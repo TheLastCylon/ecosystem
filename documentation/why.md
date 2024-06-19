@@ -53,7 +53,7 @@ What's more though is: It's not as if this is a secret. It's in the names: HTTP 
 - HTTP is Hypertext Transfer Protocol. A protocol designed for transferring Hypertext between machines on a network!
 - HTML is Hypertext Markup Language. A language browsers use in order to render what you see in the browser.
 
-Given that we are now in a world where we are NOT transferring static HTML data to web-browsers anymore: Why are we still using HTTP?
+Given that we are now in a world where we are **not** transferring static HTML data to web-browsers anymore: Why are we still using HTTP?
 
 Why can't I just have a TCP server, sitting behind Apache or Nginx?
 
@@ -64,7 +64,7 @@ Why can't we just use JSON as a protocol and get it over with?!
 ### TCP? Why not UDP or UDS?
 In modern day terms TCP is an absolute requirement for web-applications! Thing is, not all back-ends are exposed to the internet.
 
-There are times when I need a back-end to NOT be exposed to the internet at all. And what's more is: There are times when I need a back-end to be oblivious of the fact that the internet even exists.
+There are times when I need a back-end to **not** be exposed to the internet at all. And what's more is: There are times when I need a back-end to be oblivious of the fact that the internet even exists.
 
 Yes, there are times when I need a back-end, that does not talk to a browser, ever.
 

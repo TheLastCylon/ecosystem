@@ -1,6 +1,7 @@
 import logging
 import asyncio
 
+from ..configuration import UDPConfig
 from ..server_base import ServerBase
 
 from ...requests import RequestRouter
@@ -11,16 +12,15 @@ from ...exceptions import IncompleteMessageException
 class UDPServer(asyncio.DatagramProtocol, ServerBase):
     def __init__(
         self,
-        host          : str,
-        port          : int,
+        configuration : UDPConfig,
         logger        : logging.Logger,
         request_router: RequestRouter,
     ):
         ServerBase.__init__(self, logger, request_router)
-        self.host             : str                       = host
-        self.port             : int                       = port
-        self.__transport      : asyncio.DatagramTransport = None
-        self.__loop           : asyncio.AbstractEventLoop = None
+        self.host       : str                       = configuration.host
+        self.port       : int                       = configuration.port
+        self.__transport: asyncio.DatagramTransport = None
+        self.__loop     : asyncio.AbstractEventLoop = None
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):
@@ -55,7 +55,7 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
 
     # --------------------------------------------------------------------------------
     async def __create_datagram_listener(self):
-        self._logger.info("Creating UDP listener")
+        self._logger.info(f"Serving UDP on [{self.host}:{self.port}]")
         self.__loop = asyncio.get_running_loop()
         self.__transport, protocol = await self.__loop.create_datagram_endpoint(
             lambda: self,

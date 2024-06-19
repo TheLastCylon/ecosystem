@@ -1,4 +1,4 @@
-from ecosystem import ApplicationBase
+from ecosystem import ApplicationBase, TCPConfig, UDPConfig, UDSConfig
 from .handlers import GuessANumber, RollDX, RollDXTimes
 
 
@@ -8,11 +8,11 @@ class DiceRollerServer(ApplicationBase):
         super().__init__(
             "dice_roller",
             "0",
-            "127.0.0.1",
-            8888,
-            8889,
             [GuessANumber(), RollDX(), RollDXTimes()],
-            '/tmp',
+            TCPConfig("127.0.0.1", 8888),
+            UDPConfig("127.0.0.1", 8889),
+            UDSConfig("/tmp"),
+            '/tmp'
         )
 
 

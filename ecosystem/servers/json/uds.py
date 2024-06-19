@@ -2,6 +2,7 @@ import logging
 import asyncio
 import socket
 
+from ..configuration import UDSConfig
 from ..stream_server_base import StreamServerBase
 
 from ...requests import RequestRouter
@@ -11,13 +12,13 @@ from ...requests import RequestRouter
 class UDSServer(StreamServerBase):
     def __init__(
         self,
-        server_path   : str,
+        configuration : UDSConfig,
         logger        : logging.Logger,
         request_router: RequestRouter,
     ):
         super(UDSServer, self).__init__(logger, request_router)
-        self.__server_path    : str            = server_path
-        self.__uds_supported  : bool           = hasattr(socket, "AF_UNIX")
+        self.__server_path  : str  = f"{configuration.directory}/{configuration.socket_file_name}"
+        self.__uds_supported: bool = hasattr(socket, "AF_UNIX")
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):
@@ -44,7 +45,7 @@ class UDSServer(StreamServerBase):
     async def __setup_server(self):
         self._server   = await asyncio.start_unix_server(self._handle_request, self.__server_path)
         serving_address = self._server.sockets[0].getsockname()
-        self._logger.info(f'Serving on {serving_address}')
+        self._logger.info(f'Serving UDS on {serving_address}')
 
     # --------------------------------------------------------------------------------
     async def serve(self):

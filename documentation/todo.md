@@ -1,15 +1,30 @@
 # TODO
+
+- [ ] configuration
+  - [ ] application name
+  - [ ] host
+  - [ ] port
+  - [ ] client_request_timeout
+  - [ ] logger
+    - [ ] log file
+    - [ ] log max size
+      - [ ] 1024*1024*1024      = 1,073,741,824 i.e. One megabyte
+      - [ ] (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
+
 - [ ] Timeout on TCP communications.
-- [ ] Timeout on UDP communications.
-- [ ] Timeout on UDS communications.
-- [ ] running as daemon
-- [ ] lru cache
+  - [ ] TCP communications
+  - [ ] UDP communications.
+  - [ ] UDS communications.
+- [ ] Prevent startup of duplicate instances.
+- [ ] Running as a daemon
+- [ ] LRU cache
 - [ ] Documentation
   - [X] the protocol
+  - [ ] Base example
   - [ ] Handlers
   - [ ] Queues
   - [ ] Application base
-- Queueing
+- [ ] Queueing
   - [ ] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
     - [X] These will typically have a handler, that pops data off the queue, and does something with the data in the queue.
@@ -38,99 +53,9 @@
       - [ ] through queue size specific handler
     - [ ] see a specific request in a queue, using the uid
 
-- [ ] configuration
-  - [ ] application name
-  - [ ] host
-  - [ ] port
-  - [ ] client_request_timeout
-  - [ ] logger
-    - [ ] log file
-    - [ ] log max size
-      - [ ] 1024*1024*1024      = 1,073,741,824 i.e. One megabyte
-      - [ ] (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
 
-```json
-{
-  "applications": [
-    {
-      "name"           : "test_application_001",
-      "host"           : "127.0.0.1",
-      "request_timeout": 10,
-      "logging": {
-        "directory": "/asdf/asdf/asdf/asdf",
-        "max_size_in_bytes": 10737418240,
-        "max_files"        : 10
-      },
-      "instances": [
-        {
-          "id"             : 0,
-          "host"           : "127.0.0.1",
-          "port"           : 1000,
-          "request_timeout": 10,
-          "logging": {
-            "directory": "/asdf/asdf/asdf/asdf",
-            "max_size_in_bytes": 10737418240,
-            "max_files"        : 10
-          }
-        }
-      ]
-    },
-    {
-      "name"           : "test_application_002",
-      "host"           : "127.0.0.1",
-      "request_timeout": 10,
-      "logging": {
-        "directory": "/asdf/asdf/asdf/asdf",
-        "max_size_in_bytes": 10737418240
-      },
-      "instances": [
-        {
-          "number"         : 0,
-          "host"           : "127.0.0.1",
-          "port"           : 1000,
-          "request_timeout": 10,
-          "logging": {
-            "directory": "/asdf/asdf/asdf/asdf",
-            "max_size_in_bytes": 10737418240
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-
-# Communication
-## Request
-```json
-{
-  "request": {
-    "name": "asdfasdfasdf",
-    "data": {
-    }
-  }
-}
-```
-
-## Response
-### success
-```json
-{
-  "response": {
-    "status"       : 0,
-    "data"         : {
-    }
-  }
-}
-```
-
-### failure
-```json
-{
-  "response": {
-    "status"       : ">0",
-    "error-message": ""
-  }
-}
-```
+# Done
+- [X] Make communication channels optional
+  - [X] TCP
+  - [X] UDP
+  - [X] UDS

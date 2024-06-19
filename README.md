@@ -10,6 +10,4 @@ Ecosystem does not currently support HTTP natively. It is first and foremost int
 Ecosystem is developed under the BSD 3-Clause License.
 
 ## More
-- [Requirements](./documentation/requirements.md)
-- [Documentation and Examples]()
-- [Why do this?](./documentation/why.md)
+For more, take a look at the [documentation](./documentation/documentation_root.md).

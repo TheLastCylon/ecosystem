@@ -1,6 +1,7 @@
 import logging
 import asyncio
 
+from ..configuration import TCPConfig
 from ..stream_server_base import StreamServerBase
 from ...requests import RequestRouter
 
@@ -9,14 +10,13 @@ from ...requests import RequestRouter
 class TCPServer(StreamServerBase):
     def __init__(
         self,
-        host          : str,
-        port          : int,
+        configuration : TCPConfig,
         logger        : logging.Logger,
         request_router: RequestRouter,
     ):
         super().__init__(logger, request_router)
-        self.host             : str                         = host
-        self.port             : int                         = port
+        self.host: str = configuration.host
+        self.port: int = configuration.port
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):
@@ -39,7 +39,7 @@ class TCPServer(StreamServerBase):
     async def __setup_server(self):
         self._server   = await asyncio.start_server(self._handle_request, self.host, self.port)
         serving_address = self._server.sockets[0].getsockname()
-        self._logger.info(f'Serving on {serving_address}')
+        self._logger.info(f'Serving TCP on {serving_address}')
 
     # --------------------------------------------------------------------------------
     async def serve(self):

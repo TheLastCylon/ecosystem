@@ -8,9 +8,9 @@ from .logging import setup_logger
 from .requests import HandlerBase
 from .requests import RequestRouter
 
-from .servers import TCPServer
-from .servers import UDPServer
-from .servers import UDSServer
+from .servers import TCPServer, TCPConfig
+from .servers import UDPServer, UDPConfig
+from .servers import UDSServer, UDSConfig
 
 from .standard_handlers import ErrorCleaner
 from .standard_handlers import ErrorReporter
@@ -28,10 +28,10 @@ class ApplicationBase(metaclass=SingletonType):
         self,
         name         : str,
         instance     : str,
-        host         : str,
-        tcp_port     : int,
-        udp_port     : int,
         handlers     : List[HandlerBase],
+        tcp_config   : TCPConfig = None,
+        udp_config   : UDPConfig = None,
+        uds_config   : UDSConfig = None,
         log_directory: str = '/tmp',
     ):
         self.logger                : logging.Logger    = setup_logger(log_directory, name, instance)
@@ -42,14 +42,30 @@ class ApplicationBase(metaclass=SingletonType):
         self.__request_router      : RequestRouter     = RequestRouter(self.__statistics_keeper, self.logger)
         self.__error_state_list    : ErrorStateList    = ErrorStateList()
         self.__handlers            : List[HandlerBase] = handlers
+        self.__server_tcp          : TCPServer         = None
+        self.__server_udp          : UDPServer         = None
+        self.__server_uds          : UDSServer         = None
 
-        self.__server_tcp: TCPServer = TCPServer(host, tcp_port, self.logger, self.__request_router)
-        self.__server_udp: UDPServer = UDPServer(host, udp_port, self.logger, self.__request_router)
-        self.__server_uds: UDSServer = UDSServer(
-            f"/tmp/{name}_{instance}_uds.sock",
-            self.logger,
-            self.__request_router,
-        )
+        self.__configure_communication_servers(tcp_config, udp_config, uds_config)
+
+    # --------------------------------------------------------------------------------
+    def __configure_communication_servers(
+        self,
+        tcp_config: TCPConfig = None,
+        udp_config: UDPConfig = None,
+        uds_config: UDSConfig = None
+    ):
+        if tcp_config:
+            self.__server_tcp = TCPServer(tcp_config, self.logger, self.__request_router)
+
+        if udp_config:
+            self.__server_udp = UDPServer(udp_config, self.logger, self.__request_router)
+
+        if uds_config:
+            if uds_config.socket_file_name == "use_default":
+                uds_config.socket_file_name = f"{self.__application_name}_{self.__application_instance}_uds.sock"
+
+            self.__server_uds = UDSServer(uds_config, self.logger, self.__request_router)
 
     # --------------------------------------------------------------------------------
     def start(self):
@@ -91,18 +107,21 @@ class ApplicationBase(metaclass=SingletonType):
 
     # --------------------------------------------------------------------------------
     async def __start_tcp_server(self):
-        async with self.__server_tcp:
-            await asyncio.create_task(self.__server_tcp.serve())
+        if self.__server_tcp:
+            async with self.__server_tcp:
+                await asyncio.create_task(self.__server_tcp.serve())
 
     # --------------------------------------------------------------------------------
     async def __start_udp_server(self):
-        async with self.__server_udp:
-            await asyncio.create_task(self.__server_udp.serve())
+        if self.__server_udp:
+            async with self.__server_udp:
+                await asyncio.create_task(self.__server_udp.serve())
 
     # --------------------------------------------------------------------------------
     async def __start_uds_server(self):
-        async with self.__server_uds:
-            await asyncio.create_task(self.__server_uds.serve())
+        if self.__server_uds:
+            async with self.__server_uds:
+                await asyncio.create_task(self.__server_uds.serve())
 
     # --------------------------------------------------------------------------------
     async def __start(self):
