@@ -1,5 +1,24 @@
 # The simplest Ecosystem server
 
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+!!! DRAFT !!!
+
+
 The code for this example is located in [examples/base/server.py](../examples/base/server.py)
 
 To run it, get into your terminal and go to the directory you have cloned this repository into, then:
