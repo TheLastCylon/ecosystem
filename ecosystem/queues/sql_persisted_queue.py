@@ -1,0 +1,217 @@
+import json
+import uuid
+import sqlalchemy
+
+from typing import Type, cast, TypeVar, Generic
+
+from pydantic import BaseModel as PydanticBaseModel
+
+from sqlalchemy import create_engine, Column, BigInteger, BINARY, String, func
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import sessionmaker
+
+
+OrmBaseClass = sqlalchemy.orm.declarative_base()
+
+_QueuedType = TypeVar('_QueuedType', bound=PydanticBaseModel)
+
+
+# --------------------------------------------------------------------------------
+class QueueRecord(OrmBaseClass):
+    __tablename__ = 'queued_objects'
+    record_id     = Column(BigInteger, primary_key=True)
+    record_uuid   = Column(BINARY(16), unique=True, index=True, nullable=False, default=uuid.uuid4().bytes)
+    object_string = Column(String)
+
+
+# --------------------------------------------------------------------------------
+class SqlPersistedQueueBase:
+    def __init__(self, file_path: str):
+        self.file_path        : str               = file_path
+        self.connection_string: str               = f"sqlite:///{file_path}"
+        self.database_engine  : sqlalchemy.Engine = create_engine(self.connection_string)
+
+        OrmBaseClass.metadata.create_all(self.database_engine)
+
+        self.session = sessionmaker(bind=self.database_engine)()
+
+
+# --------------------------------------------------------------------------------
+class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
+    def __init__(
+        self,
+        file_path     : str,
+        queued_type   : Type[_QueuedType],
+        max_uncommited: int = 0,
+    ):
+        super().__init__(file_path)
+        self.max_uncommited  : int               = max_uncommited
+        self.uncommited_count: int               = 0
+        self.queued_type     : Type[_QueuedType] = queued_type
+
+    # --------------------------------------------------------------------------------
+    def shut_down(self):
+        self.session.commit()
+        self.session.close()
+
+    # --------------------------------------------------------------------------------
+    # Note:
+    # Because SQLite defines BIGINT as signed, and can deal with negative values
+    # in a primary key. We genuinely don't have to be concerned about dealing with
+    # a minimum record id here. Thankyou SQLite guys. I Love your work!
+    async def push_front(self, object_to_queue: _QueuedType, uid: uuid.UUID = None) -> uuid.UUID :
+        queue_uuid = uid or uuid.uuid4()
+        new_record = QueueRecord(
+            record_uuid   = queue_uuid.bytes,
+            object_string = object_to_queue.json()
+        )
+        new_record.record_id = await self.__get_min_record_id() - 1
+        await self.__write_record(new_record)
+        return queue_uuid
+
+    # --------------------------------------------------------------------------------
+    async def push_back(self, object_to_queue: _QueuedType, uid: uuid.UUID = None) -> uuid.UUID:
+        queue_uuid = uid or uuid.uuid4()
+        new_record = QueueRecord(
+            record_uuid   = queue_uuid.bytes,
+            object_string = object_to_queue.json()
+        )
+        new_record.record_id = await self.__get_max_record_id() + 1
+        await self.__write_record(new_record)
+        return queue_uuid
+
+    # --------------------------------------------------------------------------------
+    async def pop_front(self):
+        queued_record = await self.__get_record_with_lowest_record_id()
+
+        if queued_record is None:
+            return None
+
+        queueable_type_object = self.__record_to_queueable_object(queued_record)
+        await self.__delete_record(queued_record)
+
+        return queueable_type_object
+
+    # --------------------------------------------------------------------------------
+    async def pop_back(self):
+        queued_record = await self.__get_record_with_highest_record_id()
+
+        if queued_record is None:
+            return None
+
+        queueable_type_object = self.__record_to_queueable_object(queued_record)
+        await self.__delete_record(queued_record)
+
+        return queueable_type_object
+
+    # --------------------------------------------------------------------------------
+    async def pop_uuid(self, object_uuid: uuid.UUID):
+        queued_record = self.__get_record_by_uuid(object_uuid)
+
+        if queued_record is None:
+            return None
+
+        queueable_type_object = self.__record_to_queueable_object(queued_record)
+        await self.__delete_record(queued_record)
+
+        return queueable_type_object
+
+    # --------------------------------------------------------------------------------
+    async def inspect_front(self):
+        queued_record = await self.__get_record_with_lowest_record_id()
+        if queued_record is None:
+            return None
+
+        return self.__record_to_queueable_object(queued_record)
+
+    # --------------------------------------------------------------------------------
+    async def inspect_back(self):
+        queued_record = await self.__get_record_with_highest_record_id()
+        if queued_record is None:
+            return None
+
+        return self.__record_to_queueable_object(queued_record)
+
+    # --------------------------------------------------------------------------------
+    async def inspect_uuid(self, object_uuid: uuid.UUID):
+        queued_record = self.__get_record_by_uuid(object_uuid)
+        if queued_record is None:
+            return None
+        return self.__record_to_queueable_object(queued_record)
+
+    # --------------------------------------------------------------------------------
+    async def size(self) -> int:
+        return int(self.session.query(func.count(QueueRecord.record_id)).scalar())
+
+    # --------------------------------------------------------------------------------
+    async def is_empty(self) -> int:
+        return await self.size() == 0
+
+    # --------------------------------------------------------------------------------
+    async def __write_record(self, record: QueueRecord):
+        self.session.add(record)
+        self.uncommited_count += 1
+        await self.__check_commit_count()
+
+    # --------------------------------------------------------------------------------
+    async def __delete_record(self, record: QueueRecord):
+        self.session.delete(record)
+        self.uncommited_count += 1
+        await self.__check_commit_count()
+
+    # --------------------------------------------------------------------------------
+    async def __get_min_record_id(self) -> int:
+        if await self.size() < 1:
+            return 0
+        return int(self.session.query(func.min(QueueRecord.record_id)).scalar())
+
+    # --------------------------------------------------------------------------------
+    async def __get_max_record_id(self) -> int:
+        if await self.size() < 1:
+            return 0
+        return int(self.session.query(func.max(QueueRecord.record_id)).scalar())
+
+    # --------------------------------------------------------------------------------
+    def __get_record_by_record_id(self, record_id: int) -> QueueRecord | None:
+        try:
+            # cast is used here to stop some IDEs from thinking that the query returns Type[QueueRecord] rather than QueueRecord
+            return cast(
+                QueueRecord,
+                self.session.query(QueueRecord).filter(QueueRecord.record_id == record_id).one() # noqa PyCharm's report that the equality check has a problem is a false positive.
+            )
+        except NoResultFound:
+            return None
+
+    # --------------------------------------------------------------------------------
+    def __get_record_by_uuid(self, record_uuid: uuid.UUID) -> QueueRecord | None:
+        try:
+            # cast is used here to stop some IDEs from thinking that the query returns Type[QueueRecord] rather than QueueRecord
+            return cast(
+                QueueRecord,
+                self.session.query(QueueRecord).filter(QueueRecord.record_uuid == record_uuid.bytes).one() # noqa PyCharm's report that the equality check has a problem is a false positive.
+            )
+        except NoResultFound:
+            return None
+
+    # --------------------------------------------------------------------------------
+    async def __get_record_with_lowest_record_id(self) -> QueueRecord | None:
+        if await self.size() < 1:
+            return None
+        return self.__get_record_by_record_id(await self.__get_min_record_id())
+
+    # --------------------------------------------------------------------------------
+    async def __get_record_with_highest_record_id(self) -> QueueRecord | None:
+        if await self.size() < 1:
+            return None
+        return self.__get_record_by_record_id(await self.__get_max_record_id())
+
+    # --------------------------------------------------------------------------------
+    def __record_to_queueable_object(self, record: QueueRecord) -> _QueuedType:
+        queued_data = json.loads(record.object_string)
+        return self.queued_type(**queued_data)
+
+    # --------------------------------------------------------------------------------
+    async def __check_commit_count(self):
+        if self.uncommited_count >= self.max_uncommited:
+            self.session.commit()
+            self.uncommited_count = 0

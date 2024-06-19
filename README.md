@@ -1,2 +1,15 @@
-# ecosystem
-A Python framework for back-end development. Allowing for TCP, UDP and UDS connections. Using JSON as the communications protocol. Please note: Ecosystem will never support HTTP natively. 
+# Ecosystem
+A Python framework for back-end development. Allowing for TCP, UDP and UDS connections. Using JSON as the communications protocol.
+
+**Please note**:
+
+Ecosystem does not currently support HTTP natively. It is first and foremost intended to NOT be used with HTTP.
+
+## License
+
+Ecosystem is developed under the BSD 3-Clause License.
+
+## More
+- [Requirements](./documentation/requirements.md)
+- [Documentation and Examples]()
+- [Why do this?](./documentation/why.md)
