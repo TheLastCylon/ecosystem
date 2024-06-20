@@ -1,24 +1,35 @@
-from ecosystem import ApplicationBase, TCPConfig, UDPConfig, UDSConfig
+from ecosystem import ApplicationBase
+from ecosystem import ConfigApplication
+from ecosystem import ConfigApplicationInstance
+from ecosystem import ConfigTCP
+from ecosystem import ConfigUDP
+from ecosystem import ConfigUDS
+
 from .handlers import GuessANumber, RollDX, RollDXTimes
+
+app_config          = ConfigApplication(name = "dice_roller_example")
+app_instance_config = ConfigApplicationInstance(
+    instance_id = "0",
+    tcp         = ConfigTCP(host="127.0.0.1", port=8888),
+    udp         = ConfigUDP(host="127.0.0.1", port=8889),
+    uds         = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT"),
+)
+app_config.instances[app_instance_config.instance_id] = app_instance_config
 
 
 # --------------------------------------------------------------------------------
-class DiceRollerServer(ApplicationBase):
+class DiceRollerExampleServer(ApplicationBase):
     def __init__(self):
         super().__init__(
-            "dice_roller",
-            "0",
+            app_config.name,
             [GuessANumber(), RollDX(), RollDXTimes()],
-            TCPConfig("127.0.0.1", 8888),
-            UDPConfig("127.0.0.1", 8889),
-            UDSConfig("/tmp"),
-            '/tmp'
+            app_config
         )
 
 
 # --------------------------------------------------------------------------------
 def main():
-    app = DiceRollerServer()
+    app = DiceRollerExampleServer()
     app.start()
 
 

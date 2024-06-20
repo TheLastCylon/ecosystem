@@ -12,7 +12,7 @@ from .dtos import RollDXTimesRequestDto
 
 client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
-client_uds = UDSClient("/tmp/dice_roller_0_uds.sock")
+client_uds = UDSClient("/tmp/dice_roller_example_0_uds.sock")
 
 
 # --------------------------------------------------------------------------------
