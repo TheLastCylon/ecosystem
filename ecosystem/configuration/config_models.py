@@ -12,9 +12,9 @@ class ConfigStatisticsKeeper(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class ConfigLogging(PydanticBaseModel):
-    directory        : str = "/tmp"
-    max_size_in_bytes: int = 10737418240, # (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
-    max_files        : int = 10
+    directory         : str = "/tmp"
+    max_size_in_bytes : int = 10737418240 # (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
+    max_files         : int = 10
 
 
 # --------------------------------------------------------------------------------

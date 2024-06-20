@@ -1,4 +1,9 @@
-from ecosystem import ApplicationBase, ConfigApplication, ConfigApplicationInstance, ConfigTCP, ConfigUDP, ConfigUDS
+from ecosystem import ApplicationBase
+from ecosystem import ConfigApplication
+from ecosystem import ConfigApplicationInstance
+from ecosystem import ConfigTCP
+from ecosystem import ConfigUDP
+from ecosystem import ConfigUDS
 
 app_config          = ConfigApplication(name = "base_example")
 app_instance_config = ConfigApplicationInstance(
@@ -11,14 +16,14 @@ app_config.instances[app_instance_config.instance_id] = app_instance_config
 
 
 # --------------------------------------------------------------------------------
-class BaseServer(ApplicationBase):
+class BaseExampleServer(ApplicationBase):
     def __init__(self):
-        super().__init__(app_config.name, [], app_config, '/tmp')
+        super().__init__(app_config.name, [], app_config)
 
 
 # --------------------------------------------------------------------------------
 def main():
-    app = BaseServer()
+    app = BaseExampleServer()
     app.start()
 
 

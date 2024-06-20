@@ -49,11 +49,10 @@ class ApplicationBase(metaclass=SingletonType):
         name         : str,
         handlers     : List[HandlerBase],
         configuration: ConfigApplication = None,
-        log_directory: str               = '/tmp',
     ):
         self.__configure_argument_parser()
         self.__configuration = configuration
-        self.__configure_basics(name, handlers, log_directory)
+        self.__configure_basics(name, handlers)
         self.__configure_communication_servers()
 
     # --------------------------------------------------------------------------------
@@ -61,7 +60,6 @@ class ApplicationBase(metaclass=SingletonType):
         self,
         name         : str,
         handlers     : List[HandlerBase],
-        log_directory: str,
     ) -> None:
         self.__application_name     = name
         self.__application_instance = self.command_line_args.instance
@@ -72,7 +70,12 @@ class ApplicationBase(metaclass=SingletonType):
             else:
                 self.__configuration = load_config_from_file(self.command_line_args.config)
 
-        self.logger                 = setup_logger(log_directory, name, self.__application_instance)
+        self.logger = setup_logger(
+            self.__application_name,
+            self.__application_instance,
+            self.__configuration.instances[self.__application_instance].logging
+        )
+
         self.__statistics_keeper    = StatisticsKeeper(self.logger)
         self.__request_router       = RequestRouter(self.__statistics_keeper, self.logger)
         self.__error_state_list     = ErrorStateList()
@@ -125,7 +128,7 @@ class ApplicationBase(metaclass=SingletonType):
         if self.__configuration.instances[self.__application_instance].uds:
             uds_config = self.__configuration.instances[self.__application_instance].uds
             if uds_config.socket_file_name == "DEFAULT":
-                uds_config.socket_file_name = f"{self.__application_name}-{self.__application_instance}_uds.sock"
+                uds_config.socket_file_name = f"{self.__application_name}_{self.__application_instance}_uds.sock"
 
             self.__server_uds = UDSServer(
                 uds_config,
