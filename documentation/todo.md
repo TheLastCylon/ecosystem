@@ -1,16 +1,17 @@
 # TODO
 
-- [ ] Cater for Windows os in all default configurations
+- [ ] Cater for Windows OS in all default configurations
 
-- [ ] Timeout on TCP communications.
+- [ ] Test Timeout on communications.
   - [ ] TCP communications
   - [ ] UDP communications.
   - [ ] UDS communications.
+
 - [ ] Prevent startup of duplicate instances.
 - [ ] Running as a daemon
+
 - [ ] LRU cache
 
-- [ ] Documentation: Base example
 - [ ] Documentation: Handlers
 - [ ] Documentation: Queues
 - [ ] Documentation: Application base
@@ -56,3 +57,4 @@
 - [X] configuration through environment variables
 - [X] configuration through json file
 - [X] Documentation: the protocol
+- [X] Documentation: Base example

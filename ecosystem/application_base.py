@@ -4,7 +4,7 @@ import argparse
 
 from typing import List
 
-from .logging import setup_logger
+from .logs import setup_logger
 
 from .requests import HandlerBase
 from .requests import RequestRouter
@@ -76,10 +76,15 @@ class ApplicationBase(metaclass=SingletonType):
             self.__configuration.instances[self.__application_instance].logging
         )
 
-        self.__statistics_keeper    = StatisticsKeeper(self.logger)
-        self.__request_router       = RequestRouter(self.__statistics_keeper, self.logger)
-        self.__error_state_list     = ErrorStateList()
-        self.__handlers             = handlers
+        self.__statistics_keeper = StatisticsKeeper(
+            self.logger,
+            self.__configuration.instances[self.__application_instance].stats_keeper.gather_period,
+            self.__configuration.instances[self.__application_instance].stats_keeper.history_length
+        )
+
+        self.__request_router   = RequestRouter(self.__statistics_keeper, self.logger)
+        self.__error_state_list = ErrorStateList()
+        self.__handlers         = handlers
 
     # --------------------------------------------------------------------------------
     def __configure_argument_parser(self):

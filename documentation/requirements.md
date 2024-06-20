@@ -1,7 +1,14 @@
 # Requirements
+| Requirement                                    | Version    |
+|------------------------------------------------|------------|
+| [python](https://www.python.org/)              | \>= 3.8    |
+| [sqlalchemy](https://sqlalchemy.org)           | \>= 2.0.17 |
+| [pydantic](https://docs.pydantic.dev/latest/)  | \>= 2.7.4  |
+
 
 ## Python
-Yup, you will need Python for this. Specifically versions 3.8 and higher.
+Yup, you will need Python for this.
+
 Ecosystem might work with lower versions, but the probability of that is very low, primarily due to my use of asyncio.
 
 As much as I love to lose my cool with Python and the world of dynamic and duck typing, it is a damn good solution to a world-wide problem.
@@ -13,13 +20,12 @@ Just one thing ... What's up with the name mangling of class members that start 
 ## SqlAlchemy
 All the queue solutions in Ecosystem, rely on [SqlAlchemy](https://sqlalchemy.org) and [Sqlite](https://sqlite.org).
 
-Refer to their documentation on how to install and use with Python.
-As for version, well, I just did a `pip install sqlalchemy`, use the latest, you'll do fine.
+I tested with version 2.0.17, lower versions might work though. Let me know if they do and I'll start a list of what works and what does not.
 
 Side note: The people doing [SqlAlchemy](https://sqlalchemy.org) and [Sqlite](https://sqlite.org) do not get the credit they deserve. Both these solutions are pretty damn amazing. So, from me to all the people involved with these: Thank you. You Rock!
 
 ## Pydantic
-I tested with version 2.7, lower versions might work but do keep in mind that it's untested.
+I tested with version 2.7.4, lower versions might work but do keep in mind that it's untested.
 
 Also: Without [Pydantic](https://docs.pydantic.dev/latest/), Ecosystem would have required alot more work than it has so far.
 

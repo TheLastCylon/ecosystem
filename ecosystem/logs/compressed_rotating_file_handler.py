@@ -6,11 +6,11 @@ from logging.handlers import RotatingFileHandler
 # --------------------------------------------------------------------------------
 class CompressedRotatingFileHandler(RotatingFileHandler):
     """
-    Handler for logging to a set of files, which switches from one file
+    Handler for logs to a set of files, which switches from one file
     to the next when the current file reaches a certain size. Upon switching,
     the file that was being logged to, is compressed using gzip compression.
 
-    Derived from: Python's logging.handlers.RotatingFileHandler
+    Derived from: Python's logs.handlers.RotatingFileHandler
     """
     def __init__(
         self,
@@ -28,7 +28,7 @@ class CompressedRotatingFileHandler(RotatingFileHandler):
             encoding (str)    : is the name of the encoding used to decode or encode the log file. See documentation for open(), for more detail
             delay (bool)      : If True, the log file is not created/opened until the first log message is emitted.
 
-        Open the specified file_path and use it as the stream for logging.
+        Open the specified file_path and use it as the stream for logs.
 
         If `max_bytes` is set to 0, the file specified grows indefinitely. i.e. rollover
         never happens.
