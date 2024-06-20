@@ -1,4 +1,7 @@
 from .application_base import ApplicationBase
-from .application_base import TCPConfig
-from .application_base import UDPConfig
-from .application_base import UDSConfig
+
+from .configuration import ConfigApplication
+from .configuration import ConfigApplicationInstance
+from .configuration import ConfigTCP
+from .configuration import ConfigUDP
+from .configuration import ConfigUDS

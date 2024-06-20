@@ -2,9 +2,9 @@ import logging
 import asyncio
 import socket
 
-from ..configuration import UDSConfig
 from ..stream_server_base import StreamServerBase
 
+from ...configuration import ConfigUDS
 from ...requests import RequestRouter
 
 
@@ -12,7 +12,7 @@ from ...requests import RequestRouter
 class UDSServer(StreamServerBase):
     def __init__(
         self,
-        configuration : UDSConfig,
+        configuration : ConfigUDS,
         logger        : logging.Logger,
         request_router: RequestRouter,
     ):

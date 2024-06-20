@@ -1,15 +1,6 @@
 # TODO
 
-- [ ] configuration
-  - [ ] application name
-  - [ ] host
-  - [ ] port
-  - [ ] client_request_timeout
-  - [ ] logger
-    - [ ] log file
-    - [ ] log max size
-      - [ ] 1024*1024*1024      = 1,073,741,824 i.e. One megabyte
-      - [ ] (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
+- [ ] Cater for Windows os in all default configurations
 
 - [ ] Timeout on TCP communications.
   - [ ] TCP communications
@@ -18,12 +9,14 @@
 - [ ] Prevent startup of duplicate instances.
 - [ ] Running as a daemon
 - [ ] LRU cache
-- [ ] Documentation
-  - [X] the protocol
-  - [ ] Base example
-  - [ ] Handlers
-  - [ ] Queues
-  - [ ] Application base
+
+- [ ] Documentation: Base example
+- [ ] Documentation: Handlers
+- [ ] Documentation: Queues
+- [ ] Documentation: Application base
+- [ ] Documentation: Logging
+- [ ] Documentation: Application configuration
+
 - [ ] Queueing
   - [ ] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
@@ -59,3 +52,7 @@
   - [X] TCP
   - [X] UDP
   - [X] UDS
+- [X] Command line argument parsing.
+- [X] configuration through environment variables
+- [X] configuration through json file
+- [X] Documentation: the protocol

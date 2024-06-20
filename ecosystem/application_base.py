@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import argparse
 
 from typing import List
 
@@ -8,9 +9,9 @@ from .logging import setup_logger
 from .requests import HandlerBase
 from .requests import RequestRouter
 
-from .servers import TCPServer, TCPConfig
-from .servers import UDPServer, UDPConfig
-from .servers import UDSServer, UDSConfig
+from .servers import TCPServer
+from .servers import UDPServer
+from .servers import UDSServer
 
 from .standard_handlers import ErrorCleaner
 from .standard_handlers import ErrorReporter
@@ -19,53 +20,118 @@ from .standard_handlers import Statistics
 from .state_keepers import ErrorStateList
 from .state_keepers import StatisticsKeeper
 
+from .configuration import ConfigApplication
+from .configuration import load_config_from_file
+from .configuration import load_config_from_environment
+
 from .util import SingletonType
 
 
 # --------------------------------------------------------------------------------
 class ApplicationBase(metaclass=SingletonType):
+    argument_parser       : argparse.ArgumentParser = argparse.ArgumentParser()
+    command_line_args     : argparse.Namespace      = None
+    logger                : logging.Logger          = None
+    __configuration       : ConfigApplication       = None
+    __application_name    : str                     = None
+    __application_instance: str                     = None
+    __running             : bool                    = False
+    __statistics_keeper   : StatisticsKeeper        = None
+    __request_router      : RequestRouter           = None
+    __error_state_list    : ErrorStateList          = None
+    __handlers            : List[HandlerBase]       = None
+    __server_tcp          : TCPServer               = None
+    __server_udp          : UDPServer               = None
+    __server_uds          : UDSServer               = None
+
     def __init__(
         self,
         name         : str,
-        instance     : str,
         handlers     : List[HandlerBase],
-        tcp_config   : TCPConfig = None,
-        udp_config   : UDPConfig = None,
-        uds_config   : UDSConfig = None,
-        log_directory: str = '/tmp',
+        configuration: ConfigApplication = None,
+        log_directory: str               = '/tmp',
     ):
-        self.logger                : logging.Logger    = setup_logger(log_directory, name, instance)
-        self.__running             : bool              = False
-        self.__application_name    : str               = name
-        self.__application_instance: str               = instance
-        self.__statistics_keeper   : StatisticsKeeper  = StatisticsKeeper(self.logger)
-        self.__request_router      : RequestRouter     = RequestRouter(self.__statistics_keeper, self.logger)
-        self.__error_state_list    : ErrorStateList    = ErrorStateList()
-        self.__handlers            : List[HandlerBase] = handlers
-        self.__server_tcp          : TCPServer         = None
-        self.__server_udp          : UDPServer         = None
-        self.__server_uds          : UDSServer         = None
-
-        self.__configure_communication_servers(tcp_config, udp_config, uds_config)
+        self.__configure_argument_parser()
+        self.__configuration = configuration
+        self.__configure_basics(name, handlers, log_directory)
+        self.__configure_communication_servers()
 
     # --------------------------------------------------------------------------------
-    def __configure_communication_servers(
+    def __configure_basics(
         self,
-        tcp_config: TCPConfig = None,
-        udp_config: UDPConfig = None,
-        uds_config: UDSConfig = None
-    ):
-        if tcp_config:
-            self.__server_tcp = TCPServer(tcp_config, self.logger, self.__request_router)
+        name         : str,
+        handlers     : List[HandlerBase],
+        log_directory: str,
+    ) -> None:
+        self.__application_name     = name
+        self.__application_instance = self.command_line_args.instance
 
-        if udp_config:
-            self.__server_udp = UDPServer(udp_config, self.logger, self.__request_router)
+        if not self.__configuration:
+            if not self.command_line_args.config:
+                self.__configuration = load_config_from_environment(self.__application_name, self.__application_instance)
+            else:
+                self.__configuration = load_config_from_file(self.command_line_args.config)
 
-        if uds_config:
-            if uds_config.socket_file_name == "use_default":
-                uds_config.socket_file_name = f"{self.__application_name}_{self.__application_instance}_uds.sock"
+        self.logger                 = setup_logger(log_directory, name, self.__application_instance)
+        self.__statistics_keeper    = StatisticsKeeper(self.logger)
+        self.__request_router       = RequestRouter(self.__statistics_keeper, self.logger)
+        self.__error_state_list     = ErrorStateList()
+        self.__handlers             = handlers
 
-            self.__server_uds = UDSServer(uds_config, self.logger, self.__request_router)
+    # --------------------------------------------------------------------------------
+    def __configure_argument_parser(self):
+        self.argument_parser.add_argument(
+            "-i", "--instance",
+            type     = str,
+            required = False,
+            help     = 'The instance id this invocation of the script needs to run as. Default:"0"',
+            default  = "0"
+        )
+
+        self.argument_parser.add_argument(
+            "-c", "--console",
+            type     = bool,
+            required = False,
+            help     = "Start the application as a console application, rather than a daemon. Default:False",
+            default  = False
+        )
+
+        self.argument_parser.add_argument(
+            "-C", "--config",
+            type     = str,
+            required = False,
+            help     = "Specify a configuration file to load for this invocation. Default:None",
+            default  = None
+        )
+
+        self.command_line_args = self.argument_parser.parse_args()
+
+    # --------------------------------------------------------------------------------
+    def __configure_communication_servers(self):
+        if self.__configuration.instances[self.__application_instance].tcp:
+            self.__server_tcp = TCPServer(
+                self.__configuration.instances[self.__application_instance].tcp,
+                self.logger,
+                self.__request_router
+            )
+
+        if self.__configuration.instances[self.__application_instance].udp:
+            self.__server_udp = UDPServer(
+                self.__configuration.instances[self.__application_instance].udp,
+                self.logger,
+                self.__request_router
+            )
+
+        if self.__configuration.instances[self.__application_instance].uds:
+            uds_config = self.__configuration.instances[self.__application_instance].uds
+            if uds_config.socket_file_name == "DEFAULT":
+                uds_config.socket_file_name = f"{self.__application_name}-{self.__application_instance}_uds.sock"
+
+            self.__server_uds = UDSServer(
+                uds_config,
+                self.logger,
+                self.__request_router
+            )
 
     # --------------------------------------------------------------------------------
     def start(self):

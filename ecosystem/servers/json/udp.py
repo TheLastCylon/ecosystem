@@ -1,9 +1,9 @@
 import logging
 import asyncio
 
-from ..configuration import UDPConfig
 from ..server_base import ServerBase
 
+from ...configuration import ConfigUDP
 from ...requests import RequestRouter
 from ...exceptions import IncompleteMessageException
 
@@ -12,7 +12,7 @@ from ...exceptions import IncompleteMessageException
 class UDPServer(asyncio.DatagramProtocol, ServerBase):
     def __init__(
         self,
-        configuration : UDPConfig,
+        configuration : ConfigUDP,
         logger        : logging.Logger,
         request_router: RequestRouter,
     ):
