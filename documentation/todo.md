@@ -19,16 +19,28 @@
 - [ ] Documentation: Application configuration
 
 - [ ] Queueing
+
   - [X] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
     - [X] These will typically have a handler, that pops data off the queue, and does something with the data in the queue.
-    - [X] Pause for:
-      - [X] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
-      - [X] Processing: Just pauses processing. Still accepts new requests.
-      - [X] Both      : Stops accepting and processing
+    - [ ] Pause for:
+      - [ ] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
+      - [ ] Processing: Just pauses processing. Still accepts new requests.
+      - [ ] Both      : Stops accepting and processing
     - [X] Queues
       - [X] Incoming queue
       - [X] Error queue
+  - [ ] For queued endpoints
+    - [ ] move requests in error queue to incoming queue
+      - [ ] for all
+      - [ ] for specific uid
+    - [ ] clear error queue: one with uuid (as in forget that request existed)
+    - [ ] clear error queue: all (as in forget all those request existed)
+    - [ ] get queue sizes
+      - [X] through standard statistics handler
+      - [ ] through queue size specific handler
+    - [X] inspect a specific request in a queue, using the uid
+
   - [ ] Outgoing queue
     - [ ] A message of the: "Hey you, do your thing with this data, I'm done with it." kind.
     - [ ] This typically requires some kind of triple queue
@@ -36,17 +48,11 @@
       - [ ] one for messages that need to be retried
       - [ ] one for messages that have errored out
 
+
+
+
 - [ ] standard handlers
   - [ ] Stop: As in a handler that will tell an application to shut down
-  - [ ] For queued request handlers
-    - [ ] move requests in error queue to incoming queue
-      - [ ] for specific uid
-      - [ ] for all
-    - [ ] clear error queue (as in forget those request existed)
-    - [ ] get queue sizes
-      - [X] through standard statistics handler
-      - [ ] through queue size specific handler
-    - [ ] see a specific request in a queue, using the uid
 
 
 # Done

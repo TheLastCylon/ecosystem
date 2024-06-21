@@ -4,7 +4,7 @@ from typing import Dict, List, cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from .handler_base import HandlerBase
-from .queued_handler_base import QueuedRequestHandlerBase
+from .queued_handler import QueuedHandler
 
 from ..logs import EcoLogger
 from ..data_transfer_objects import RequestDTO
@@ -26,10 +26,10 @@ class RequestRouter(metaclass=SingletonType):
             raise Exception(f"Handler command id [{handler.get_route_key()}] already exists")
 
     def get_queued_handlers(self):
-        response: List[QueuedRequestHandlerBase] = []
+        response: List[QueuedHandler] = []
         for queue in self.__routing_table.values():
-            if isinstance(queue, QueuedRequestHandlerBase):
-                response.append(cast(QueuedRequestHandlerBase, queue))
+            if isinstance(queue, QueuedHandler):
+                response.append(cast(QueuedHandler, queue))
         return response
 
     async def route_request(self, request: RequestDTO) -> PydanticBaseModel:

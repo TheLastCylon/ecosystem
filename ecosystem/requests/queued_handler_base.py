@@ -52,6 +52,18 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     incoming_queue          : SqlPersistedQueue[QueuedRequestDTO] = None
     error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
 
+    def __init__(
+        self,
+        route_key       : str,
+        request_dto_type: Type[_T],
+        max_uncommited  : int = 0,
+        max_retries     : int = 0,
+    ):
+        super().__init__(route_key, request_dto_type)
+        self.max_uncommited = max_uncommited
+        self.max_retries    = max_retries
+
+    # --------------------------------------------------------------------------------
     def pause_receiving(self):
         self._receiving_paused = True
 
@@ -64,16 +76,37 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def unpause_processing(self):
         self._processing_paused = False
 
-    def __init__(
-        self,
-        route_key       : str,
-        request_dto_type: Type[_T],
-        max_uncommited  : int = 0,
-        max_retries     : int = 0,
-    ):
-        super().__init__(route_key, request_dto_type)
-        self.max_uncommited = max_uncommited
-        self.max_retries    = max_retries
+    # --------------------------------------------------------------------------------
+    async def pop_request_from_error_queue(self, request_uid: uuid.UUID) -> _T | None:
+        queued_request = await self.error_queue.pop_uuid(request_uid)
+        if not queued_request:
+            return None
+        return self.request_dto_type(**queued_request.request)
+
+    # --------------------------------------------------------------------------------
+    async def inspect_request_in_error_queue(self, request_uid: uuid.UUID) -> _T | None:
+        queued_request = await self.error_queue.inspect_uuid(request_uid)
+        if not queued_request:
+            return None
+        return self.request_dto_type(**queued_request.request)
+
+    # --------------------------------------------------------------------------------
+    async def reprocess_error_queue(self):
+        self._processing_paused = True
+        while not await self.error_queue.is_empty():
+            queued_request = await self.error_queue.pop_front()
+            await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
+        self._processing_paused = False
+
+    # --------------------------------------------------------------------------------
+    async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> bool:
+        self._processing_paused = True
+        queued_request = await self.error_queue.pop_uuid(request_uid)
+        if not queued_request:
+            return False
+        await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
+        self._processing_paused = False
+        return True
 
     # --------------------------------------------------------------------------------
     def __setup_incoming_queue(self):
