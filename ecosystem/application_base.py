@@ -1,10 +1,7 @@
 import asyncio
-import logging
 import argparse
 
-from typing import List
-
-from .logs import setup_logger
+from .logs import EcoLogger
 
 from .requests import HandlerBase
 from .requests import RequestRouter
@@ -12,10 +9,6 @@ from .requests import RequestRouter
 from .servers import TCPServer
 from .servers import UDPServer
 from .servers import UDSServer
-
-from .standard_handlers import ErrorCleaner
-from .standard_handlers import ErrorReporter
-from .standard_handlers import Statistics
 
 from .state_keepers import ErrorStateList
 from .state_keepers import StatisticsKeeper
@@ -26,41 +19,36 @@ from .configuration import load_config_from_environment
 
 from .util import SingletonType
 
+from .exceptions import InstanceConfigurationNotFoundException
+
+from .standard_endpoints import standard_endpoint_error_states # noqa
+from .standard_endpoints import standard_endpoint_error_clear  # noqa
+from .standard_endpoints import standard_endpoint_statistics   # noqa
+
 
 # --------------------------------------------------------------------------------
 class ApplicationBase(metaclass=SingletonType):
     argument_parser       : argparse.ArgumentParser = argparse.ArgumentParser()
     command_line_args     : argparse.Namespace      = None
-    logger                : logging.Logger          = None
+    logger                : EcoLogger               = EcoLogger()
+    __request_router      : RequestRouter           = RequestRouter()
+    __statistics_keeper   : StatisticsKeeper        = StatisticsKeeper()
+    __error_state_list    : ErrorStateList          = ErrorStateList()
+    __running             : bool                    = False
     __configuration       : ConfigApplication       = None
     __application_name    : str                     = None
     __application_instance: str                     = None
-    __running             : bool                    = False
-    __statistics_keeper   : StatisticsKeeper        = None
-    __request_router      : RequestRouter           = None
-    __error_state_list    : ErrorStateList          = None
-    __handlers            : List[HandlerBase]       = None
     __server_tcp          : TCPServer               = None
     __server_udp          : UDPServer               = None
     __server_uds          : UDSServer               = None
 
-    def __init__(
-        self,
-        name         : str,
-        handlers     : List[HandlerBase],
-        configuration: ConfigApplication = None,
-    ):
+    def __init__(self, name: str, configuration: ConfigApplication = None):
         self.__configure_argument_parser()
         self.__configuration = configuration
-        self.__configure_basics(name, handlers)
-        self.__configure_communication_servers()
+        self.__configure_basics(name)
 
     # --------------------------------------------------------------------------------
-    def __configure_basics(
-        self,
-        name         : str,
-        handlers     : List[HandlerBase],
-    ) -> None:
+    def __configure_basics(self, name: str) -> None:
         self.__application_name     = name
         self.__application_instance = self.command_line_args.instance
 
@@ -70,21 +58,23 @@ class ApplicationBase(metaclass=SingletonType):
             else:
                 self.__configuration = load_config_from_file(self.command_line_args.config)
 
-        self.logger = setup_logger(
+        if self.__application_instance not in self.__configuration.instances.keys():
+            raise InstanceConfigurationNotFoundException(self.__application_name,self.__application_instance)
+
+        self.logger.setup(
             self.__application_name,
             self.__application_instance,
             self.__configuration.instances[self.__application_instance].logging
         )
 
-        self.__statistics_keeper = StatisticsKeeper(
-            self.logger,
-            self.__configuration.instances[self.__application_instance].stats_keeper.gather_period,
+        self.__statistics_keeper.set_gather_period(
+            self.__configuration.instances[self.__application_instance].stats_keeper.gather_period
+        )
+        self.__statistics_keeper.set_history_length(
             self.__configuration.instances[self.__application_instance].stats_keeper.history_length
         )
 
-        self.__request_router   = RequestRouter(self.__statistics_keeper, self.logger)
-        self.__error_state_list = ErrorStateList()
-        self.__handlers         = handlers
+        self.__configure_communication_servers()
 
     # --------------------------------------------------------------------------------
     def __configure_argument_parser(self):
@@ -117,35 +107,31 @@ class ApplicationBase(metaclass=SingletonType):
     # --------------------------------------------------------------------------------
     def __configure_communication_servers(self):
         if self.__configuration.instances[self.__application_instance].tcp:
-            self.__server_tcp = TCPServer(
-                self.__configuration.instances[self.__application_instance].tcp,
-                self.logger,
-                self.__request_router
-            )
+            self.__server_tcp = TCPServer(self.__configuration.instances[self.__application_instance].tcp)
 
         if self.__configuration.instances[self.__application_instance].udp:
-            self.__server_udp = UDPServer(
-                self.__configuration.instances[self.__application_instance].udp,
-                self.logger,
-                self.__request_router
-            )
+            self.__server_udp = UDPServer(self.__configuration.instances[self.__application_instance].udp)
 
         if self.__configuration.instances[self.__application_instance].uds:
             uds_config = self.__configuration.instances[self.__application_instance].uds
             if uds_config.socket_file_name == "DEFAULT":
                 uds_config.socket_file_name = f"{self.__application_name}_{self.__application_instance}_uds.sock"
+            self.__server_uds = UDSServer(uds_config)
 
-            self.__server_uds = UDSServer(
-                uds_config,
-                self.logger,
-                self.__request_router
+    # --------------------------------------------------------------------------------
+    def __setup_queued_handlers(self):
+        queue_directory = self.__configuration.instances[self.__application_instance].queue_directory
+        for queued_handler in self.__request_router.get_queued_handlers():
+            queued_handler.setup(
+                queue_directory,
+                self.__application_name,
+                self.__application_instance
             )
 
     # --------------------------------------------------------------------------------
     def start(self):
-        self.__register_handlers()
+        self.__setup_queued_handlers()
         self.__running = True
-        self.__statistics_keeper.set_logger(self.logger)
         asyncio.run(self.__start())
 
     # --------------------------------------------------------------------------------
@@ -154,27 +140,9 @@ class ApplicationBase(metaclass=SingletonType):
 
     # --------------------------------------------------------------------------------
     def register_handler(self, handler: HandlerBase):
-        handler.configure(
-            self.logger,
-            self.__statistics_keeper,
-            self.__error_state_list,
-            self.__application_name,
-            self.__application_instance
-        )
         self.__request_router.register_handler(handler)
 
     # --------------------------------------------------------------------------------
-    def __register_handlers(self):
-        self.__register_standard_handlers()
-        for handler in self.__handlers:
-            self.register_handler(handler)
-
-    # --------------------------------------------------------------------------------
-    def __register_standard_handlers(self):
-        self.register_handler(Statistics())
-        self.register_handler(ErrorReporter())
-        self.register_handler(ErrorCleaner())
-
     async def __start_stats_keeper(self):
         async with self.__statistics_keeper:
             await asyncio.create_task(self.__statistics_keeper.gather_statistics())

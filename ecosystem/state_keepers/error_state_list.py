@@ -8,8 +8,10 @@ from ..util.singleton import SingletonType
 
 # --------------------------------------------------------------------------------
 class ErrorStateList(metaclass=SingletonType):
+    error_state_map: Dict[str, ErrorStateKeeper] = {}
+
     def __init__(self):
-        self.error_state_map: Dict[str, ErrorStateKeeper] = {}
+        pass
 
     def __str__(self) -> str:
         return self.to_json()

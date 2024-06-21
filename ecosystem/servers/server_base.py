@@ -3,6 +3,7 @@ import logging
 
 from pydantic import ValidationError
 
+from ..logs import EcoLogger
 from ..data_transfer_objects import RequestDTO, ResponseDTO
 from ..exceptions import RoutingExceptionBase
 from ..requests import RequestRouter
@@ -11,14 +12,12 @@ from ..requests import Status
 
 # --------------------------------------------------------------------------------
 class ServerBase:
-    def __init__(
-        self,
-        logger        : logging.Logger,
-        request_router: RequestRouter,
-    ):
-        self._running        : bool           = False
-        self._logger         : logging.Logger = logger
-        self._request_router : RequestRouter  = request_router
+    _running       : bool          = False
+    _logger        : EcoLogger     = EcoLogger()
+    _request_router: RequestRouter = RequestRouter()
+
+    def __init__(self):
+        pass
 
     # --------------------------------------------------------------------------------
     async def _route_request(self, request_data: str) -> ResponseDTO:

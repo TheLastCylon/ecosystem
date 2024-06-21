@@ -4,7 +4,7 @@ from ecosystem.clients import TCPClient
 from ecosystem.clients import UDPClient
 from ecosystem.clients import UDSClient
 from ecosystem.data_transfer_objects.empty import EmptyDto
-from ecosystem.standard_handlers.statistics import StatisticsRequestDto
+from ecosystem.standard_endpoints.statistics import StatsRequestDto
 
 from .dtos import RollDXRequestDto
 from .dtos import RollDXTimesRequestDto
@@ -51,7 +51,7 @@ async def main():
     guess_dto      = EmptyDto()
     roll_dto       = RollDXRequestDto(sides = 20)
     roll_times_dto = RollDXTimesRequestDto(sides = 20, how_many = 10)
-    statistics_dto = StatisticsRequestDto(type = "current")
+    statistics_dto = StatsRequestDto(type = "current")
 
     try:
         # TCP

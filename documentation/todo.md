@@ -1,4 +1,5 @@
 # TODO
+- [ ] Prevent startup of duplicate instances.
 
 - [ ] Cater for Windows OS in all default configurations
 
@@ -7,10 +8,10 @@
   - [ ] UDP communications.
   - [ ] UDS communications.
 
-- [ ] Prevent startup of duplicate instances.
-- [ ] Running as a daemon
-
 - [ ] LRU cache
+
+- [ ] Echo client example
+- [ ] Documentation: Echo client example
 
 - [ ] Documentation: Handlers
 - [ ] Documentation: Queues
@@ -37,6 +38,7 @@
       - [ ] one for messages that have errored out
 
 - [ ] standard handlers
+  - [ ] Stop: As in a handler that will tell an application to shut down
   - [ ] For queued request handlers
     - [ ] move requests in error queue to incoming queue
       - [ ] for specific uid
@@ -58,3 +60,11 @@
 - [X] configuration through json file
 - [X] Documentation: the protocol
 - [X] Documentation: Base example
+- [X] Echo sever example
+- [X] Documentation: Echo sever example
+
+# Possibly won't do:
+- [ ] Running as a daemon:
+  - NOTE: This Likely won't get done due to lack of standard mechanisms for achieving this in a cross-platform way.
+  - Python's multiprocessing does not do true Unix daemon running and solutions like python-daemon are platform specific.
+

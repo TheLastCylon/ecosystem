@@ -1,21 +1,14 @@
-import logging
 import asyncio
 
 from ..stream_server_base import StreamServerBase
 
 from ...configuration import ConfigTCP
-from ...requests import RequestRouter
 
 
 # --------------------------------------------------------------------------------
 class TCPServer(StreamServerBase):
-    def __init__(
-        self,
-        configuration : ConfigTCP,
-        logger        : logging.Logger,
-        request_router: RequestRouter,
-    ):
-        super().__init__(logger, request_router)
+    def __init__(self, configuration : ConfigTCP):
+        super().__init__()
         self.host: str = configuration.host
         self.port: int = configuration.port
 

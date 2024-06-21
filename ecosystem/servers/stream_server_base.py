@@ -1,8 +1,6 @@
 import asyncio
-import logging
 
 from .server_base import ServerBase
-from ..requests import RequestRouter
 
 from ..exceptions import IncompleteMessageException
 from ..exceptions import ClientDisconnectedException
@@ -10,13 +8,10 @@ from ..exceptions import ClientDisconnectedException
 
 # --------------------------------------------------------------------------------
 class StreamServerBase(ServerBase):
-    def __init__(
-        self,
-        logger        : logging.Logger,
-        request_router: RequestRouter,
-    ):
-        super().__init__(logger, request_router)
-        self._server: asyncio.Server = None
+    _server: asyncio.Server = None
+
+    def __init__(self):
+        super().__init__()
 
     # --------------------------------------------------------------------------------
     @staticmethod
@@ -54,4 +49,3 @@ class StreamServerBase(ServerBase):
         except (ClientDisconnectedException, IncompleteMessageException) as e:
             self._logger.info(e.message)
             return
-

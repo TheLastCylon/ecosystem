@@ -1,22 +1,15 @@
-import logging
 import asyncio
 import socket
 
 from ..stream_server_base import StreamServerBase
 
 from ...configuration import ConfigUDS
-from ...requests import RequestRouter
 
 
 # --------------------------------------------------------------------------------
 class UDSServer(StreamServerBase):
-    def __init__(
-        self,
-        configuration : ConfigUDS,
-        logger        : logging.Logger,
-        request_router: RequestRouter,
-    ):
-        super(UDSServer, self).__init__(logger, request_router)
+    def __init__(self, configuration : ConfigUDS):
+        super().__init__()
         self.__server_path  : str  = f"{configuration.directory}/{configuration.socket_file_name}"
         self.__uds_supported: bool = hasattr(socket, "AF_UNIX")
 

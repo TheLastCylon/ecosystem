@@ -46,7 +46,7 @@ That's rather cool, but let's get into the code and see what we are doing here.
 
 ## The code
 
-A complete Ecosystem server, though not a very useful one, can be written in 33 lines of code. Less, if you don't care about code readability.
+A complete Ecosystem server, though not a very useful one, can be written in under 40 lines of code. Less, if you don't care about code readability.
 
 Here it is:
 
@@ -71,7 +71,7 @@ Here it is:
 18: # --------------------------------------------------------------------------------
 19: class BaseExampleServer(ApplicationBase):
 20:     def __init__(self):
-21:         super().__init__(app_config.name, [], app_config)
+21:         super().__init__(app_config.name, app_config)
 22: 
 23: 
 24: # --------------------------------------------------------------------------------
@@ -82,8 +82,11 @@ Here it is:
 29: 
 30: # --------------------------------------------------------------------------------
 31: if __name__ == '__main__':
-32:     main()
-33: 
+32:     try:
+33:         main()
+34:     except Exception as e:
+35:         print(str(e))
+36:
 ```
 
 ### Imports
@@ -143,12 +146,12 @@ If you do not set the configuration for a server type, your application will not
 So yes, you can have an Ecosystem application that has any combination of TCP, UDP or UDS servers, including none at all. Though that won't be very useful now, would it?
 
 # Declaring the application class, and running it.
-From line 18 to 32, we declare our class and write the code for getting it running.
+From line 18 to 35, we declare our class and write the code for getting it running.
 ```python
 18: # --------------------------------------------------------------------------------
 19: class BaseExampleServer(ApplicationBase):
 20:     def __init__(self):
-21:         super().__init__(app_config.name, [], app_config)
+21:         super().__init__(app_config.name, app_config)
 22: 
 23: 
 24: # --------------------------------------------------------------------------------
@@ -159,7 +162,11 @@ From line 18 to 32, we declare our class and write the code for getting it runni
 29: 
 30: # --------------------------------------------------------------------------------
 31: if __name__ == '__main__':
-32:     main()
+32:     try:
+33:         main()
+34:     except Exception as e:
+35:         print(str(e))
+36:
 ```
 
 I'm certain you've seen this pattern before.
@@ -171,9 +178,8 @@ I'm certain you've seen this pattern before.
 
 The values we are passing to the base class `__init__` method are:
 1. `app_config.name`, our application name as configured earlier
-2. `[]`, an empty list of handlers. We'll cover this later. Right now though, know that there are handlers, and this is one way of tell your application about the handlers you want it to use.
-3. `app_config`, the application level configuration for our application.
+2. `app_config`, the application level configuration for our application.
 
 That is it. All of it.
 
-Next, we'll be learning about handlers and what they are.
+Once you are comfortable with this example, take a look at an Ecosystem [Echo-server](./example_echo.md).

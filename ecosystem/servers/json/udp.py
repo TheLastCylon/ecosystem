@@ -1,22 +1,15 @@
-import logging
 import asyncio
 
 from ..server_base import ServerBase
 
 from ...configuration import ConfigUDP
-from ...requests import RequestRouter
 from ...exceptions import IncompleteMessageException
 
 
 # --------------------------------------------------------------------------------
 class UDPServer(asyncio.DatagramProtocol, ServerBase):
-    def __init__(
-        self,
-        configuration : ConfigUDP,
-        logger        : logging.Logger,
-        request_router: RequestRouter,
-    ):
-        ServerBase.__init__(self, logger, request_router)
+    def __init__(self, configuration : ConfigUDP):
+        ServerBase.__init__(self)
         self.host       : str                       = configuration.host
         self.port       : int                       = configuration.port
         self.__transport: asyncio.DatagramTransport = None

@@ -18,3 +18,7 @@ from .communication_uds import UDSCommunicationsFailureEmptyResponse
 
 from .routing import RoutingExceptionBase
 from .routing import UnknownRouteKeyException
+
+from .queueing import ReceivingPausedException
+
+from .configuration import InstanceConfigurationNotFoundException

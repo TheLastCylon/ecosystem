@@ -1,17 +1,17 @@
 import asyncio
-import logging
 import uuid
 
 from pydantic import BaseModel as PydanticBaseModel
 from abc import ABC, abstractmethod
 from typing import Any, Type, TypeVar, Generic
 
+
 from .handler_base import HandlerBase
 
 from ..queues import SqlPersistedQueue
 
-from ..state_keepers import ErrorStateList
 from ..state_keepers import StatisticsKeeper
+from ..exceptions import ReceivingPausedException
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
 
@@ -37,47 +37,46 @@ class QueuedRequestDTO(PydanticBaseModel):
 #   - somehow process the stuff in the queue
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
+    running                 : bool                                = False
+    _receiving_paused       : bool                                = True
+    _processing_paused      : bool                                = True
+    statistics_keeper       : StatisticsKeeper                    = StatisticsKeeper()
+    directory               : str                                 = None
+    queue_file_name_base    : str                                 = None
+    queue_file_name_in      : str                                 = None
+    queue_file_name_error   : str                                 = None
+    max_uncommited          : int                                 = None
+    max_retries             : int                                 = None
+    incoming_queue_file_path: str                                 = None
+    error_queue_file_path   : str                                 = None
+    incoming_queue          : SqlPersistedQueue[QueuedRequestDTO] = None
+    error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
+
+    def pause_receiving(self):
+        self._receiving_paused = True
+
+    def unpause_receiving(self):
+        self._receiving_paused = False
+
+    def pause_processing(self):
+        self._processing_paused = True
+
+    def unpause_processing(self):
+        self._processing_paused = False
+
     def __init__(
         self,
         route_key       : str,
-        description     : str,
         request_dto_type: Type[_T],
-        queue_directory : str,
         max_uncommited  : int = 0,
         max_retries     : int = 0,
     ):
-        super(QueuedRequestHandlerBase, self).__init__(route_key, description, request_dto_type)
-        self.queue_directory         : str                                 = queue_directory
-        self.max_uncommited          : int                                 = max_uncommited
-        self.max_retries             : int                                 = max_retries
-        self.running                 : bool                                = False
-        self.queue_file_base_name    : str                                 = None
-        self.incoming_queue_file_name: str                                 = None
-        self.error_queue_file_name   : str                                 = None
-        self.incoming_queue_file_path: str                                 = None
-        self.error_queue_file_path   : str                                 = None
-        self.incoming_queue          : SqlPersistedQueue[QueuedRequestDTO] = None
-        self.error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
+        super().__init__(route_key, request_dto_type)
+        self.max_uncommited = max_uncommited
+        self.max_retries    = max_retries
 
-    def configure(
-        self,
-        logger              : logging.Logger,
-        statistics_keeper   : StatisticsKeeper,
-        error_state_list    : ErrorStateList,
-        application_name    : str,
-        application_instance: str
-    ):
-        self.logger                   = logger
-        self.statistics_keeper        = statistics_keeper
-        self.error_state_list         = error_state_list
-        self.application_name         = application_name
-        self.application_instance     = application_instance
-        self.queue_file_base_name     = f"{self.application_name}-{self.application_instance}-{self._route_key}-queue-"
-        self.incoming_queue_file_name = f"{self.queue_file_base_name}-incoming"
-        self.error_queue_file_name    = f"{self.queue_file_base_name}-error"
-        self.incoming_queue_file_path = f"{self.queue_directory}/{self.incoming_queue_file_name}"
-        self.error_queue_file_path    = f"{self.queue_directory}/{self.error_queue_file_name}"
-
+    # --------------------------------------------------------------------------------
+    def __setup_incoming_queue(self):
         self.incoming_queue = SqlPersistedQueue[QueuedRequestDTO](
             self.incoming_queue_file_path,
             QueuedRequestDTO,
@@ -85,6 +84,8 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         )
         self.statistics_keeper.add_persisted_queue(f"{self._route_key}-in", self.incoming_queue)
 
+    # --------------------------------------------------------------------------------
+    def __setup_error_queue(self):
         self.error_queue = SqlPersistedQueue[QueuedRequestDTO](
             self.error_queue_file_path,
             QueuedRequestDTO,
@@ -93,18 +94,47 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self.statistics_keeper.add_persisted_queue(f"{self._route_key}-error", self.error_queue)
 
     # --------------------------------------------------------------------------------
+    def __configure_queue_names(
+        self,
+        directory       : str,
+        application_name: str,
+        instance_id     : str,
+    ):
+        app_instance_string           = f"{application_name}-{instance_id}"
+        self.directory                = directory
+        self.queue_file_name_base     = f"{app_instance_string}-{self._route_key}-queue"
+        self.queue_file_name_in       = f"{self.queue_file_name_base}-incoming"
+        self.queue_file_name_error    = f"{self.queue_file_name_base}-error"
+        self.incoming_queue_file_path = f"{self.directory}/{self.queue_file_name_in}"
+        self.error_queue_file_path    = f"{self.directory}/{self.queue_file_name_error}"
+
+    # --------------------------------------------------------------------------------
+    def setup(
+        self,
+        directory       : str,
+        application_name: str,
+        instance_id     : str,
+    ):
+        self.__configure_queue_names(directory, application_name, instance_id)
+        self.__setup_incoming_queue()
+        self.__setup_error_queue()
+        self.unpause_receiving()
+        self.unpause_processing()
+
+    # --------------------------------------------------------------------------------
     async def _process_queue(self):
         self.running = True
-        while not await self.incoming_queue.is_empty():
-            queued_request      = await self.incoming_queue.pop_front()
-            queued_request_uid  = uuid.UUID(queued_request.uid)
-            queued_request_data = self.request_dto_type(**queued_request.request)
-            if not await self.process_queued_request(queued_request_data):
-                queued_request.retries += 1
-                if queued_request.retries >= self.max_retries:
-                    await self.error_queue.push_back(queued_request, queued_request_uid)
-                else:
-                    await self.incoming_queue.push_back(queued_request, queued_request_uid)
+        if not self._processing_paused:
+            while not await self.incoming_queue.is_empty():
+                queued_request      = await self.incoming_queue.pop_front()
+                queued_request_uid  = uuid.UUID(queued_request.uid)
+                queued_request_data = self.request_dto_type(**queued_request.request)
+                if not await self.process_queued_request(queued_request_data):
+                    queued_request.retries += 1
+                    if queued_request.retries >= self.max_retries:
+                        await self.error_queue.push_back(queued_request, queued_request_uid)
+                    else:
+                        await self.incoming_queue.push_back(queued_request, queued_request_uid)
         self.running = False
 
     # --------------------------------------------------------------------------------
@@ -114,6 +144,9 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
+        if self._receiving_paused:
+            raise ReceivingPausedException(self._route_key)
+
         data_to_queue = QueuedRequestDTO(uid = str(request_uuid), retries = 0, request = request_data)
         response      = QueuedRequestHandlerResponseDTO(
             uid = str(await self.incoming_queue.push_back(data_to_queue, request_uuid))

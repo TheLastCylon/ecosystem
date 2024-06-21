@@ -37,12 +37,13 @@ class ConfigUDS(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class ConfigApplicationInstance(PydanticBaseModel):
-    instance_id : str                    = "0"
-    tcp         : ConfigTCP              = None
-    udp         : ConfigUDP              = None
-    uds         : ConfigUDS              = None
-    stats_keeper: ConfigStatisticsKeeper = ConfigStatisticsKeeper()
-    logging     : ConfigLogging          = ConfigLogging()
+    instance_id     : str                    = "0"
+    tcp             : ConfigTCP              = None
+    udp             : ConfigUDP              = None
+    uds             : ConfigUDS              = None
+    stats_keeper    : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
+    logging         : ConfigLogging          = ConfigLogging()
+    queue_directory : str                    = "/tmp"
 
 
 # --------------------------------------------------------------------------------

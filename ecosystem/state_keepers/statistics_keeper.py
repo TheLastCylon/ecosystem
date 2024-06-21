@@ -1,27 +1,32 @@
-import logging
 import asyncio
 import time
 
 from typing import Any, Dict, List
 
+from ..logs import EcoLogger
 from ..util import SingletonType
 from ..queues import SqlPersistedQueue
 
 
 # --------------------------------------------------------------------------------
 class StatisticsKeeper(metaclass=SingletonType):
-    def __init__(self, logger: logging.Logger = None, gather_period: int = 300, history_length: int = 12):
-        self.__running           : bool                         = False
-        self.__logger            : logging.Logger               = logger
-        self.__gather_period     : int                          = gather_period
-        self.__history_length    : int                          = history_length
-        self.__start_time        : int                          = int(time.time())
-        self.__statistics_current: Dict[str, Any]               = {}
-        self.__statistics_history: Dict[str, List[float]]       = {}
-        self.__persisted_queues  : Dict[str, SqlPersistedQueue] = {}
+    __running           : bool                         = False
+    __logger            : EcoLogger                    = EcoLogger()
+    __gather_period     : int                          = 300
+    __history_length    : int                          = 12
+    __start_time        : int                          = int(time.time())
+    __statistics_current: Dict[str, Any]               = {}
+    __statistics_history: Dict[str, List[float]]       = {}
+    __persisted_queues  : Dict[str, SqlPersistedQueue] = {}
 
-    def set_logger(self, logger: logging.Logger):
-        self.__logger = logger
+    def __init__(self):
+        pass
+
+    def set_gather_period(self, gather_period: int):
+        self.__gather_period = gather_period
+
+    def set_history_length(self, history_length: int):
+        self.__history_length = history_length
 
     async def get_current_statistics(self) -> Dict[str, Any]:
         for key in self.__persisted_queues.keys():
