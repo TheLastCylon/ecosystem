@@ -3,6 +3,8 @@
 
 - [ ] Cater for Windows OS in all default configurations
 
+- [ ] Ecosystem JavaScript client
+
 - [ ] Test Timeout on communications.
   - [ ] TCP communications
   - [ ] UDP communications.
