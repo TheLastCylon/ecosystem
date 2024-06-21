@@ -2,11 +2,12 @@ import asyncio
 import json
 import uuid
 
+from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..client_base import ClientBase
 
-from ...data_transfer_objects import RequestDTO, ResponseDTO
+from ...data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto
 
 from ...exceptions import UDPCommunicationsFailureEmptyResponse
 from ...exceptions import UDPCommunicationsFailureRetryable
@@ -57,7 +58,12 @@ class UDPClient(asyncio.DatagramProtocol, ClientBase):
             self.on_done.set_exception(Exception('Connection lost')) # TODO: Improve this exception
 
     # --------------------------------------------------------------------------------
-    async def send_message(self,  route_key: str, data: PydanticBaseModel) -> ResponseDTO:
+    async def send_message(
+        self,
+        route_key        : str,
+        data             : PydanticBaseModel,
+        response_dto_type: Type[PydanticBaseModel] = EmptyDto
+    ) -> PydanticBaseModel:
         self.success     = False
         self.retry_count = 0
         request          = RequestDTO(uid=str(uuid.uuid4()), route_key=route_key, data=data)
@@ -65,7 +71,8 @@ class UDPClient(asyncio.DatagramProtocol, ClientBase):
         response_str     = await asyncio.create_task(self.__send_message_retry_loop(f"{request_str}\n"))
         response_dict    = json.loads(response_str)
         response         = ResponseDTO(**response_dict)
-        return response
+        response_dto     = response_dto_type(**response.data)
+        return response_dto
 
     # --------------------------------------------------------------------------------
     async def __send_message_retry_loop(self, request: str) -> str:

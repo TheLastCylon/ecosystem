@@ -10,9 +10,6 @@
 
 - [ ] LRU cache
 
-- [ ] Echo client example
-- [ ] Documentation: Echo client example
-
 - [ ] Documentation: Handlers
 - [ ] Documentation: Queues
 - [ ] Documentation: Application base
@@ -62,6 +59,8 @@
 - [X] Documentation: Base example
 - [X] Echo sever example
 - [X] Documentation: Echo sever example
+- [X] Echo client example
+- [X] Documentation: Echo client example
 
 # Possibly won't do:
 - [ ] Running as a daemon:

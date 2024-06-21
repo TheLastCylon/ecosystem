@@ -182,4 +182,4 @@ The values we are passing to the base class `__init__` method are:
 
 That is it. All of it.
 
-Once you are comfortable with this example, take a look at an Ecosystem [Echo-server](./example_echo.md).
+Once you are comfortable with this example, take a look at an Ecosystem [Echo-server](./example_echo_server.md).

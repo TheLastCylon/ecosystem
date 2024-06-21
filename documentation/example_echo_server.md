@@ -35,7 +35,11 @@ The response you get should be similar to:
 
 As with all frameworks, we will now examine how to get a server to give you back, what you sent in.
 
-Yes, an Echo-server.
+Yes, an Ecosystem ... Echo-server.
+
+**IMPORTANT:** This is not an example of good coding practice!
+Project structure is important! Later on, we'll look at how to structure your Ecosystem projects, so you don't end up in maintenance-hell.
+Right now though, it's more important for you to understand the basics. So don't use this as an example of how to lay out your projects.
 
 Here's the code:
 
@@ -222,4 +226,4 @@ The only difference here, is the name of our class `EchoExampleServer`.
 
 And there you have it.
 
-A full-blown echo server, in under 60 lines of code!
+A full-blown echo server. With TCP, UDP and UDS communications. In under 60 lines of code!

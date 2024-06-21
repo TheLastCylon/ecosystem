@@ -3,11 +3,12 @@ import json
 import socket
 import uuid
 
+from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..client_base import ClientBase
 
-from ...data_transfer_objects import RequestDTO, ResponseDTO
+from ...data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto
 
 from ...exceptions import UDSCommunicationsFailureMaxRetriesReached
 from ...exceptions import UDSCommunicationsFailureEmptyResponse
@@ -26,7 +27,12 @@ class UDSClient(ClientBase):
         self.can_transmit: bool = hasattr(socket, "AF_UNIX")
 
     # --------------------------------------------------------------------------------
-    async def send_message(self, route_key: str, data: PydanticBaseModel) -> ResponseDTO:
+    async def send_message(
+        self,
+        route_key        : str,
+        data             : PydanticBaseModel,
+        response_dto_type: Type[PydanticBaseModel] = EmptyDto
+    ) -> PydanticBaseModel:
         if not self.can_transmit:
             raise Exception("UDS communications are not supported on this platform. Will not send message.")
 
@@ -41,8 +47,9 @@ class UDSClient(ClientBase):
                 response_str  = await asyncio.create_task(self.__send_message(f"{request_str}\n"))
                 response_dict = json.loads(response_str)
                 response      = ResponseDTO(**response_dict)
+                response_dto  = response_dto_type(**response.data)
                 self.success  = True
-                return response
+                return response_dto
             except UDSCommunicationsFailureRetryable as e:
                 await asyncio.sleep(1)
                 self.retry_count += 1
