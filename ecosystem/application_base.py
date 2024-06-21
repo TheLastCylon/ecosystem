@@ -21,9 +21,16 @@ from .util import SingletonType
 
 from .exceptions import InstanceConfigurationNotFoundException
 
+# Pycharm complains that we aren't using these imports,
+# but the import is what does the work of getting everything up and
+# running. So we do a noqa on each.
 from .standard_endpoints import standard_endpoint_error_states # noqa
 from .standard_endpoints import standard_endpoint_error_clear  # noqa
 from .standard_endpoints import standard_endpoint_statistics   # noqa
+from .standard_endpoints import pause_queue_receiving          # noqa
+from .standard_endpoints import unpause_queue_receiving        # noqa
+from .standard_endpoints import pause_queue_processing         # noqa
+from .standard_endpoints import unpause_queue_processing       # noqa
 
 
 # --------------------------------------------------------------------------------

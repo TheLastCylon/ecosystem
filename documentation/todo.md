@@ -13,19 +13,19 @@
 - [ ] LRU cache
 
 - [ ] Documentation: Handlers
-- [ ] Documentation: Queues
+- [ ] Documentation: Queued endpoints, remember pause and unpause
 - [ ] Documentation: Application base
 - [ ] Documentation: Logging
 - [ ] Documentation: Application configuration
 
 - [ ] Queueing
-  - [ ] Incoming queue
+  - [X] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
     - [X] These will typically have a handler, that pops data off the queue, and does something with the data in the queue.
-    - [ ] Pause for:
-      - [ ] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
-      - [ ] Processing: Just pauses processing. Still accepts new requests.
-      - [ ] Both      : Stops accepting and processing
+    - [X] Pause for:
+      - [X] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
+      - [X] Processing: Just pauses processing. Still accepts new requests.
+      - [X] Both      : Stops accepting and processing
     - [X] Queues
       - [X] Incoming queue
       - [X] Error queue
