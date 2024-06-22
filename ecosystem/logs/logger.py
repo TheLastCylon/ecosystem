@@ -1,3 +1,5 @@
+import os
+import inspect
 import logging
 import sys
 
@@ -9,7 +11,7 @@ from ..configuration import ConfigLogging
 # --------------------------------------------------------------------------------
 class EcoLogger(metaclass=SingletonType):
     __date_format    : str                           = '%Y%m%d%H%M%S'
-    __log_format     : str                           = '%(asctime)s.%(msecs)03d|%(name)s|%(levelname)s|%(filename)s|%(lineno)s|%(message)s'
+    __log_format     : str                           = '%(asctime)s.%(msecs)03d|%(name)s|%(levelname)s|%(message)s'
     __logger_name    : str                           = None
     __file_path      : str                           = None
     __level          : int                           = logging.DEBUG
@@ -22,20 +24,32 @@ class EcoLogger(metaclass=SingletonType):
         pass
 
     def debug(self, message: str):
+        frame    = inspect.currentframe().f_back
+        filename = os.path.basename(frame.f_code.co_filename)
+        line     = frame.f_lineno
         if self.__logger:
-            self.__logger.debug(message)
+            self.__logger.debug(f"{filename}|{line}|{message}")
 
     def info(self, message: str):
+        frame    = inspect.currentframe().f_back
+        filename = os.path.basename(frame.f_code.co_filename)
+        line     = frame.f_lineno
         if self.__logger:
-            self.__logger.info(message)
+            self.__logger.info(f"{filename}|{line}|{message}")
 
     def warn(self, message: str):
+        frame    = inspect.currentframe().f_back
+        filename = os.path.basename(frame.f_code.co_filename)
+        line     = frame.f_lineno
         if self.__logger:
-            self.__logger.warning(message)
+            self.__logger.warning(f"{filename}|{line}|{message}")
 
     def error(self, message: str):
+        frame    = inspect.currentframe().f_back
+        filename = os.path.basename(frame.f_code.co_filename)
+        line     = frame.f_lineno
         if self.__logger:
-            self.__logger.error(message)
+            self.__logger.error(f"{filename}|{line}|{message}")
 
     def __setup_file_logging(self, file_path: str, max_bytes: int, max_files: int):
         self.__file_handler = CompressedRotatingFileHandler(

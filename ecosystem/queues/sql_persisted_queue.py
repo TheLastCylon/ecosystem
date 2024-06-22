@@ -2,11 +2,11 @@ import json
 import uuid
 import sqlalchemy
 
-from typing import Type, cast, TypeVar, Generic
+from typing import Type, cast, TypeVar, Generic, List
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from sqlalchemy import create_engine, Column, BigInteger, BINARY, String, func
+from sqlalchemy import create_engine, Column, BigInteger, BINARY, String, func, Table, MetaData
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import sessionmaker
 
@@ -146,6 +146,24 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
     # --------------------------------------------------------------------------------
     async def is_empty(self) -> int:
         return await self.size() == 0
+
+    # --------------------------------------------------------------------------------
+    async def get_first_x_uuids(self, how_many: int = 1) -> List[str]:
+        response: List[str] = []
+        queued_records      = self.session.query(QueueRecord).limit(how_many).all()
+        for record in queued_records:
+            response.append(str(uuid.UUID(bytes=record.record_uuid)))
+        return response
+
+    # --------------------------------------------------------------------------------
+    async def clear(self):
+        metadata = MetaData()
+        table    = Table("queued_objects", metadata, autoload_with=self.database_engine)
+        self.session.query(table).filter(table.c.record_id > 0).delete()
+        self.session.query(table).filter(table.c.record_id < 0).delete()
+        self.session.query(table).filter(table.c.record_id == 0).delete()
+        self.session.commit()
+        self.uncommited_count = 0
 
     # --------------------------------------------------------------------------------
     async def __write_record(self, record: QueueRecord):

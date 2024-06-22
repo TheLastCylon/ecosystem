@@ -1,3 +1,5 @@
+import uuid
+
 from typing import Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 from .queued_handler_base import QueuedRequestHandlerBase
@@ -23,5 +25,5 @@ class QueuedHandler(Generic[_T], QueuedRequestHandlerBase[_T]):
         self.function = function
 
     # --------------------------------------------------------------------------------
-    async def process_queued_request(self, request: _T) -> bool:
-        return await self.function(request)
+    async def process_queued_request(self,  request_uuid: uuid.UUID, request: _T) -> bool:
+        return await self.function(request_uuid, request)

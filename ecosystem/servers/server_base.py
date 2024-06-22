@@ -24,12 +24,11 @@ class ServerBase:
         request_uuid: str = ""
         try:
             request_dict = json.loads(request_data.strip())
-            self._logger.info(f"_route_request: {request_dict}")
             request      = RequestDTO(**request_dict)
+            # self._logger.info(f"_route_request: uid[{request.uid}] route_key[{request.route_key}]")
             request_uuid = request.uid
             response     = await self._request_router.route_request(request)
-            self._logger.info(f"_route_request response: {response}")
-            self._logger.info(f"_route_request response json: {response.json()}")
+            # self._logger.info(f"_route_request response json: {response.json()}")
             return ResponseDTO(
                 uid    = request_uuid,
                 status = Status.SUCCESS.value,

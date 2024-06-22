@@ -26,14 +26,14 @@ from .exceptions import InstanceConfigurationNotFoundException
 from .standard_endpoints import standard_endpoint_error_states # noqa
 from .standard_endpoints import standard_endpoint_error_clear  # noqa
 from .standard_endpoints import standard_endpoint_statistics   # noqa
-# from .standard_endpoints import queue_receiving_pause          # noqa
-# from .standard_endpoints import queue_receiving_unpause        # noqa
-# from .standard_endpoints import queue_processing_pause         # noqa
-# from .standard_endpoints import queue_processing_unpause       # noqa
-# from .standard_endpoints import error_queue_pop_request        # noqa
-# from .standard_endpoints import error_queue_inspect_request    # noqa
-# from .standard_endpoints import error_queue_reprocess_all      # noqa
-# from .standard_endpoints import error_queue_reprocess_request  # noqa
+from .standard_endpoints import queue_receiving_pause          # noqa
+from .standard_endpoints import queue_receiving_unpause        # noqa
+from .standard_endpoints import queue_processing_pause         # noqa
+from .standard_endpoints import queue_processing_unpause       # noqa
+from .standard_endpoints import error_queue_pop_request        # noqa
+from .standard_endpoints import error_queue_inspect_request    # noqa
+from .standard_endpoints import error_queue_reprocess_all      # noqa
+from .standard_endpoints import error_queue_reprocess_request  # noqa
 
 
 # --------------------------------------------------------------------------------

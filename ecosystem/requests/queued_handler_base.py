@@ -3,7 +3,7 @@ import uuid
 
 from pydantic import BaseModel as PydanticBaseModel
 from abc import ABC, abstractmethod
-from typing import Any, Type, TypeVar, Generic
+from typing import Any, Type, TypeVar, Generic, List
 
 
 from .handler_base import HandlerBase
@@ -77,6 +77,22 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self._processing_paused = False
 
     # --------------------------------------------------------------------------------
+    async def incoming_queue_size(self) -> int:
+        return await self.incoming_queue.size()
+
+    # --------------------------------------------------------------------------------
+    async def error_queue_size(self) -> int:
+        return await self.error_queue.size()
+
+    # --------------------------------------------------------------------------------
+    async def error_queue_clear(self) -> int:
+        return await self.error_queue.clear()
+
+    # --------------------------------------------------------------------------------
+    async def get_first_x_error_uuids(self, how_many: int = 1) -> List[str]:
+        return await self.error_queue.get_first_x_uuids(how_many)
+
+    # --------------------------------------------------------------------------------
     async def pop_request_from_error_queue(self, request_uid: uuid.UUID) -> _T | None:
         queued_request = await self.error_queue.pop_uuid(request_uid)
         if not queued_request:
@@ -96,6 +112,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         while not await self.error_queue.is_empty():
             queued_request = await self.error_queue.pop_front()
             await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
+        await self.__check_process_queue()
         self._processing_paused = False
 
     # --------------------------------------------------------------------------------
@@ -105,6 +122,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         if not queued_request:
             return False
         await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
+        await self.__check_process_queue()
         self._processing_paused = False
         return True
 
@@ -115,7 +133,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             QueuedRequestDTO,
             self.max_uncommited
         )
-        self.statistics_keeper.add_persisted_queue(f"{self._route_key}-in", self.incoming_queue)
+        self.statistics_keeper.add_persisted_queue(f"queue-{self._route_key}-in", self.incoming_queue)
 
     # --------------------------------------------------------------------------------
     def __setup_error_queue(self):
@@ -124,7 +142,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             QueuedRequestDTO,
             self.max_uncommited
         )
-        self.statistics_keeper.add_persisted_queue(f"{self._route_key}-error", self.error_queue)
+        self.statistics_keeper.add_persisted_queue(f"queue-{self._route_key}-error", self.error_queue)
 
     # --------------------------------------------------------------------------------
     def __configure_queue_names(
@@ -162,7 +180,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
                 queued_request      = await self.incoming_queue.pop_front()
                 queued_request_uid  = uuid.UUID(queued_request.uid)
                 queued_request_data = self.request_dto_type(**queued_request.request)
-                if not await self.process_queued_request(queued_request_data):
+                if not await self.process_queued_request(queued_request_uid, queued_request_data):
                     queued_request.retries += 1
                     if queued_request.retries >= self.max_retries:
                         await self.error_queue.push_back(queued_request, queued_request_uid)
@@ -172,8 +190,13 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def process_queued_request(self, request: _T) -> bool:
+    async def process_queued_request(self, request_uuid: uuid.UUID, request: _T) -> bool:
         pass
+
+    # --------------------------------------------------------------------------------
+    async def __check_process_queue(self):
+        if not self.running:
+            asyncio.create_task(self._process_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
 
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
@@ -184,7 +207,5 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         response      = QueuedRequestHandlerResponseDTO(
             uid = str(await self.incoming_queue.push_back(data_to_queue, request_uuid))
         )
-
-        if not self.running:
-            asyncio.create_task(self._process_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
+        await self.__check_process_queue()
         return response

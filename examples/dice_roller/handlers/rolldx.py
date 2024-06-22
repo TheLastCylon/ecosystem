@@ -10,7 +10,7 @@ from ..dtos import RollDXRequestDto, RollDXResponseDto
 
 
 @endpoint("roll", RollDXRequestDto)
-def roll_the_dice(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def roll_the_dice(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     StatisticsKeeper().increment("log.this.statistic")
     numbers = list(range(1, request.sides))
     return RollDXResponseDto(result = random.choice(numbers))

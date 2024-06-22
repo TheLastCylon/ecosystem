@@ -33,7 +33,7 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
     async def __process_received_data(self, received_data: str, address):
         response_dict = await self._route_request(received_data)
         response_str  = response_dict.json()
-        self._logger.info(f"Send response:\n {response_str}")
+        # self._logger.info(f"Send response:\n {response_str}")
         self.__transport.sendto(response_str.encode(), address)
 
     # --------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
         if not request_data.endswith('\n'):
             raise IncompleteMessageException(request_data)
 
-        self._logger.info(f"Received {request_data} from {address}")
+        # self._logger.info(f"Received {request_data} from {address}")
         self.__loop.create_task(self.__process_received_data(request_data, address))
 
     # --------------------------------------------------------------------------------

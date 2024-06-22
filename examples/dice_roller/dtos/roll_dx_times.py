@@ -9,4 +9,4 @@ class RollDXTimesRequestDto(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class RollDXTimesResponseDto(PydanticBaseModel):
-    result: int
+    uid: str

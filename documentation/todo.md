@@ -23,23 +23,24 @@
   - [X] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
     - [X] These will typically have a handler, that pops data off the queue, and does something with the data in the queue.
-    - [ ] Pause for:
-      - [ ] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
-      - [ ] Processing: Just pauses processing. Still accepts new requests.
-      - [ ] Both      : Stops accepting and processing
+    - [X] Pause for:
+      - [X] Accepting : Prevents new requests from going into the queue. Throws an error that is propagated to the client.
+      - [X] Processing: Just pauses processing. Still accepts new requests.
+      - [X] Both      : Stops accepting and processing
     - [X] Queues
       - [X] Incoming queue
       - [X] Error queue
-  - [ ] For queued endpoints
-    - [ ] move requests in error queue to incoming queue
-      - [ ] for all
-      - [ ] for specific uid
-    - [ ] clear error queue: one with uuid (as in forget that request existed)
-    - [ ] clear error queue: all (as in forget all those request existed)
-    - [ ] get queue sizes
+  - [X] For queued endpoints
+    - [X] move requests in error queue to incoming queue (i.e. re-process)
+      - [X] for all
+      - [X] for specific uid
+    - [X] clear error queue: one with uuid (as in forget that request existed) (is popping a request off the error queue, so is done)
+    - [X] clear error queue: all (as in forget all those request existed)
+    - [X] get queue sizes
       - [X] through standard statistics handler
-      - [ ] through queue size specific handler
-    - [X] inspect a specific request in a queue, using the uid
+      - [X] through queue size specific handler
+    - [X] inspect a specific request in an error queue, using the uid
+    - [X] pop a specific request in an error queue, using the uid
 
   - [ ] Outgoing queue
     - [ ] A message of the: "Hey you, do your thing with this data, I'm done with it." kind.
@@ -48,10 +49,10 @@
       - [ ] one for messages that need to be retried
       - [ ] one for messages that have errored out
 
+- [ ] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
 
 
-
-- [ ] standard handlers
+- [ ] standard endpoints
   - [ ] Stop: As in a handler that will tell an application to shut down
 
 
