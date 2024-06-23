@@ -9,6 +9,7 @@ from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues import SqlPersistedQueue
 from ..state_keepers import StatisticsKeeper
+from ..exceptions import ServerBusyException, CommunicationsMaxRetriesReached
 
 _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)
 _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
@@ -104,11 +105,13 @@ class QueuedSenderBase(
 
                 try:
                     await self.send_data(queued_request_data, queued_request_uid)
-                except Exception as e:
-                    # TODO: Only retry sending, if the sending is retryable:
-                    #  i.e. There isn't something wrong with the message itself.
+                except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
+                    queued_request.retries += 1
                     await self.retry_queue.push_back(queued_request, queued_request_uid)
                     await self.__check_process_retry_queue()
+                except Exception: # Move it to the error queue
+                    # TODO: Store the reason for the error in the error queue
+                    await self.error_queue.push_back(queued_request, queued_request_uid)
         self.processor_send_running = False
 
     # --------------------------------------------------------------------------------
@@ -128,18 +131,17 @@ class QueuedSenderBase(
 
                 try:
                     await self.send_data(queued_request_data, queued_request_uid)
-                except Exception as e:
-                    # TODO: Only retry of sending is retryable
+                except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
                     if queued_request.retries >= self.max_retries:
                         await self.error_queue.push_back(queued_request, queued_request_uid)
                     else:
                         queued_request.retries += 1
                         await self.retry_queue.push_back(queued_request, queued_request_uid)
+                except Exception: # Move it to the error queue
+                    # TODO: Store the reason for the error in the error queue
+                    await self.error_queue.push_back(queued_request, queued_request_uid)
         self.processor_retry_running = False
 
     # --------------------------------------------------------------------------------
     async def send(self, *args, **kwargs):
         pass
-
-
-

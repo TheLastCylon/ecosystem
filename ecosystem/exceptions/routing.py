@@ -12,4 +12,4 @@ class RoutingExceptionBase(ExceptionBase):
 # --------------------------------------------------------------------------------
 class UnknownRouteKeyException(RoutingExceptionBase):
     def __init__(self, route_key: str):
-        super().__init__(Status.COMMAND_NOT_SUPPORTED.value, f"Unknown route key '{route_key}'")
+        super().__init__(Status.ROUTE_KEY_UNKNOWN.value, f"Unknown route key '{route_key}'")

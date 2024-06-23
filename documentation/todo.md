@@ -18,6 +18,8 @@
 - [ ] Documentation: Logging
 - [ ] Documentation: Application configuration
 
+- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+
 - [ ] Queueing
 
   - [X] Incoming queue
@@ -49,7 +51,7 @@
       - [ ] one for messages that need to be retried
       - [ ] one for messages that have errored out
 
-- [ ] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
+- [X] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
 
 
 - [ ] standard endpoints

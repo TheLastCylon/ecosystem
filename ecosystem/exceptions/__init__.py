@@ -32,6 +32,18 @@ from .routing import (
     UnknownRouteKeyException,
 )
 
+from .response import (
+    ResponseException,
+    ProtocolParsingException,
+    ClientDeniedException,
+    PydanticValidationException,
+    RouteKeyUnknownException,
+    ServerBusyException,
+    ProcessingException,
+    UnknownException,
+    UnknownStatusCodeException,
+)
+
 from .queueing import ReceivingPausedException
 
 from .configuration import InstanceConfigurationNotFoundException

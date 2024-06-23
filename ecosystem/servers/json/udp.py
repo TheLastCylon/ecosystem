@@ -38,9 +38,10 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
 
     # --------------------------------------------------------------------------------
     def datagram_received(self, bytes_read, address):
+        # TODO: Check client against white-list
         request_data: str = bytes_read.decode()
 
-        if not request_data.endswith('\n'):
+        if not request_data.endswith('\n'): # TODO: This makes sense here, but shouldn't the exception be related to Status.PROTOCOL_PARSING_ERROR?
             raise IncompleteMessageException(request_data)
 
         # self._logger.info(f"Received {request_data} from {address}")

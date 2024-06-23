@@ -7,6 +7,18 @@ from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto
+from ..requests import Status
+
+from ..exceptions import (
+    ProtocolParsingException,
+    ClientDeniedException,
+    PydanticValidationException,
+    RouteKeyUnknownException,
+    ServerBusyException,
+    ProcessingException,
+    UnknownException,
+    UnknownStatusCodeException,
+)
 
 
 # --------------------------------------------------------------------------------
@@ -32,6 +44,32 @@ class ClientBase(ABC):
         pass
 
     # --------------------------------------------------------------------------------
+    @staticmethod
+    def generate_response_exception(request: ResponseDTO):
+        if request.status == Status.PROTOCOL_PARSING_ERROR.value:
+            return ProtocolParsingException(str(request.data))
+
+        if request.status == Status.CLIENT_DENIED.value:
+            return ClientDeniedException(str(request.data.json()))
+
+        if request.status == Status.PYDANTIC_VALIDATION_ERROR.value:
+            return PydanticValidationException(str(request.data))
+
+        if request.status == Status.ROUTE_KEY_UNKNOWN.value:
+            return RouteKeyUnknownException(str(request.data))
+
+        if request.status == Status.APPLICATION_BUSY.value:
+            return ServerBusyException(str(request.data))
+
+        if request.status == Status.PROCESSING_FAILURE.value:
+            return ProcessingException(str(request.data))
+
+        if request.status == Status.UNKNOWN.value:
+            return UnknownException(str(request.data))
+
+        return UnknownStatusCodeException(f"Unrecognised status code[{request.status}]: {str(request.data)}")
+
+    # --------------------------------------------------------------------------------
     async def send_message(
         self,
         route_key        : str,
@@ -51,5 +89,9 @@ class ClientBase(ABC):
         response_str     = await asyncio.create_task(self._send_message_retry_loop(f"{request_str}\n"))
         response_dict    = json.loads(response_str)
         response         = ResponseDTO(**response_dict)
+
+        if response.status != Status.SUCCESS.value:
+            raise self.generate_response_exception(response)
+
         response_dto     = response_dto_type(**response.data)
         return response_dto

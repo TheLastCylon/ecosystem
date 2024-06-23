@@ -37,13 +37,13 @@ class ServerBase:
         except json.decoder.JSONDecodeError as e:
             return ResponseDTO(
                 uid    = request_uuid,
-                status = Status.JSON_PARSING_ERROR.value,
+                status = Status.PROTOCOL_PARSING_ERROR.value,
                 data   = str(e)
             )
         except ValidationError as e:
             return ResponseDTO(
                 uid    = request_uuid,
-                status = Status.JSON_PARSING_ERROR.value,
+                status = Status.PYDANTIC_VALIDATION_ERROR.value,
                 data   = str(e)
             )
         except RoutingExceptionBase as e:

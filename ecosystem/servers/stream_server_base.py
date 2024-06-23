@@ -22,7 +22,7 @@ class StreamServerBase(ServerBase):
 
         request_data: str = bytes_read.decode()
 
-        if not request_data.endswith('\n'):
+        if not request_data.endswith('\n'): # TODO: Does this even make sense. We did a readline didn't we?
             raise IncompleteMessageException(request_data)
 
         return request_data
@@ -34,6 +34,7 @@ class StreamServerBase(ServerBase):
                 return
 
             # requestor_address = writer.get_extra_info('peername')
+            # TODO: Check client against white-list!
             request_data      = await self._read_incoming_request(reader) # ClientDisconnectedException, IncompleteMessageException
             # self._logger.info(f"_handle_request: Received from {requestor_address}:\n{request_data}")
 
