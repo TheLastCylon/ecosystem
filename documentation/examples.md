@@ -11,3 +11,4 @@ So, keep that in mind when you are looking at the examples. They might not work 
 - [The simplest Ecosystem server](./example_base.md)
 - [The obligatory Echo-server](./example_echo_server.md)
 - [And now, the Echo-client](./example_echo_client.md)
+- [Roll the dice](./example_dice_roller.md)
