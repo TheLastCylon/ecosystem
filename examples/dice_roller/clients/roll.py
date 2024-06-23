@@ -1,5 +1,5 @@
 from ecosystem.clients import TCPClient, UDPClient, UDSClient
-from .senders import RollDXSender
+from ..senders import RollDXSender
 
 
 # --------------------------------------------------------------------------------

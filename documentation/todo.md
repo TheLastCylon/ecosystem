@@ -17,6 +17,10 @@
 - [ ] Documentation: Application base
 - [ ] Documentation: Logging
 - [ ] Documentation: Application configuration
+- [ ] Documentation: Dice roller example
+  - [ ] guess endpoint
+  - [ ] roll endpoint
+  - [ ] roll_times endpoint
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
 
@@ -51,9 +55,6 @@
       - [ ] one for messages that need to be retried
       - [ ] one for messages that have errored out
 
-- [X] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
-
-
 - [ ] standard endpoints
   - [ ] Stop: As in a handler that will tell an application to shut down
 
@@ -72,6 +73,7 @@
 - [X] Documentation: Echo sever example
 - [X] Echo client example
 - [X] Documentation: Echo client example
+- [X] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
 
 # Possibly won't do:
 - [ ] Running as a daemon:

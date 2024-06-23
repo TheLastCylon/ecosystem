@@ -1,9 +1,9 @@
 import asyncio
 from ecosystem.clients import TCPClient, UDPClient, UDSClient
 
-from .client_guess import GuessEndpointClient
-from .client_roll import RollEndpointClient
-from .client_roll_times import RollTimesEndpointClient
+from .clients.guess import GuessEndpointClient
+from .clients.roll import RollEndpointClient
+from .clients.roll_times import RollTimesEndpointClient
 
 
 # --------------------------------------------------------------------------------
