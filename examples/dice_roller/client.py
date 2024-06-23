@@ -1,4 +1,5 @@
 import asyncio
+from ecosystem.clients import TCPClient, UDPClient, UDSClient
 
 from .client_guess import GuessEndpointClient
 from .client_roll import RollEndpointClient
@@ -7,9 +8,13 @@ from .client_roll_times import RollTimesEndpointClient
 
 # --------------------------------------------------------------------------------
 async def main():
-    guess_client      = GuessEndpointClient()
-    roll_client       = RollEndpointClient()
-    roll_times_client = RollTimesEndpointClient()
+    tcp_client = TCPClient(server_host='127.0.0.1', server_port=8888)
+    udp_client = UDPClient(server_host='127.0.0.1', server_port=8889)
+    uds_client = UDSClient("/tmp/dice_roller_example_0_uds.sock")
+
+    guess_client      = GuessEndpointClient(tcp_client, udp_client, uds_client)
+    roll_client       = RollEndpointClient(tcp_client, udp_client, uds_client)
+    roll_times_client = RollTimesEndpointClient(tcp_client, udp_client, uds_client)
 
     try:
         await guess_client.send_message()

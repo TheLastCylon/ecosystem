@@ -42,7 +42,7 @@
     - [X] inspect a specific request in an error queue, using the uid
     - [X] pop a specific request in an error queue, using the uid
 
-  - [ ] Outgoing queue
+  - [ ] Outgoing queue i.e. Queued sender
     - [ ] A message of the: "Hey you, do your thing with this data, I'm done with it." kind.
     - [ ] This typically requires some kind of triple queue
       - [ ] one for the outgoing messages

@@ -1,21 +1,26 @@
-from .client_base import ClientBase
-from .dtos import RollDXRequestDto, RollDXResponseDto
+from ecosystem.clients import TCPClient, UDPClient, UDSClient
+from .senders import RollDXSender
 
 
 # --------------------------------------------------------------------------------
-class RollEndpointClient(ClientBase[RollDXRequestDto, RollDXResponseDto]):
-    def __init__(self):
-        super().__init__("roll", RollDXRequestDto, RollDXResponseDto)
+class RollEndpointClient:
+    def __init__(
+        self,
+        client_tcp: TCPClient,
+        client_udp: UDPClient,
+        client_uds: UDSClient,
+    ):
+        self.tcp_sender = RollDXSender(client_tcp)
+        self.udp_sender = RollDXSender(client_udp)
+        self.uds_sender = RollDXSender(client_uds)
 
     async def send_message(self, number_of_sides: int):
-
-        request_data = RollDXRequestDto(sides=number_of_sides)
         print(f"RollEndpointClient: TCP Sending number of sides[{number_of_sides}]. ", end="")
-        tcp_response = await self.send_tcp(request_data)
+        tcp_response = await self.tcp_sender.send(number_of_sides)
         print(f"Received: [{tcp_response.result}]")
         print(f"RollEndpointClient: UDP Sending number of sides[{number_of_sides}]. ", end="")
-        udp_response = await self.send_udp(request_data)
+        udp_response = await self.udp_sender.send(number_of_sides)
         print(f"Received: [{udp_response.result}]")
         print(f"RollEndpointClient: UDS Sending number of sides[{number_of_sides}]. ", end="")
-        uds_response = await self.send_uds(request_data)
+        uds_response = await self.uds_sender.send(number_of_sides)
         print(f"Received: [{uds_response.result}]")
