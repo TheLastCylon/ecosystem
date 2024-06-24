@@ -15,8 +15,8 @@
 - [ ] Documentation: Handlers
 - [ ] Documentation: Queued endpoints, remember pause and unpause
 - [ ] Documentation: Application base
-- [ ] Documentation: Logging
 - [ ] Documentation: Application configuration
+- [ ] Documentation: Logging
 - [ ] Documentation: Dice roller example
   - [ ] guess endpoint
   - [ ] roll endpoint
@@ -24,8 +24,30 @@
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
 
-- [ ] Queueing
+- [ ] Queued sender: delay between send attempts (user defined back-off function?)
+- [ ] Queued sender: keeper
+- [ ] Queued sender: queue manipulation handler
 
+- [ ] standard endpoints
+  - [ ] Stop: As in a handler that will tell an application to shut down
+
+
+# Done
+- [X] Make communication channels optional
+  - [X] TCP
+  - [X] UDP
+  - [X] UDS
+- [X] Command line argument parsing.
+- [X] configuration through environment variables
+- [X] configuration through json file
+- [X] Documentation: the protocol
+- [X] Documentation: Base example
+- [X] Echo sever example
+- [X] Documentation: Echo sever example
+- [X] Echo client example
+- [X] Documentation: Echo client example
+- [X] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
+- [X] Queueing
   - [X] Incoming queue
     - [X] i.e. A queue that gets data in on one of the communication channels
     - [X] These will typically have a handler, that pops data off the queue, and does something with the data in the queue.
@@ -47,33 +69,12 @@
       - [X] through queue size specific handler
     - [X] inspect a specific request in an error queue, using the uid
     - [X] pop a specific request in an error queue, using the uid
-
-  - [ ] Outgoing queue i.e. Queued sender
-    - [ ] A message of the: "Hey you, do your thing with this data, I'm done with it." kind.
-    - [ ] This typically requires some kind of triple queue
-      - [ ] one for the outgoing messages
-      - [ ] one for messages that need to be retried
-      - [ ] one for messages that have errored out
-
-- [ ] standard endpoints
-  - [ ] Stop: As in a handler that will tell an application to shut down
-
-
-# Done
-- [X] Make communication channels optional
-  - [X] TCP
-  - [X] UDP
-  - [X] UDS
-- [X] Command line argument parsing.
-- [X] configuration through environment variables
-- [X] configuration through json file
-- [X] Documentation: the protocol
-- [X] Documentation: Base example
-- [X] Echo sever example
-- [X] Documentation: Echo sever example
-- [X] Echo client example
-- [X] Documentation: Echo client example
-- [X] Proper handling of error responses in clients. i.e. When a client gets an error response rather than the expected response DTO.
+  - [X] Outgoing queue i.e. Queued sender
+    - [X] A message of the: "Hey you, do your thing with this data, I'm done with it." kind.
+    - [X] This typically requires some kind of triple queue
+      - [X] one for the outgoing messages
+      - [X] one for messages that need to be retried
+      - [X] one for messages that have errored out
 
 # Possibly won't do:
 - [ ] Running as a daemon:

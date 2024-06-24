@@ -1,6 +1,6 @@
 import uuid
 
-from typing import Any, Type, TypeVar, Generic, List
+from typing import Any, Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
 from .sender_base import SenderBase
@@ -23,6 +23,13 @@ class QueuedRequestDTO(PydanticBaseModel):
 
 
 # --------------------------------------------------------------------------------
+class QueuedRequestErrorDTO(PydanticBaseModel):
+    uid    : str
+    request: Any
+    reason : str
+
+
+# --------------------------------------------------------------------------------
 # Upon sending:
 #   - Put it in the send queue
 #   - Send processor:
@@ -40,24 +47,24 @@ class QueuedSenderBase(
     Generic[_RequestDTOType, _ResponseDTOType],
     SenderBase[_RequestDTOType, _ResponseDTOType]
 ):
-    running                 : bool                                = False
-    processor_send_running  : bool                                = False
-    processor_retry_running : bool                                = False
-    _sending_paused         : bool                                = True
-    _retrying_paused        : bool                                = True
-    statistics_keeper       : StatisticsKeeper                    = StatisticsKeeper()
-    directory               : str                                 = None
-    queue_file_name_base    : str                                 = None
-    queue_file_name_in      : str                                 = None
-    queue_file_name_error   : str                                 = None
-    max_uncommited          : int                                 = None
-    max_retries             : int                                 = None
-    send_queue_file_path    : str                                 = None
-    retry_queue_file_path   : str                                 = None
-    error_queue_file_path   : str                                 = None
-    send_queue              : SqlPersistedQueue[QueuedRequestDTO] = None
-    retry_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
-    error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
+    running                 : bool                                     = False
+    processor_send_running  : bool                                     = False
+    processor_retry_running : bool                                     = False
+    _sending_paused         : bool                                     = True
+    _retrying_paused        : bool                                     = True
+    statistics_keeper       : StatisticsKeeper                         = StatisticsKeeper()
+    directory               : str                                      = None
+    queue_file_name_base    : str                                      = None
+    queue_file_name_in      : str                                      = None
+    queue_file_name_error   : str                                      = None
+    max_uncommited          : int                                      = None
+    max_retries             : int                                      = None
+    send_queue_file_path    : str                                      = None
+    retry_queue_file_path   : str                                      = None
+    error_queue_file_path   : str                                      = None
+    send_queue              : SqlPersistedQueue[QueuedRequestDTO]      = None
+    retry_queue             : SqlPersistedQueue[QueuedRequestDTO]      = None
+    error_queue             : SqlPersistedQueue[QueuedRequestErrorDTO] = None
 
     def __init__(
         self,
@@ -78,6 +85,10 @@ class QueuedSenderBase(
         self.max_retries    = max_retries
 
     # --------------------------------------------------------------------------------
+    async def send(self, *args, **kwargs):
+        pass
+
+    # --------------------------------------------------------------------------------
     async def enqueue(self, request_data: _RequestDTOType, request_uuid: uuid.UUID = uuid.uuid4()) -> None:
         data_to_queue = QueuedRequestDTO(uid=str(request_uuid), retries=0, request=request_data)
         await self.send_queue.push_back(data_to_queue, request_uuid)
@@ -94,54 +105,72 @@ class QueuedSenderBase(
             asyncio.create_task(self.__process_retry_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
 
     # --------------------------------------------------------------------------------
+    async def __push_queued_request_to_error_queue(
+        self,
+        queued_request: QueuedRequestDTO,
+        reason: str
+    ):
+        request_uid = uuid.UUID(queued_request.uid)
+        data        = QueuedRequestErrorDTO(
+            uid    = queued_request.uid,
+            request= queued_request.request,
+            reason = reason
+        )
+        await self.error_queue.push_back(data, request_uid)
+
     # TODO: Some kind of delay between send attempts
+    # --------------------------------------------------------------------------------
+    async def __attempt_queued_request_send(
+        self,
+        queued_request: QueuedRequestDTO,
+    ):
+        queued_request_uid  = uuid.UUID(queued_request.uid)
+        queued_request_data = self._request_dto_type(**queued_request.request)
+        await self.send_data(queued_request_data, queued_request_uid)
+
+    # --------------------------------------------------------------------------------
+    async def __push_queued_request_to_retry_queue(
+        self,
+        queued_request: QueuedRequestDTO,
+    ):
+        queued_request.retries += 1
+        await self.retry_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
+        await self.__check_process_retry_queue()
+
+    # --------------------------------------------------------------------------------
     async def __process_send_queue(self) -> None:
         self.processor_send_running = True
         if not self._sending_paused:
             while not await self.send_queue.is_empty():
-                queued_request      = await self.send_queue.pop_front()
-                queued_request_uid  = uuid.UUID(queued_request.uid)
-                queued_request_data = self._request_dto_type(**queued_request.request)
-
+                queued_request = await self.send_queue.pop_front()
                 try:
-                    await self.send_data(queued_request_data, queued_request_uid)
+                    await self.__attempt_queued_request_send(queued_request)
                 except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
-                    queued_request.retries += 1
-                    await self.retry_queue.push_back(queued_request, queued_request_uid)
-                    await self.__check_process_retry_queue()
-                except Exception: # Move it to the error queue
-                    # TODO: Store the reason for the error in the error queue
-                    await self.error_queue.push_back(queued_request, queued_request_uid)
+                    await self.__push_queued_request_to_retry_queue(queued_request)
+                except Exception as e : # Move it to the error queue
+                    await self.__push_queued_request_to_error_queue(queued_request, str(e))
         self.processor_send_running = False
 
     # --------------------------------------------------------------------------------
-    # - attempt to send the message
-    #    - On success -> Done!
-    #    - On fail:
-    #        - Still retryable     -> Put message in back of retry queue
-    #        - On retries exceeded -> Put message in error queue
-    # TODO: Some kind of delay between send attempts
+    async def __check_max_retries(
+        self,
+        queued_request: QueuedRequestDTO,
+    ):
+        if queued_request.retries >= self.max_retries:
+            await self.__push_queued_request_to_error_queue(queued_request, "Max Retries Reached")
+        else:
+            await self.__push_queued_request_to_retry_queue(queued_request)
+
+    # --------------------------------------------------------------------------------
     async def __process_retry_queue(self) -> None:
         self.processor_retry_running = True
         if not self._retrying_paused:
             while not await self.retry_queue.is_empty():
-                queued_request      = await self.retry_queue.pop_front()
-                queued_request_uid  = uuid.UUID(queued_request.uid)
-                queued_request_data = self._request_dto_type(**queued_request.request)
-
+                queued_request = await self.retry_queue.pop_front()
                 try:
-                    await self.send_data(queued_request_data, queued_request_uid)
+                    await self.__attempt_queued_request_send(queued_request)
                 except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
-                    if queued_request.retries >= self.max_retries:
-                        await self.error_queue.push_back(queued_request, queued_request_uid)
-                    else:
-                        queued_request.retries += 1
-                        await self.retry_queue.push_back(queued_request, queued_request_uid)
-                except Exception: # Move it to the error queue
-                    # TODO: Store the reason for the error in the error queue
-                    await self.error_queue.push_back(queued_request, queued_request_uid)
+                    await self.__check_max_retries(queued_request)
+                except Exception as e: # Move it to the error queue
+                    await self.__push_queued_request_to_error_queue(queued_request, str(e))
         self.processor_retry_running = False
-
-    # --------------------------------------------------------------------------------
-    async def send(self, *args, **kwargs):
-        pass
