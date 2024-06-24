@@ -1,8 +1,4 @@
 # TODO
-- [ ] Prevent startup of duplicate instances.
-
-- [ ] Cater for Windows OS in all default configurations
-
 - [ ] Ecosystem JavaScript client
 
 - [ ] Test Timeout on communications.
@@ -75,9 +71,11 @@
       - [X] one for the outgoing messages
       - [X] one for messages that need to be retried
       - [X] one for messages that have errored out
+- [X] Prevent startup of duplicate instances.
 
 # Possibly won't do:
 - [ ] Running as a daemon:
   - NOTE: This Likely won't get done due to lack of standard mechanisms for achieving this in a cross-platform way.
   - Python's multiprocessing does not do true Unix daemon running and solutions like python-daemon are platform specific.
-
+- [ ] Cater for Windows OS in all default configurations
+  - No sane, platform independent defaults exist!

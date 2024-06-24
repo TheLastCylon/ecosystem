@@ -47,3 +47,5 @@ from .response import (
 from .queueing import ReceivingPausedException
 
 from .configuration import InstanceConfigurationNotFoundException
+
+from .process import InstanceAlreadyRunningException

@@ -12,7 +12,7 @@ class ConfigStatisticsKeeper(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class ConfigLogging(PydanticBaseModel):
-    directory         : str = "/tmp"
+    directory         : str = "/tmp"  # Log files should survive reboot!
     max_size_in_bytes : int = 10737418240 # (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
     max_files         : int = 10
 
@@ -31,7 +31,7 @@ class ConfigUDP(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class ConfigUDS(PydanticBaseModel):
-    directory       : str = "/tmp"
+    directory       : str = "/tmp" # because we don't want sock files surviving reboot
     socket_file_name: str = "DEFAULT"
 
 
@@ -43,7 +43,11 @@ class ConfigApplicationInstance(PydanticBaseModel):
     uds             : ConfigUDS              = None
     stats_keeper    : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
     logging         : ConfigLogging          = ConfigLogging()
-    queue_directory : str                    = "/tmp"
+    lock_directory  : str                    = "/tmp"
+    # Do not default queue_directory to anything. Make the user explicitly set it.
+    # Rather let them get an error, than lose their queues due to them having been
+    # written to a place that gets cleaned on reboot.
+    queue_directory : str                    = None
 
 
 # --------------------------------------------------------------------------------

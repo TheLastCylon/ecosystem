@@ -1,3 +1,4 @@
+import os
 import asyncio
 import argparse
 
@@ -18,7 +19,7 @@ from .configuration import load_config_from_environment
 
 from .util import SingletonType
 
-from .exceptions import InstanceConfigurationNotFoundException
+from .exceptions import InstanceConfigurationNotFoundException, InstanceAlreadyRunningException
 
 # Pycharm complains that we aren't using these imports,
 # but the import is what does the work of getting everything up and
@@ -52,16 +53,43 @@ class ApplicationBase(metaclass=SingletonType):
     __server_udp          : UDPServer               = None
     __server_uds          : UDSServer               = None
 
+    # --------------------------------------------------------------------------------
     def __init__(self, name: str, configuration: ConfigApplication = None):
         self.__configure_argument_parser()
         self.__configuration = configuration
         self.__configure_basics(name)
 
     # --------------------------------------------------------------------------------
-    def __configure_basics(self, name: str) -> None:
-        self.__application_name     = name
-        self.__application_instance = self.command_line_args.instance
+    @staticmethod
+    def __process_id_check(process_id: int) -> bool:
+        try:
+            os.kill(process_id, 0)
+        except OSError:
+            return False
+        return True
 
+    # --------------------------------------------------------------------------------
+    @staticmethod
+    def __create_lock_file(lock_file_path: str):
+        process_id = os.getpid()
+        with open(lock_file_path, "w") as lock_file:
+            lock_file.write(f"{process_id}\n")
+
+    # --------------------------------------------------------------------------------
+    def __lock_file_check(self):
+        instance_config = self.__configuration.instances[self.__application_instance]
+        lock_file_name  = f"{self.__application_name}-{self.__application_instance}.lock"
+        lock_file_path  = f"{instance_config.lock_directory}/{lock_file_name}"
+        if os.path.exists(lock_file_path):
+            with open(lock_file_path, "r") as lock_file:
+                process_id = int(lock_file.readline())
+            if self.__process_id_check(process_id):
+                raise InstanceAlreadyRunningException(self.__application_name, self.__application_instance, process_id)
+            os.remove(lock_file_path)
+        self.__create_lock_file(lock_file_path)
+
+    # --------------------------------------------------------------------------------
+    def __load_configuration(self):
         if not self.__configuration:
             if not self.command_line_args.config:
                 self.__configuration = load_config_from_environment(self.__application_name, self.__application_instance)
@@ -69,7 +97,15 @@ class ApplicationBase(metaclass=SingletonType):
                 self.__configuration = load_config_from_file(self.command_line_args.config)
 
         if self.__application_instance not in self.__configuration.instances.keys():
-            raise InstanceConfigurationNotFoundException(self.__application_name,self.__application_instance)
+            raise InstanceConfigurationNotFoundException(self.__application_name, self.__application_instance)
+
+    # --------------------------------------------------------------------------------
+    def __configure_basics(self, name: str) -> None:
+        self.__application_name     = name
+        self.__application_instance = self.command_line_args.instance
+
+        self.__load_configuration()
+        self.__lock_file_check()
 
         self.logger.setup(
             self.__application_name,
