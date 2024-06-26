@@ -13,12 +13,13 @@ class StatsRequestDto(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class StatsResponseDto(PydanticBaseModel):
-    statistics: Dict[str, Any]
+    statistics: Any
+#    statistics: Dict[str, Any]
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-statistics", StatsRequestDto)
-async def standard_endpoint_statistics(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.statistics.get", StatsRequestDto)
+async def eco_statistics_get(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data         = cast(StatsRequestDto, request)
     stats_keeper = StatisticsKeeper()
 

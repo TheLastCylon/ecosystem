@@ -23,17 +23,17 @@ On Linux you can execute a `netcat` command and test it right now.
 
 For TCP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco-statistics", "data": {"type": "current"}}' | nc localhost 8888
+echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc localhost 8888
 ```
 
 For UDP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco-statistics", "data": {"type": "current"}}' | nc -u localhost 8889
+echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -u localhost 8889
 ```
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco-statistics", "data": {"type": "current"}}' | nc -U /tmp/base_example_0_uds.sock
+echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0_uds.sock
 ```
 
 In all three cases, you'll get a response similar to:

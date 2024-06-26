@@ -29,14 +29,14 @@ def build_errors_response() -> List[Dict[str, Any]]:
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-states")
-async def standard_endpoint_error_states(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.error_states.get")
+async def eco_error_states_get(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     return ErrorsResponseDto(errors=build_errors_response())
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-clear")
-async def standard_endpoint_error_clear(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.error_states.clear")
+async def eco_error_states_clear(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     request          = cast(ErrorCleanerRequestDto, request)
     error_state_list = ErrorStateList()
     if request.count == 0:

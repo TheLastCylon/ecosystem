@@ -37,7 +37,7 @@ class RequestRouter(metaclass=SingletonType):
             raise UnknownRouteKeyException(request.route_key)
 
         # self.__logger.info(f"Routing for key [{request.route_key}]")
-        self.__statistics_keeper.increment(f"endpoints.{request.route_key}.call_count")
+        self.__statistics_keeper.increment(f"endpoint_call_counts.{request.route_key}.call_count")
         return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
 
 

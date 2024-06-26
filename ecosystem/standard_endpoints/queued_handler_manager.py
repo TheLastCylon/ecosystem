@@ -1,4 +1,6 @@
 import uuid
+import json
+
 from typing import Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -43,32 +45,32 @@ def string_to_uuid(value: str) -> uuid.UUID | bool:
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-get-first-10", QueuedHandlerManagerRequestDto)
-async def error_queue_get_first_10(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.errors.get_first_10", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_errors_get_first_10(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     uuid_list             = await queued_handler_keeper.get_first_10_error_uuids(data.queue_route_key)
-    if not uuid_list:
+    if uuid_list == False: # noqa Explicitly test for false because an empty list is a valid response
         return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
 
-    return QueuedHandlerManagerResponseDto(message = f"{str(uuid_list)}")
+    return QueuedHandlerManagerResponseDto(message = json.dumps(uuid_list))
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-queue-size", QueuedHandlerManagerRequestDto)
-async def queue_size(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.size", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_size(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     queue_size_dict       = await queued_handler_keeper.get_queue_sizes(data.queue_route_key)
     if not queue_size_dict:
         return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
 
-    return QueuedHandlerManagerResponseDto(message = f"incoming:[{queue_size_dict['incoming']}] error:[{queue_size_dict['error']}]")
+    return QueuedHandlerManagerResponseDto(message = json.dumps(queue_size_dict))
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-queue-receiving-pause", QueuedHandlerManagerRequestDto)
-async def queue_receiving_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.receiving.pause", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_receiving_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
 
@@ -79,8 +81,8 @@ async def queue_receiving_pause(request_uuid: uuid.UUID, request) -> PydanticBas
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-queue-receiving-unpause", QueuedHandlerManagerRequestDto)
-async def queue_receiving_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.receiving.unpause", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_receiving_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
 
@@ -91,8 +93,8 @@ async def queue_receiving_unpause(request_uuid: uuid.UUID, request) -> PydanticB
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-queue-processing-pause", QueuedHandlerManagerRequestDto)
-async def queue_processing_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.processing.pause", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_processing_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
 
@@ -103,8 +105,8 @@ async def queue_processing_pause(request_uuid: uuid.UUID, request) -> PydanticBa
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-queue-processing-unpause", QueuedHandlerManagerRequestDto)
-async def queue_processing_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.processing.unpause", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
 
@@ -115,8 +117,8 @@ async def queue_processing_unpause(request_uuid: uuid.UUID, request) -> Pydantic
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-pop-request", ErrorQueueItemRequestDto)
-async def error_queue_pop_request(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.errors.pop_request", ErrorQueueItemRequestDto)
+async def eco_queued_handler_errors_pop_request(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(ErrorQueueItemRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     if not request_uuid:
@@ -136,8 +138,8 @@ async def error_queue_pop_request(request_uuid: uuid.UUID, request) -> PydanticB
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-inspect-request", ErrorQueueItemRequestDto)
-async def error_queue_inspect_request(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.errors.inspect_request", ErrorQueueItemRequestDto)
+async def eco_queued_handler_errors_inspect_request(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(ErrorQueueItemRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     if not request_uuid:
@@ -157,36 +159,8 @@ async def error_queue_inspect_request(request_uuid: uuid.UUID, request) -> Pydan
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-reprocess-all", QueuedHandlerManagerRequestDto)
-async def error_queue_reprocess_all(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                  = cast(QueuedHandlerManagerRequestDto, request)
-    queued_handler_keeper = QueuedHandlerKeeper()
-
-    if not queued_handler_keeper.has_route_key(data.queue_route_key):
-        return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
-
-    await queued_handler_keeper.reprocess_error_queue(data.queue_route_key)
-
-    return QueuedHandlerManagerResponseDto(message = f"Error queue for route key [{data.queue_route_key}] now being reprocessed.")
-
-
-# --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-clear", QueuedHandlerManagerRequestDto)
-async def error_queue_reprocess_all(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                  = cast(QueuedHandlerManagerRequestDto, request)
-    queued_handler_keeper = QueuedHandlerKeeper()
-
-    if not queued_handler_keeper.has_route_key(data.queue_route_key):
-        return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
-
-    await queued_handler_keeper.clear_error_queue(data.queue_route_key)
-
-    return QueuedHandlerManagerResponseDto(message = f"Error queue for route key [{data.queue_route_key}] has been cleared.")
-
-
-# --------------------------------------------------------------------------------
-@endpoint("eco-error-queue-reprocess-request", ErrorQueueItemRequestDto)
-async def error_queue_reprocess_request(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("eco.queued_handler.errors.reprocess.one", ErrorQueueItemRequestDto)
+async def eco_queued_handler_errors_reprocess_one(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(ErrorQueueItemRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     request_uuid          = string_to_uuid(data.request_uid)
@@ -202,3 +176,32 @@ async def error_queue_reprocess_request(request_uuid: uuid.UUID, request) -> Pyd
         return QueuedHandlerManagerResponseDto(message = f"No request with uid [{data.request_uid}] in error queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(message = f"Request with uid [{data.request_uid}] in queue for route key [{data.queue_route_key}] now being reprocessed.")
+
+
+# --------------------------------------------------------------------------------
+@endpoint("eco.queued_handler.errors.reprocess.all", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_errors_reprocess_all(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+    data                  = cast(QueuedHandlerManagerRequestDto, request)
+    queued_handler_keeper = QueuedHandlerKeeper()
+
+    if not queued_handler_keeper.has_route_key(data.queue_route_key):
+        return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
+
+    await queued_handler_keeper.reprocess_error_queue(data.queue_route_key)
+
+    return QueuedHandlerManagerResponseDto(message = f"Error queue for route key [{data.queue_route_key}] now being reprocessed.")
+
+
+# --------------------------------------------------------------------------------
+@endpoint("eco.queued_handler.errors.clear", QueuedHandlerManagerRequestDto)
+async def eco_queued_handler_errors_clear(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+    data                  = cast(QueuedHandlerManagerRequestDto, request)
+    queued_handler_keeper = QueuedHandlerKeeper()
+
+    if not queued_handler_keeper.has_route_key(data.queue_route_key):
+        return QueuedHandlerManagerResponseDto(message = f"No queue for route key: [{data.queue_route_key}]")
+
+    await queued_handler_keeper.clear_error_queue(data.queue_route_key)
+
+    return QueuedHandlerManagerResponseDto(message = f"Error queue for route key [{data.queue_route_key}] has been cleared.")
+

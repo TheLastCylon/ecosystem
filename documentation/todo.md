@@ -28,7 +28,6 @@
 - [ ] standard endpoints
   - [ ] Stop: As in a handler that will tell an application to shut down
 
-
 # Done
 - [X] Make communication channels optional
   - [X] TCP
