@@ -48,4 +48,4 @@ from .queueing import ReceivingPausedException
 
 from .configuration import InstanceConfigurationNotFoundException
 
-from .process import InstanceAlreadyRunningException
+from .process import InstanceAlreadyRunningException, TerminationSignalException

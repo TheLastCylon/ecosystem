@@ -10,3 +10,9 @@ class InstanceAlreadyRunningException(ExceptionBase):
         process_id      : int
     ):
         super().__init__(f"Instance [{instance_id}] of [{application_name}] already running with process id [{process_id}]!")
+
+
+# --------------------------------------------------------------------------------
+class TerminationSignalException(Exception):
+    pass
+

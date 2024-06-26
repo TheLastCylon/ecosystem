@@ -52,6 +52,7 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
     # --------------------------------------------------------------------------------
     def shut_down(self):
         self.session.commit()
+        self.uncommited_count = 0
         self.session.close()
 
     # --------------------------------------------------------------------------------

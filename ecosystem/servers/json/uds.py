@@ -30,6 +30,11 @@ class UDSServer(StreamServerBase):
     # --------------------------------------------------------------------------------
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.__uds_supported:
+            self.stop()
+
+    # --------------------------------------------------------------------------------
+    def stop(self):
+        if self._running:
             self._running = False
             self._logger.info(f"Stopping UDS server for {self.__server_path}.")
             self._server.close()

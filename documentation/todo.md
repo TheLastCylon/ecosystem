@@ -1,4 +1,6 @@
 # TODO
+- [ ] Documentation: Example fixes for running in Python context
+
 - [ ] Ecosystem JavaScript client
 
 - [ ] Test Timeout on communications.
@@ -72,6 +74,8 @@
       - [X] one for messages that need to be retried
       - [X] one for messages that have errored out
 - [X] Prevent startup of duplicate instances.
+- [X] Update examples to run in context 
+- [X] Make queues shutdown safe.
 
 # Possibly won't do:
 - [ ] Running as a daemon:

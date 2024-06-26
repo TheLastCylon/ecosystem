@@ -1,6 +1,9 @@
 import os
 import asyncio
+import signal
 import argparse
+
+from typing import List
 
 from .logs import EcoLogger
 
@@ -19,12 +22,15 @@ from .configuration import load_config_from_environment
 
 from .util import SingletonType
 
-from .exceptions import InstanceConfigurationNotFoundException, InstanceAlreadyRunningException
+from .exceptions import (
+    InstanceConfigurationNotFoundException,
+    InstanceAlreadyRunningException,
+    TerminationSignalException
+)
 
 # Pycharm complains that we aren't using these imports,
 # but the import is what does the work of getting everything up and
 # running. So we do a noqa on each.
-from .standard_endpoints import standard_endpoint_error_states # noqa
 from .standard_endpoints import standard_endpoint_error_clear  # noqa
 from .standard_endpoints import standard_endpoint_statistics   # noqa
 from .standard_endpoints import queue_receiving_pause          # noqa
@@ -52,6 +58,46 @@ class ApplicationBase(metaclass=SingletonType):
     __server_tcp          : TCPServer               = None
     __server_udp          : UDPServer               = None
     __server_uds          : UDSServer               = None
+
+    # --------------------------------------------------------------------------------
+    @staticmethod
+    def __handle_exit_signal(signum, frame):
+        raise TerminationSignalException("Exit signal received")
+
+    # --------------------------------------------------------------------------------
+    def __setup_signal_handlers(self):
+        for x_signal in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            signal.signal(x_signal, self.__handle_exit_signal)
+
+    # --------------------------------------------------------------------------------
+    def __enter__(self):
+        self.__setup_signal_handlers()
+        self.__running = True
+        return self
+
+    # --------------------------------------------------------------------------------
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            if not isinstance(exc_val, asyncio.CancelledError) \
+                    and not isinstance(exc_val, TerminationSignalException):
+                import traceback
+                self.logger.info(f"Shutdown: EXCEPTION: {exc_type}")
+                traceback.print_exception(exc_type, exc_val, exc_tb)
+            else:
+                self.logger.info(f"Shutdown: Termination signal received.")
+        else:
+            self.logger.info(f"Shutdown: Application context ending.")
+
+        self.__do_shutdown()
+        return True
+
+    # --------------------------------------------------------------------------------
+    def __do_shutdown(self):
+        self.logger.info("Doing Shutdown.")
+        self.__stop_servers()
+        self.__shut_down_queued_handlers()
+        # TODO: Shut down queued senders
+        self.logger.info(f"Instance [{self.__application_instance}] of application [{self.__application_name}] shutdown.")
 
     # --------------------------------------------------------------------------------
     def __init__(self, name: str, configuration: ConfigApplication = None):
@@ -165,19 +211,25 @@ class ApplicationBase(metaclass=SingletonType):
             self.__server_uds = UDSServer(uds_config)
 
     # --------------------------------------------------------------------------------
-    def __setup_queued_handlers(self):
+    async def __setup_queued_handlers(self):
         queue_directory = self.__configuration.instances[self.__application_instance].queue_directory
         for queued_handler in self.__request_router.get_queued_handlers():
-            queued_handler.setup(
+            await queued_handler.setup(
                 queue_directory,
                 self.__application_name,
                 self.__application_instance
             )
 
     # --------------------------------------------------------------------------------
+    def __shut_down_queued_handlers(self):
+        for queued_handler in self.__request_router.get_queued_handlers():
+            queued_handler.shut_down()
+
+    # --------------------------------------------------------------------------------
     def start(self):
-        self.__setup_queued_handlers()
-        self.__running = True
+        if not self.__running:
+            self.logger.info("Application not running in context. Shutting down.")
+            return
         asyncio.run(self.__start())
 
     # --------------------------------------------------------------------------------
@@ -187,37 +239,62 @@ class ApplicationBase(metaclass=SingletonType):
     # --------------------------------------------------------------------------------
     async def __start_stats_keeper(self):
         async with self.__statistics_keeper:
-            await asyncio.create_task(self.__statistics_keeper.gather_statistics())
+            await self.__statistics_keeper.gather_statistics()
 
     # --------------------------------------------------------------------------------
     async def __start_tcp_server(self):
         if self.__server_tcp:
             async with self.__server_tcp:
-                await asyncio.create_task(self.__server_tcp.serve())
+                await self.__server_tcp.serve()
+
+    # --------------------------------------------------------------------------------
+    def __stop_tcp_server(self):
+        if self.__server_tcp:
+            self.__server_tcp.stop()
 
     # --------------------------------------------------------------------------------
     async def __start_udp_server(self):
         if self.__server_udp:
             async with self.__server_udp:
-                await asyncio.create_task(self.__server_udp.serve())
+                await self.__server_udp.serve()
+
+    # --------------------------------------------------------------------------------
+    def __stop_udp_server(self):
+        if self.__server_udp:
+            self.__server_udp.stop()
 
     # --------------------------------------------------------------------------------
     async def __start_uds_server(self):
         if self.__server_uds:
             async with self.__server_uds:
-                await asyncio.create_task(self.__server_uds.serve())
+                await self.__server_uds.serve()
+
+    # --------------------------------------------------------------------------------
+    def __stop_uds_server(self):
+        if self.__server_uds:
+            self.__server_uds.stop()
+
+    # --------------------------------------------------------------------------------
+    def __stop_servers(self):
+        self.__stop_tcp_server()
+        self.__stop_udp_server()
+        self.__stop_uds_server()
 
     # --------------------------------------------------------------------------------
     async def __start(self):
-        try:
-            await asyncio.gather(
-                self.__start_stats_keeper(),
-                self.__start_tcp_server(),
-                self.__start_udp_server(),
-                self.__start_uds_server(),
-            )
-        except asyncio.exceptions.CancelledError:
-            self.logger.info(f"Instance [{self.__application_instance}] of application [{self.__application_name}] was stopped.")
+        tasks = []
+
+        await self.__setup_queued_handlers()
+        for queued_handler in self.__request_router.get_queued_handlers():
+            task = asyncio.create_task(queued_handler.wait_for_shutdown())
+            tasks.append(task)
+
+        tasks.append(asyncio.create_task(self.__start_stats_keeper()))
+        tasks.append(asyncio.create_task(self.__start_tcp_server()))
+        tasks.append(asyncio.create_task(self.__start_udp_server()))
+        tasks.append(asyncio.create_task(self.__start_uds_server()))
+
+        await asyncio.gather(*tasks)
 
 
 # --------------------------------------------------------------------------------

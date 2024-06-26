@@ -29,8 +29,8 @@ class DiceRollerExampleServer(ApplicationBase):
 
 # --------------------------------------------------------------------------------
 def main():
-    app = DiceRollerExampleServer()
-    app.start()
+    with DiceRollerExampleServer() as app:
+        app.start()
 
 
 # --------------------------------------------------------------------------------

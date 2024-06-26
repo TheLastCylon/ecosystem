@@ -12,6 +12,7 @@ from ..queues import SqlPersistedQueue
 
 from ..state_keepers import StatisticsKeeper
 from ..exceptions import ReceivingPausedException
+from ..logs import EcoLogger
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
 
@@ -41,6 +42,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     _receiving_paused       : bool                                = True
     _processing_paused      : bool                                = True
     statistics_keeper       : StatisticsKeeper                    = StatisticsKeeper()
+    log                     : EcoLogger                           = EcoLogger()
     directory               : str                                 = None
     queue_file_name_base    : str                                 = None
     queue_file_name_in      : str                                 = None
@@ -51,6 +53,8 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     error_queue_file_path   : str                                 = None
     incoming_queue          : SqlPersistedQueue[QueuedRequestDTO] = None
     error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
+    on_shutdown_future      : asyncio.Future                      = None
+    shutdown                : bool                                = False
 
     def __init__(
         self,
@@ -160,33 +164,61 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self.error_queue_file_path    = f"{self.directory}/{self.queue_file_name_error}"
 
     # --------------------------------------------------------------------------------
-    def setup(
+    async def setup(
         self,
         directory       : str,
         application_name: str,
         instance_id     : str,
     ):
+        route_key = self.get_route_key()
+        self.log.info(f"Queued handler [{route_key}] setup.")
         self.__configure_queue_names(directory, application_name, instance_id)
         self.__setup_incoming_queue()
         self.__setup_error_queue()
         self.unpause_receiving()
         self.unpause_processing()
 
+        loop = asyncio.get_running_loop()
+        self.on_shutdown_future = loop.create_future()
+        self.log.info(f"Queued handler [{route_key}] setup complete.")
+
+    # --------------------------------------------------------------------------------
+    def shut_down(self):
+        self.pause_receiving()
+        self.pause_processing()
+        self.shutdown = True
+        self.__shut_down_check()
+
+    # --------------------------------------------------------------------------------
+    def __shut_down_check(self):
+        if not self.running and self.shutdown:
+            route_key = self.get_route_key()
+            self.log.info(f"Queued handler [{route_key}] stopping.")
+            self.incoming_queue.shut_down()
+            self.error_queue.shut_down()
+            self.on_shutdown_future.set_result(True)
+            self.log.info(f"Queued handler [{route_key}] stopped.")
+
+    # --------------------------------------------------------------------------------
+    async def wait_for_shutdown(self):
+        while not self.on_shutdown_future.done():
+            await asyncio.sleep(1)
+
     # --------------------------------------------------------------------------------
     async def _process_queue(self):
         self.running = True
-        if not self._processing_paused:
-            while not await self.incoming_queue.is_empty():
-                queued_request      = await self.incoming_queue.pop_front()
-                queued_request_uid  = uuid.UUID(queued_request.uid)
-                queued_request_data = self.request_dto_type(**queued_request.request)
-                if not await self.process_queued_request(queued_request_uid, queued_request_data):
-                    queued_request.retries += 1
-                    if queued_request.retries >= self.max_retries:
-                        await self.error_queue.push_back(queued_request, queued_request_uid)
-                    else:
-                        await self.incoming_queue.push_back(queued_request, queued_request_uid)
+        while not self._processing_paused and not await self.incoming_queue.is_empty():
+            queued_request      = await self.incoming_queue.pop_front()
+            queued_request_uid  = uuid.UUID(queued_request.uid)
+            queued_request_data = self.request_dto_type(**queued_request.request)
+            if not await self.process_queued_request(queued_request_uid, queued_request_data):
+                queued_request.retries += 1
+                if queued_request.retries >= self.max_retries:
+                    await self.error_queue.push_back(queued_request, queued_request_uid)
+                else:
+                    await self.incoming_queue.push_back(queued_request, queued_request_uid)
         self.running = False
+        self.__shut_down_check()
 
     # --------------------------------------------------------------------------------
     @abstractmethod

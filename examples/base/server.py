@@ -23,8 +23,8 @@ class BaseExampleServer(ApplicationBase):
 
 # --------------------------------------------------------------------------------
 def main():
-    app = BaseExampleServer()
-    app.start()
+    with BaseExampleServer() as app:
+        app.start()
 
 
 # --------------------------------------------------------------------------------

@@ -45,8 +45,8 @@ class EchoExampleServer(ApplicationBase):
 
 # --------------------------------------------------------------------------------
 def main():
-    app = EchoExampleServer()
-    app.start()
+    with EchoExampleServer() as app:
+        app.start()
 
 
 # --------------------------------------------------------------------------------

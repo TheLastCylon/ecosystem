@@ -22,8 +22,13 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
 
     # --------------------------------------------------------------------------------
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        self._running = False
-        self._logger.info(f"Stopping UDP server for {self.host}:{self.port}.")
+        self.stop()
+
+    # --------------------------------------------------------------------------------
+    def stop(self):
+        if self._running:
+            self._running = False
+            self._logger.info(f"Stopping UDP server for {self.host}:{self.port}.")
 
     # --------------------------------------------------------------------------------
     def connection_made(self, transport):

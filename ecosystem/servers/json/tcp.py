@@ -25,9 +25,14 @@ class TCPServer(StreamServerBase):
 
     # --------------------------------------------------------------------------------
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        self._running = False
-        self._logger.info(f"Stopping TCP server for {self.host}:{self.port}.")
-        self._server.close()
+        self.stop()
+
+    # --------------------------------------------------------------------------------
+    def stop(self):
+        if self._running:
+            self._running = False
+            self._logger.info(f"Stopping TCP server for {self.host}:{self.port}.")
+            self._server.close()
 
     # --------------------------------------------------------------------------------
     async def __setup_server(self):
