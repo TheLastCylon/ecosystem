@@ -1,5 +1,4 @@
 # TODO
-
 - [ ] Ecosystem JavaScript client
 
 - [ ] Test Timeout on communications.
@@ -24,9 +23,6 @@
 - [ ] Queued sender: delay between send attempts (user defined back-off function?)
 - [ ] Queued sender: keeper
 - [ ] Queued sender: queue manipulation handler
-
-- [ ] standard endpoints
-  - [ ] Stop: As in a handler that will tell an application to shut down
 
 # Done
 - [X] Make communication channels optional
@@ -77,8 +73,17 @@
 - [X] Documentation: Example fixes for running in Python context
 
 # Possibly won't do:
+
+# Won't do:
 - [ ] Running as a daemon:
-  - NOTE: This Likely won't get done due to lack of standard mechanisms for achieving this in a cross-platform way.
-  - Python's multiprocessing does not do true Unix daemon running and solutions like python-daemon are platform specific.
+  - WHY:
+    - This won't get done due to lack of standard mechanisms for achieving this in a cross-platform way.
+    - Python's multiprocessing does not do true Unix daemon running and solutions like python-daemon are platform specific.
 - [ ] Cater for Windows OS in all default configurations
-  - No sane, platform independent defaults exist!
+  - WHY:
+    - No sane, platform independent defaults exist!
+- [ ] standard endpoints
+  - [ ] Stop: As in a handler that will tell an application to shut down
+  - WHY:
+    - This is done through interrupt handling already.
+    - It might get re-visited if remote shut-down of an application becomes a requirement.
