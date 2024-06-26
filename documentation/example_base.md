@@ -76,8 +76,8 @@ Here it is:
 23: 
 24: # --------------------------------------------------------------------------------
 25: def main():
-26:     app = BaseExampleServer()
-27:     app.start()
+26:     with BaseExampleServer() as app:
+27:         app.start()
 28: 
 29: 
 30: # --------------------------------------------------------------------------------
@@ -156,8 +156,8 @@ From line 18 to 35, we declare our class and write the code for getting it runni
 23: 
 24: # --------------------------------------------------------------------------------
 25: def main():
-26:     app = BaseExampleServer()
-27:     app.start()
+26:     with BaseExampleServer() as app:
+27:         app.start()
 28: 
 29: 
 30: # --------------------------------------------------------------------------------
@@ -172,7 +172,8 @@ From line 18 to 35, we declare our class and write the code for getting it runni
 I'm certain you've seen this pattern before.
 
 1. We declare our application class as `BaseExampleServer` and then pass all the required values to the `ApplicationBase` class.
-2. We instantiate our class in the `main` function on line 26
+2. We instantiate our class in the `main` function on line 26, within a Python context. i.e. Using `with`
+   1. Make sure to note the use of Python contexts here. An Ecosystem application can not be started without being run inside a Python context!
 3. We start it on line 27.
 4. Then finally, the `main` function is called.
 

@@ -91,8 +91,8 @@ Here's the code:
 45: 
 46: # --------------------------------------------------------------------------------
 47: def main():
-48:     app = EchoExampleServer()
-49:     app.start()
+48:     with EchoExampleServer() as app:
+49:         app.start()
 50: 
 51: 
 52: # --------------------------------------------------------------------------------
@@ -208,8 +208,8 @@ The only difference here, is that our application name is `echo_example`.
 45: 
 46: # --------------------------------------------------------------------------------
 47: def main():
-48:     app = EchoExampleServer()
-49:     app.start()
+48:     with EchoExampleServer() as app:
+49:         app.start()
 50: 
 51: 
 52: # --------------------------------------------------------------------------------

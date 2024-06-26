@@ -3,8 +3,6 @@ import asyncio
 import signal
 import argparse
 
-from typing import List
-
 from .logs import EcoLogger
 
 from .requests.request_router import RequestRouter

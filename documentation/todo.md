@@ -1,5 +1,4 @@
 # TODO
-- [ ] Documentation: Example fixes for running in Python context
 
 - [ ] Ecosystem JavaScript client
 
@@ -76,6 +75,7 @@
 - [X] Prevent startup of duplicate instances.
 - [X] Update examples to run in context 
 - [X] Make queues shutdown safe.
+- [X] Documentation: Example fixes for running in Python context
 
 # Possibly won't do:
 - [ ] Running as a daemon:
