@@ -1,5 +1,5 @@
-from .guess_a_number import GuessANumberResponseDto
+from .guess import GuessResponseDto
 
-from .rolldx import RollDXRequestDto, RollDXResponseDto
+from .roll import RollRequestDto, RollResponseDto
 
-from .roll_dx_times import RollDXTimesRequestDto
+from .roll_times import RollTimesRequestDto

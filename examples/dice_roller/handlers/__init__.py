@@ -1,3 +1,3 @@
-from .guess_a_number import guess_a_number
-from .rolldx import roll_the_dice
-from .roll_dx_times import roll_dx_times
+from .guess import dice_roller_guess
+from .roll import dice_roller_roll
+from .roll_times import dice_roller_roll_times

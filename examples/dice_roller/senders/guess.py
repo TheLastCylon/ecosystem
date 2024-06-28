@@ -1,15 +1,16 @@
-from ecosystem.sending import SenderBase
-from ecosystem.clients import ClientBase
+from ecosystem.sending import sender
 from ecosystem.data_transfer_objects import EmptyDto
 
+from .tcp_config import tcp_client
 from ..dtos import GuessResponseDto
 
 
-# --------------------------------------------------------------------------------
-class GuessANumberSender(SenderBase[EmptyDto, GuessResponseDto]):
-    def __init__(self, client: ClientBase):
-        super().__init__(client, "guess", EmptyDto, GuessResponseDto)
+@sender(tcp_client, "dice_roller.guess", GuessResponseDto)
+async def sender_dice_roller_guess():
+    return EmptyDto()
 
-    async def send(self):
-        request_data = EmptyDto()
-        return await self.send_data(request_data)
+
+async def do_some_guessing():
+    print(f"do_some_guessing: Sending. ", end="")
+    tcp_response: GuessResponseDto = await sender_dice_roller_guess() # noqa
+    print(f"Received: [{tcp_response.number}]")

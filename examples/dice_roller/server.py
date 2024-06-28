@@ -5,7 +5,7 @@ from ecosystem import ConfigTCP
 from ecosystem import ConfigUDP
 from ecosystem import ConfigUDS
 
-from .handlers import guess_a_number, roll_the_dice, roll_dx_times # noqa
+from .handlers import dice_roller_guess, dice_roller_roll, dice_roller_roll_times # noqa
 
 app_config          = ConfigApplication(name = "dice_roller_example")
 app_instance_config = ConfigApplicationInstance(

@@ -1,6 +1,19 @@
 # TODO
 - [ ] Ecosystem JavaScript client
 
+- [ ] Queued sender: delay between send attempts (user defined back-off function?)
+- [ ] Queued sender: keeper
+- [ ] Queued sender: queue manipulation handler
+
+- [ ] Sequenced Queued Sender
+  - As in: Make sure messages groups are sent in order
+
+- [ ] Broadcaster
+  - As in: Send this message to a list of clients
+  - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
+
+- [ ] Sequenced Broadcaster
+
 - [ ] Test Timeout on communications.
   - [ ] TCP communications
   - [ ] UDP communications.
@@ -9,6 +22,7 @@
 - [ ] LRU cache
 
 - [ ] Documentation: Handlers
+- [ ] Documentation: sender
 - [ ] Documentation: Queued endpoints, remember pause and unpause
 - [ ] Documentation: Application base
 - [ ] Documentation: Application configuration
@@ -19,10 +33,6 @@
   - [ ] roll_times endpoint
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
-
-- [ ] Queued sender: delay between send attempts (user defined back-off function?)
-- [ ] Queued sender: keeper
-- [ ] Queued sender: queue manipulation handler
 
 # Done
 - [X] Make communication channels optional
@@ -71,6 +81,7 @@
 - [X] Update examples to run in context 
 - [X] Make queues shutdown safe.
 - [X] Documentation: Example fixes for running in Python context
+- [X] Queued handler: Make sure it starts running at startup.
 
 # Possibly won't do:
 

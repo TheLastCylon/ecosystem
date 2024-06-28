@@ -5,10 +5,10 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from ecosystem import endpoint
 
-from ..dtos import RollDXRequestDto, RollDXResponseDto
+from ..dtos import RollRequestDto, RollResponseDto
 
 
-@endpoint("roll", RollDXRequestDto)
-async def roll_the_dice(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+@endpoint("dice_roller.roll", RollRequestDto)
+async def dice_roller_roll(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     numbers = list(range(1, request.sides))
-    return RollDXResponseDto(result = random.choice(numbers))
+    return RollResponseDto(result = random.choice(numbers))

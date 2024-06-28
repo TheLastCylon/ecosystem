@@ -25,26 +25,22 @@ And the client with: `python -m examples.dice_roller.client`
 ## Project structure
 Note that, from this point on, we will start exploring good project structure along with the examples. Hence, you'll find the code is distributed over several directories and files, as shown below:
 - `dice_roller/`
-    - `clients/`
-        - [\_\_init\_\_.py](../examples/dice_roller/clients/__init__.py)
-        - [guess.py](../examples/dice_roller/clients/guess.py)
-        - [roll.py](../examples/dice_roller/clients/roll.py)
-        - [roll_times.py](../examples/dice_roller/clients/roll_times.py)
     - `dtos/`
         - [\_\_init\_\_.py](../examples/dice_roller/dtos/__init__.py)
-        - [guess_a_number.py](../examples/dice_roller/dtos/guess_a_number.py)
-        - [roll_dx_times.py](../examples/dice_roller/dtos/roll_dx_times.py)
-        - [rolldx.py](../examples/dice_roller/dtos/rolldx.py)
+        - [guess.py](../examples/dice_roller/dtos/guess.py)
+        - [roll.py](../examples/dice_roller/dtos/roll.py)
+        - [roll_times.py](../examples/dice_roller/dtos/roll_times.py)
     - `handlers/`
         - [\_\_init\_\_.py](../examples/dice_roller/handlers/__init__.py)
-        - [guess_a_number.py](../examples/dice_roller/handlers/guess_a_number.py)
-        - [roll_dx_times.py](../examples/dice_roller/handlers/roll_dx_times.py)
-        - [rolldx.py](../examples/dice_roller/handlers/rolldx.py)
+        - [guess.py](../examples/dice_roller/handlers/guess.py)
+        - [roll.py](../examples/dice_roller/handlers/roll.py)
+        - [roll_times.py](../examples/dice_roller/handlers/roll_times.py)
     - `senders/`
         - [\_\_init\_\_.py](../examples/dice_roller/senders/__init__.py)
-        - [guess_a_number.py](../examples/dice_roller/senders/guess_a_number.py)
-        - [roll_dx_times.py](../examples/dice_roller/senders/roll_times.py)
-        - [rolldx.py](../examples/dice_roller/senders/rolldx.py)
+        - [guess.py](../examples/dice_roller/senders/guess.py)
+        - [roll.py](../examples/dice_roller/senders/roll.py)
+        - [roll_times.py](../examples/dice_roller/senders/roll_times.py)
+        - [tcp_config.py](../examples/dice_roller/senders/tcp_config.py)
     - [\_\_init\_\_.py](../examples/dice_roller/__init__.py)
     - [client.py](../examples/dice_roller/client.py)
     - [server.py](../examples/dice_roller/server.py)
@@ -53,7 +49,6 @@ Take note: I'm keeping all my DTO declarations in one directory, a Python packag
 
 Relevant packages for the example client are:
 - `dtos`
-- `clients`
 - `senders`
 
 And for the server:

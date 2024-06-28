@@ -5,6 +5,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from .sender_base import SenderBase
 
+from ..logs import EcoLogger
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues import SqlPersistedQueue
@@ -65,6 +66,7 @@ class QueuedSenderBase(
     send_queue              : SqlPersistedQueue[QueuedRequestDTO]      = None
     retry_queue             : SqlPersistedQueue[QueuedRequestDTO]      = None
     error_queue             : SqlPersistedQueue[QueuedRequestErrorDTO] = None
+    __logger                : EcoLogger                                = EcoLogger()
 
     def __init__(
         self,
@@ -89,9 +91,15 @@ class QueuedSenderBase(
         pass
 
     # --------------------------------------------------------------------------------
-    async def enqueue(self, request_data: _RequestDTOType, request_uuid: uuid.UUID = uuid.uuid4()) -> None:
-        data_to_queue = QueuedRequestDTO(uid=str(request_uuid), retries=0, request=request_data)
-        await self.send_queue.push_back(data_to_queue, request_uuid)
+    async def enqueue(self, request_data: _RequestDTOType, request_uuid: uuid.UUID = None) -> None:
+        if not request_uuid:
+            uuid_to_use = uuid.uuid4()
+        else:
+            uuid_to_use = request_uuid
+
+        self.__logger.info(f"Pushing {request_data} to queue [{self._route_key}] .")
+        data_to_queue = QueuedRequestDTO(uid=str(uuid_to_use), retries=0, request=request_data)
+        await self.send_queue.push_back(data_to_queue, uuid_to_use)
         await self.__check_process_send_queue()
 
     # --------------------------------------------------------------------------------
@@ -110,6 +118,7 @@ class QueuedSenderBase(
         queued_request: QueuedRequestDTO,
         reason: str
     ):
+        self.__logger.info(f"Pushing request to ERROR queue.")
         request_uid = uuid.UUID(queued_request.uid)
         data        = QueuedRequestErrorDTO(
             uid    = queued_request.uid,
@@ -124,6 +133,7 @@ class QueuedSenderBase(
         self,
         queued_request: QueuedRequestDTO,
     ):
+        self.__logger.info(f"Attempting send.")
         queued_request_uid  = uuid.UUID(queued_request.uid)
         queued_request_data = self._request_dto_type(**queued_request.request)
         await self.send_data(queued_request_data, queued_request_uid)
@@ -133,6 +143,7 @@ class QueuedSenderBase(
         self,
         queued_request: QueuedRequestDTO,
     ):
+        self.__logger.info(f"Pushing request to retry queue.")
         queued_request.retries += 1
         await self.retry_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
         await self.__check_process_retry_queue()

@@ -178,6 +178,8 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self.unpause_receiving()
         self.unpause_processing()
 
+        await self.__check_process_queue()
+
         loop = asyncio.get_running_loop()
         self.on_shutdown_future = loop.create_future()
         self.log.info(f"Queued handler [{route_key}] setup complete.")
