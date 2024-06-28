@@ -13,8 +13,11 @@ I can feed a family for 6 months with the cost of one MAC computer so ... No, ju
 So, keep that in mind when you are looking at the examples. They might not work as is for your environment. Especially when it comes to directories/folders used.
 
 - Before you start, take a look at the [Json Protocol](./the_protocol.md)
-- [The simplest Ecosystem server](./example_base.md)
-- [The obligatory Echo-server](./example_echo_server.md)
-- [And now, the Echo-client](./example_echo_client.md)
-- [A better Echo-client (a.k.a Introducing the sender decorator)](./example_echo_better_client.md)
-- [Roll the dice](./example_dice_roller.md)
+- [The simplest Ecosystem server](examples/base.md)
+- [The obligatory Echo-server](./examples/echo/server.md)
+- [And now, the Echo-client](./examples/echo/client.md)
+- [A better Echo-client (a.k.a Introducing the sender decorator)](./examples/echo/better_client.md)
+- [Roll the dice](./examples/dice_roller/dice_roller.md)
+  - [The DTOs](./examples/dice_roller/the_dtos.md)
+  - [The server](./examples/dice_roller/server.md)
+  - [The Client](./examples/dice_roller/client.md)

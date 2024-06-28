@@ -1,6 +1,6 @@
 # And now, the Echo-client
 
-We've seen how to create an [Echo-server](./example_echo_server.md) with Ecosystem, now let's take a look at making an Echo-client.
+We've seen how to create an [Echo-server](./server.md) with Ecosystem, now let's take a look at making an Echo-client.
 
 Again though, please do not use this as an example of how to lay out your production projects!
 
@@ -8,7 +8,7 @@ We'll get to good project structure later. Right now, just get a grip on the bas
 
 In order to test this client, get into your terminal and go to the directory you have cloned this repository into, then:
 
-1. Start the [Echo-server](./example_echo_server.md) with: `python -m examples.echo.server -i 0`
+1. Start the [Echo-server](./server.md) with: `python -m examples.echo.server -i 0`
 2. Get into another terminal and start the Echo-client with: `python -m examples.echo.client`
 
 You should see a prompt like this:
@@ -38,7 +38,7 @@ In order to stop the client, just enter `quit` at the prompt.
 Now, let's jump into it.
 
 ## The code:
-You can find this code in [examples/echo/client.py](../examples/echo/client.py)
+You can find this code in [examples/echo/client.py](../../../examples/echo/client.py)
 
 ```python
  1: import asyncio
@@ -124,7 +124,7 @@ On line 3 we import `cast` from `typing`, this isn't strictly necessary, but it 
 
 Line 4 is where we get the TCP, UDP and UDS client classes from Ecosystem.
 
-In lines 6 and 7, we grab the request and response DTOs we used in the [Echo-server](./example_echo_server.md), directly from its source.
+In lines 6 and 7, we grab the request and response DTOs we used in the [Echo-server](./server.md), directly from its source.
 
 THIS IS BAD PRACTICE! DON'T DO IT IN YOUR PRODUCTION CODE!
 

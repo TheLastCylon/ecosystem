@@ -1,6 +1,6 @@
 # A better Echo-client (a.k.a Introducing the sender decorator)
 
-In our previous [Echo-client example](./example_echo_client.md), our `tcp_send`, `udp_send` and `uds_send` methods, used the `send_message` method of the various clients, directly.
+In our previous [Echo-client example](./client.md), our `tcp_send`, `udp_send` and `uds_send` methods, used the `send_message` method of the various clients, directly.
 
 In a simple example like an Echo-client, this approach is good enough. But things are never this easy in the real world!
 

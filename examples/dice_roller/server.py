@@ -5,7 +5,14 @@ from ecosystem import ConfigTCP
 from ecosystem import ConfigUDP
 from ecosystem import ConfigUDS
 
-from .handlers import dice_roller_guess, dice_roller_roll, dice_roller_roll_times # noqa
+# Pycharm complains that we aren't using these imports.
+# But the act of importing is what does the work we need to get done.
+# So I add a noqa comment to let it know, that I know what I'm doing here.
+from .handlers import ( # noqa
+    dice_roller_guess,
+    dice_roller_roll,
+    dice_roller_roll_times
+)
 
 app_config          = ConfigApplication(name = "dice_roller_example")
 app_instance_config = ConfigApplicationInstance(

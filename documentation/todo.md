@@ -1,4 +1,12 @@
 # TODO
+
+- [X] Documentation: Dice roller example
+  - [X] Server
+    - [X] guess endpoint
+    - [X] roll endpoint
+    - [X] roll_times endpoint
+  - [ ] Client
+
 - [ ] Ecosystem JavaScript client
 
 - [ ] Queued sender: delay between send attempts (user defined back-off function?)
@@ -27,10 +35,6 @@
 - [ ] Documentation: Application base
 - [ ] Documentation: Application configuration
 - [ ] Documentation: Logging
-- [ ] Documentation: Dice roller example
-  - [ ] guess endpoint
-  - [ ] roll endpoint
-  - [ ] roll_times endpoint
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
 

@@ -1,8 +1,8 @@
 # The obligatory Echo-server
 
-If you've not looked at the [simplest Ecosystem server](./example_base.md), you might want to take a look at it. This example expands on that.
+If you've not looked at the [simplest Ecosystem server](../base.md), you might want to take a look at it. This example expands on that.
 
-The code for this example is located in [examples/echo/server.py](../examples/echo/server.py)
+The code for this example is located in [examples/echo/server.py](../../../examples/echo/server.py)
 
 To run it, get into your terminal and go to the directory you have cloned this repository into, then:
 
@@ -105,7 +105,7 @@ Here's the code:
 ```
 
 ### Imports
-Here lines 4 to 9 are exactly as lines 1 to 6 were in our [previous example](./example_base.md).
+Here lines 4 to 9 are exactly as lines 1 to 6 were in our [previous example](../base.md).
 
 ```python
  1: import uuid
@@ -185,7 +185,7 @@ On line 26, we generate our response and return it.
 As you can see here, we do nothing more than instantiate an instance of `EchoResponseDto`, making sure to populate its `message` attribute, with what we received in the request.
 
 ### Configuration
-From line 30 to 37, we do exactly what we did in our [previous example](./example_base.md).
+From line 30 to 37, we do exactly what we did in our [previous example](../base.md).
 The only difference here, is that our application name is `echo_example`.
 ```python
 30: app_config          = ConfigApplication(name = "echo_example")
@@ -221,7 +221,7 @@ The only difference here, is that our application name is `echo_example`.
 58:
 ```
 
-As with our [previous example](./example_base.md). We declare our application class and run it.
+As with our [previous example](../base.md). We declare our application class and run it.
 The only difference here, is the name of our class `EchoExampleServer`.
 
 And there you have it.

@@ -1,20 +1,8 @@
 # Rolling the dice:
-!! DRAFT !! !! DRAFT !! !! DRAFT !!
 
-!! DRAFT !! !! DRAFT !! !! DRAFT !!
+If you've not looked at the Echo [client](../echo/client.md), [better client](../echo/better_client.md) and [server](../echo/server.md) examples, you might want to take a look at it.
 
-NOTES:
-- Remember to:
-  - Introduce concepts of `EmptyDTO` and `QueuedRequestHandlerResponseDTO`
-
-!! DRAFT !! !! DRAFT !! !! DRAFT !!
-
-!! DRAFT !! !! DRAFT !! !! DRAFT !!
-
----
-If you've not looked at the [Echo-client](./example_echo_client.md) and [Echo-server](./example_echo_server.md) examples, you might want to take a look at it.
-
-This example expands on that.
+This example expands on concepts covered there.
 
 The code for this example is located in the `examples/dice_roller` directory of this repository.
 
@@ -54,3 +42,5 @@ Relevant packages for the example client are:
 And for the server:
 - `dtos`
 - `handlers`
+
+From here, go ahead and read about [the dtos](./the_dtos.md).
