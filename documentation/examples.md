@@ -3,7 +3,12 @@
 **Important**:
 
 Everything I've done here should work on a modern day Linux machine.
-Yes. Linux. I've not used Windows in over a decade and I can not bring myself to the point where I can justify spend the money on a MAC. I can feed a family for 6 months with the cost of one MAC computer so ... No, just ... No.
+
+Yes. Linux.
+
+I've not used Windows in over a decade and I can not bring myself to the point where I can justify spending the money for a MAC.
+
+I can feed a family for 6 months with the cost of one MAC computer so ... No, just ... No.
 
 So, keep that in mind when you are looking at the examples. They might not work as is for your environment. Especially when it comes to directories/folders used.
 
@@ -11,4 +16,5 @@ So, keep that in mind when you are looking at the examples. They might not work 
 - [The simplest Ecosystem server](./example_base.md)
 - [The obligatory Echo-server](./example_echo_server.md)
 - [And now, the Echo-client](./example_echo_client.md)
+- [A better Echo-client (a.k.a Introducing the sender decorator)](./example_echo_better_client.md)
 - [Roll the dice](./example_dice_roller.md)

@@ -2,10 +2,10 @@ from pydantic import BaseModel as PydanticBaseModel
 
 
 # --------------------------------------------------------------------------------
-class RollDXRequestDto(PydanticBaseModel):
+class RollRequestDto(PydanticBaseModel):
     sides: int
 
 
-class RollDXResponseDto(PydanticBaseModel):
+# --------------------------------------------------------------------------------
+class RollResponseDto(PydanticBaseModel):
     result: int
-

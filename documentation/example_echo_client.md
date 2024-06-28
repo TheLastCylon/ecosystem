@@ -38,6 +38,7 @@ In order to stop the client, just enter `quit` at the prompt.
 Now, let's jump into it.
 
 ## The code:
+You can find this code in [examples/echo/client.py](../examples/echo/client.py)
 
 ```python
  1: import asyncio
@@ -190,7 +191,7 @@ On line 17, we take the `response` from `send_message`, and cast it to our `Echo
 
 Again, not strictly needed, but good practice and helps keep our type hinting stuff working nicely.
 
-The other two functions, `udp_send` and `udp_send`, do exactly the same, just for each of the other two clients.
+The other two functions, `udp_send` and `uds_send`, do exactly the same, just for each of the other two clients.
 
 So let's move on.
 
@@ -236,4 +237,4 @@ Along with some nice output, so we can see what's going on in the terminal.
 
 Yea, the `main` function here is nothing more than a loop that accepts our input and passes it to where we send it.
 
-Only line 62 we call the `main` function with `asyncio.run(main())`, again though: Don't freak out if you've not used `asyncio`, we'll get to that. It's not nearly as hard as people tell you it is.
+On line 62 we call the `main` function with `asyncio.run(main())`, again though: Don't freak out if you've not used `asyncio`, we'll get to that. It's not nearly as hard as people tell you it is.
