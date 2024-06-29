@@ -20,7 +20,6 @@
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
 
-
 ## Beyond MVP
 - [ ] LRU cache
 

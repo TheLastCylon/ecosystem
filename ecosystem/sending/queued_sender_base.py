@@ -9,7 +9,7 @@ from .sender_base import SenderBase
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues import SqlPersistedQueue
-from ..state_keepers import StatisticsKeeper
+from ..state_keepers.statistics_keeper import StatisticsKeeper
 from ..exceptions import ServerBusyException, CommunicationsMaxRetriesReached
 
 _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)

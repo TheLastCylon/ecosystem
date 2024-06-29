@@ -4,9 +4,8 @@ import logging
 from pydantic import ValidationError
 
 from ..data_transfer_objects import RequestDTO, ResponseDTO
-from ..exceptions import RoutingExceptionBase
-from ..requests import RequestRouter
-from ..requests import Status
+from ..requests.request_router import RequestRouter, RoutingExceptionBase
+from ..requests.status import Status
 
 
 # --------------------------------------------------------------------------------

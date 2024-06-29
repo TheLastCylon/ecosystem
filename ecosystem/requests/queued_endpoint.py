@@ -4,7 +4,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from .request_router import RequestRouter
 from .queued_handler import QueuedHandler
 
-from ..state_keepers import QueuedHandlerKeeper
+from ..state_keepers.queued_handler_keeper import QueuedHandlerKeeper
 from ..data_transfer_objects import EmptyDto
 
 _T = TypeVar("_T", bound=PydanticBaseModel)

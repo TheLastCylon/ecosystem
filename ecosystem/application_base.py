@@ -15,17 +15,12 @@ from .servers import (
     UDSServer,
 )
 
-from .state_keepers import (
-    ErrorStateList,
-    StatisticsKeeper
-)
+from .state_keepers.error_state_list import ErrorStateList
+from .state_keepers.statistics_keeper import StatisticsKeeper
 
 from .util import SingletonType
 
-from .exceptions import (
-    InstanceAlreadyRunningException,
-    TerminationSignalException
-)
+from .exceptions.exception_base import ExceptionBase
 
 # Pycharm complains that we aren't using these imports,
 # but the import is what does the work of getting everything up and
@@ -46,6 +41,22 @@ from .standard_endpoints import ( # noqa
     eco_queued_handler_size,
     eco_statistics_get,
 )
+
+
+# --------------------------------------------------------------------------------
+class InstanceAlreadyRunningException(ExceptionBase):
+    def __init__(
+        self,
+        application_name: str,
+        instance_id     : str,
+        process_id      : int
+    ):
+        super().__init__(f"Instance [{instance_id}] of [{application_name}] already running with process id [{process_id}]!")
+
+
+# --------------------------------------------------------------------------------
+class TerminationSignalException(Exception):
+    pass
 
 
 # --------------------------------------------------------------------------------

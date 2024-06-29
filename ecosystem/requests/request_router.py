@@ -8,9 +8,22 @@ from .queued_handler_base import QueuedRequestHandlerBase
 from .status import Status
 
 from ..data_transfer_objects import RequestDTO
-from ..exceptions import UnknownRouteKeyException
 from ..util import SingletonType
-from ..state_keepers import StatisticsKeeper
+from ..state_keepers.statistics_keeper import StatisticsKeeper
+
+
+# --------------------------------------------------------------------------------
+class RoutingExceptionBase(Exception):
+    def __init__(self, status: int, message: str):
+        self.status : int = status
+        self.message: str = f"status: [{status}] message: [{message}]"
+        super().__init__(self.message)
+
+
+# --------------------------------------------------------------------------------
+class UnknownRouteKeyException(RoutingExceptionBase):
+    def __init__(self, route_key: str):
+        super().__init__(Status.ROUTE_KEY_UNKNOWN.value, f"Unknown route key '{route_key}'")
 
 
 # --------------------------------------------------------------------------------
@@ -33,7 +46,7 @@ class RequestRouter(metaclass=SingletonType):
 
     async def route_request(self, request: RequestDTO) -> PydanticBaseModel:
         if request.route_key not in self.__routing_table.keys():
-            raise UnknownRouteKeyException(Status.ROUTE_KEY_UNKNOWN.value, request.route_key)
+            raise UnknownRouteKeyException(request.route_key)
 
         self.__statistics_keeper.increment(f"endpoint_call_counts.{request.route_key}.call_count")
         return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)

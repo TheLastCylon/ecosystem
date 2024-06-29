@@ -1,17 +1,15 @@
 import uuid
 
-from typing import Dict, Any, List
+from typing import Dict, List
 from pydantic import BaseModel as PydanticBaseModel
 
+from ..requests.queued_handler import QueuedHandler
 from ..util import SingletonType
 
 
 # --------------------------------------------------------------------------------
 class QueuedHandlerKeeper(metaclass=SingletonType):
-    # __queued_handlers is supposed to be of type Dict[str, QueuedHandler], but
-    # importing it causes circular imports errors. Duck typing to the resque ...
-    # I guess.
-    __queued_handlers: Dict[str, Any] = {}
+    __queued_handlers: Dict[str, QueuedHandler] = {}
 
     def __init__(self):
         pass
@@ -23,7 +21,7 @@ class QueuedHandlerKeeper(metaclass=SingletonType):
         return True
 
     # --------------------------------------------------------------------------------
-    def add_queued_handler(self, queued_handler: Any):
+    def add_queued_handler(self, queued_handler: QueuedHandler):
         self.__queued_handlers[queued_handler.get_route_key()] = queued_handler
 
     # --------------------------------------------------------------------------------

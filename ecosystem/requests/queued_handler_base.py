@@ -12,10 +12,23 @@ from .status import Status
 
 from ..data_transfer_objects import QueuedEndpointResponseDTO
 from ..queues import SqlPersistedQueue
-from ..state_keepers import StatisticsKeeper
-from ..exceptions import ReceivingPausedException
+from ..state_keepers.statistics_keeper import StatisticsKeeper
+
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
+
+
+# --------------------------------------------------------------------------------
+class QueueingExceptionBase(Exception):
+    def __init__(self, status: int, message: str):
+        self.status: int = status
+        super().__init__(f"status: [{status}] message: [{message}]")
+
+
+# --------------------------------------------------------------------------------
+class ReceivingPausedException(QueueingExceptionBase):
+    def __init__(self, route_key: str):
+        super().__init__(Status.APPLICATION_BUSY.value, f"Receiving on '{route_key}' has been paused.")
 
 
 # --------------------------------------------------------------------------------
@@ -228,7 +241,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
         if self._receiving_paused:
-            raise ReceivingPausedException(Status.APPLICATION_BUSY.value, self._route_key)
+            raise ReceivingPausedException(self._route_key)
 
         data_to_queue = QueuedRequestDTO(uid = str(request_uuid), retries = 0, request = request_data)
         response      = QueuedEndpointResponseDTO(

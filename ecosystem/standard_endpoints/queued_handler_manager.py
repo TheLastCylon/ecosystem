@@ -5,7 +5,7 @@ from typing import Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests import endpoint
-from ..state_keepers import QueuedHandlerKeeper
+from ..state_keepers.queued_handler_keeper import QueuedHandlerKeeper
 
 
 # --------------------------------------------------------------------------------

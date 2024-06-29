@@ -1,9 +1,9 @@
 import uuid
-from typing import Dict, Any, cast
+from typing import Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests import endpoint
-from ..state_keepers import StatisticsKeeper
+from ..state_keepers.statistics_keeper import StatisticsKeeper
 
 
 # --------------------------------------------------------------------------------
@@ -14,7 +14,6 @@ class StatsRequestDto(PydanticBaseModel):
 # --------------------------------------------------------------------------------
 class StatsResponseDto(PydanticBaseModel):
     statistics: Any
-#    statistics: Dict[str, Any]
 
 
 # --------------------------------------------------------------------------------

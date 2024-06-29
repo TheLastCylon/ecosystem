@@ -7,7 +7,7 @@ from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto
-from ..requests import Status
+from ..requests.status import Status
 
 from ..exceptions import (
     ProtocolParsingException,

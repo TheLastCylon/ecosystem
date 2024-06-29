@@ -6,7 +6,20 @@ from .loaders import load_config_from_file, load_config_from_environment
 from .argument_parser import command_line_args
 
 from ..util.singleton import SingletonType
-from ..exceptions import InstanceConfigurationNotFoundException
+from ..exceptions.exception_base import ExceptionBase
+
+
+# --------------------------------------------------------------------------------
+class ConfigurationExceptionBase(ExceptionBase):
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+# --------------------------------------------------------------------------------
+class InstanceConfigurationNotFoundException(ConfigurationExceptionBase):
+    def __init__(self, name: str, instance: str):
+        super().__init__(f"Configuration for instance [{instance}] of application [{name}] not found!")
+
 
 # --------------------------------------------------------------------------------
 application_name = os.path.basename(sys.argv[0]).replace('.py', '')
