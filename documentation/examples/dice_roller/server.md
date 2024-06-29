@@ -283,7 +283,7 @@ It is: `QueuedRequestHandlerResponseDTO`
 ## Conclusion
 
 All of the above boils down to three things you need to understand at this stage:
-1. Most of the time, you'll need two DTOs. A request and response DTO.
+1. Most of the time, you'll need two DTOs: A request and response DTO.
 2. Some of the time you'll use `EmptyDTO` as your request DTO.
 3. Yet fewer times you'll have only a request DTO, and use `QueuedRequestHandlerResponseDTO` for the response.
 
