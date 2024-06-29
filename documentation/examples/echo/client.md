@@ -238,3 +238,8 @@ Along with some nice output, so we can see what's going on in the terminal.
 Yea, the `main` function here is nothing more than a loop that accepts our input and passes it to where we send it.
 
 On line 62 we call the `main` function with `asyncio.run(main())`, again though: Don't freak out if you've not used `asyncio`, we'll get to that. It's not nearly as hard as people tell you it is.
+
+## Conclusion
+At this point you have a solid grip on what goes into making a client with Ecosystem.
+
+Thing is, in terms of maintainability, this won't cut it in the real world. So, [let's take a look at how to do it better](./better_client.md).

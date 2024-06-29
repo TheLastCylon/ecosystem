@@ -1,17 +1,27 @@
 # TODO
 
-- [X] Documentation: Dice roller example
-  - [X] Server
-    - [X] guess endpoint
-    - [X] roll endpoint
-    - [X] roll_times endpoint
-  - [ ] Client
-
+## For MVP
 - [ ] Ecosystem JavaScript client
 
 - [ ] Queued sender: delay between send attempts (user defined back-off function?)
 - [ ] Queued sender: keeper
 - [ ] Queued sender: queue manipulation handler
+
+- [ ] Test Timeout on communications.
+  - [ ] TCP communications
+  - [ ] UDP communications.
+  - [ ] UDS communications.
+
+- [ ] Documentation: Handlers
+- [ ] Documentation: Queued endpoints, remember pause and unpause
+- [ ] Documentation: Application base
+- [ ] Documentation: Application configuration
+- [ ] Documentation: Logging
+
+- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+
+## Beyond MVP
+- [ ] LRU cache
 
 - [ ] Sequenced Queued Sender
   - As in: Make sure messages groups are sent in order
@@ -21,22 +31,6 @@
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
 
 - [ ] Sequenced Broadcaster
-
-- [ ] Test Timeout on communications.
-  - [ ] TCP communications
-  - [ ] UDP communications.
-  - [ ] UDS communications.
-
-- [ ] LRU cache
-
-- [ ] Documentation: Handlers
-- [ ] Documentation: sender
-- [ ] Documentation: Queued endpoints, remember pause and unpause
-- [ ] Documentation: Application base
-- [ ] Documentation: Application configuration
-- [ ] Documentation: Logging
-
-- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
 
 # Done
 - [X] Make communication channels optional
@@ -86,6 +80,13 @@
 - [X] Make queues shutdown safe.
 - [X] Documentation: Example fixes for running in Python context
 - [X] Queued handler: Make sure it starts running at startup.
+- [X] Documentation: Dice roller example
+  - [X] Server
+    - [X] guess endpoint
+    - [X] roll endpoint
+    - [X] roll_times endpoint
+  - [X] Client
+- [X] Documentation: sender
 
 # Possibly won't do:
 
