@@ -16,7 +16,7 @@ With that in mind, let's start looking at the code:
 
 This example can be run with: `python -m examples.dice_roller.client`
 
-Remember to have the server running with: `python -m examples.dice_roller.server -i 0`
+Remember to have the server running with: `python -m examples.dice_roller.dice_roller_example -i 0`
 
 ## The code.
 
@@ -93,13 +93,13 @@ Then we create `do_some_guessing`, which does nothing more than call `sender_dic
 #### [senders/roll_times.py](../../../examples/dice_roller/senders/roll_times.py)
 ```python
 from ecosystem.sending import sender
-from ecosystem.requests import QueuedRequestHandlerResponseDTO
+from ecosystem.data_transfer_objects import QueuedEndpointResponseDTO
 
 from .tcp_config import tcp_client
 from ..dtos import RollTimesRequestDto
 
 
-@sender(tcp_client, "dice_roller.roll_times", QueuedRequestHandlerResponseDTO)
+@sender(tcp_client, "dice_roller.roll_times", QueuedEndpointResponseDTO)
 async def sender_dice_roller_roll_times(sides: int, how_many: int):
     return RollTimesRequestDto(sides=sides, how_many=how_many)
 
@@ -110,7 +110,7 @@ async def roll_several_dice(sides: int, how_many: int):
     print(f"Received: [{tcp_response.uid}]")
 ```
 
-In our imports, the important thing here, is the import of `QueuedRequestHandlerResponseDTO`
+In our imports, the important thing here, is the import of `QueuedEndpointResponseDTO`
 
 This is so that our use of the `sender` decorator, can have a response DTO type to work with.
 

@@ -1,17 +1,16 @@
 import uuid
 import asyncio
 import random
+import logging
 
-from ecosystem import EcoLogger
-from ecosystem import queued_endpoint
-
+from ecosystem.requests import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 
 
 @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 async def dice_roller_roll_times(request_uuid: uuid.UUID, request: RollTimesRequestDto) -> bool:
-    log     = EcoLogger()
+    log     = logging.getLogger()
     numbers = list(range(1, request.sides))
 
     log.info(f"roll_times[{request_uuid}]: Processing.")

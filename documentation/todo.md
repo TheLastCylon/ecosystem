@@ -1,6 +1,9 @@
 # TODO
 
 ## For MVP
+- [ ] Investigate logging and exactly how that works.
+- [ ] Investigate sqlalchemy for use with Postgres, along with migrations done with Alembic.
+
 - [ ] Ecosystem JavaScript client
 
 - [ ] Queued sender: delay between send attempts (user defined back-off function?)
@@ -19,6 +22,7 @@
 - [ ] Documentation: Logging
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+
 
 ## Beyond MVP
 - [ ] LRU cache

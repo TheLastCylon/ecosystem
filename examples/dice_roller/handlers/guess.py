@@ -4,7 +4,7 @@ import random
 from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem import endpoint
+from ecosystem.requests import endpoint
 
 from ..dtos import GuessResponseDto
 

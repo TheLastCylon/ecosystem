@@ -3,7 +3,7 @@ import asyncio
 from ecosystem.clients import TCPClient, UDPClient, UDSClient
 from ecosystem.sending import sender
 
-from .server import EchoRequestDto, EchoResponseDto
+from .dtos import EchoRequestDto, EchoResponseDto
 
 client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)

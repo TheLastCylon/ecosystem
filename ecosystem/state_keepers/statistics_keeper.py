@@ -1,10 +1,10 @@
 import asyncio
 import time
 import copy
+import logging
 
 from typing import Any, Dict, List
 
-from ..logs import EcoLogger
 from ..util import SingletonType
 from ..queues import SqlPersistedQueue
 
@@ -12,7 +12,7 @@ from ..queues import SqlPersistedQueue
 # --------------------------------------------------------------------------------
 class StatisticsKeeper(metaclass=SingletonType):
     __running           : bool                         = False
-    __logger            : EcoLogger                    = EcoLogger()
+    __logger            : logging.Logger               = logging.getLogger()
     __gather_period     : int                          = 300
     __history_length    : int                          = 12
     __start_time        : int                          = int(time.time())

@@ -12,16 +12,18 @@ The code you are about to see, does exactly the same as the previous example. On
 
 You can run it with: `python -m examples.echo.better_client`
 
-Remember to have the Echo-server up and running with: `python -m examples.echo.server -i 0`
+Remember to have the Echo-server up and running with: `python -m examples.echo.echo_example -i 0`
 
 ## The Code
+You can find this code in [examples/echo/better_client.py](../../../examples/echo/better_client.py)
+
 ```python
  1: import asyncio
  2: 
  3: from ecosystem.clients import TCPClient, UDPClient, UDSClient
  4: from ecosystem.sending import sender
  5: 
- 6: from .server import EchoRequestDto, EchoResponseDto
+ 6: from .dtos import EchoRequestDto, EchoResponseDto
  7: 
  8: client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
  9: client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
@@ -92,16 +94,13 @@ Remember to have the Echo-server up and running with: `python -m examples.echo.s
  3: from ecosystem.clients import TCPClient, UDPClient, UDSClient
  4: from ecosystem.sending import sender
  5: 
- 6: from .server import EchoRequestDto, EchoResponseDto
- 7: 
+ 6: from .dtos import EchoRequestDto, EchoResponseDto
 ```
 
 This is very similar to the imports from the previous example.
 Two things are different though:
 1. We do not import anything from `typing`
 2. We import the Ecosystem `sender` decorator on line 4.
-
-Yes, we are still importing the DTOs directly from the server code, I promise we'll stop doing that kind of thing soon.
 
 ### Instantiating the clients
 ```python

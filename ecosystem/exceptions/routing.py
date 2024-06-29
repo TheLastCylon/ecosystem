@@ -1,5 +1,4 @@
 from .exception_base import ExceptionBase
-from ..requests.status import Status
 
 
 # --------------------------------------------------------------------------------
@@ -11,5 +10,5 @@ class RoutingExceptionBase(ExceptionBase):
 
 # --------------------------------------------------------------------------------
 class UnknownRouteKeyException(RoutingExceptionBase):
-    def __init__(self, route_key: str):
-        super().__init__(Status.ROUTE_KEY_UNKNOWN.value, f"Unknown route key '{route_key}'")
+    def __init__(self, status: int, route_key: str):
+        super().__init__(status, f"Unknown route key '{route_key}'")

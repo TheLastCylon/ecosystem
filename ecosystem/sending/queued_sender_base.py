@@ -1,11 +1,11 @@
 import uuid
+import logging
 
 from typing import Any, Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
 from .sender_base import SenderBase
 
-from ..logs import EcoLogger
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues import SqlPersistedQueue
@@ -66,7 +66,7 @@ class QueuedSenderBase(
     send_queue              : SqlPersistedQueue[QueuedRequestDTO]      = None
     retry_queue             : SqlPersistedQueue[QueuedRequestDTO]      = None
     error_queue             : SqlPersistedQueue[QueuedRequestErrorDTO] = None
-    __logger                : EcoLogger                                = EcoLogger()
+    __logger                : logging.Logger                           = logging.getLogger()
 
     def __init__(
         self,

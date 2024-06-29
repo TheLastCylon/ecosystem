@@ -1,11 +1,11 @@
 from ecosystem.sending import sender
-from ecosystem.requests import QueuedRequestHandlerResponseDTO
+from ecosystem.data_transfer_objects import QueuedEndpointResponseDTO
 
 from .tcp_config import tcp_client
 from ..dtos import RollTimesRequestDto
 
 
-@sender(tcp_client, "dice_roller.roll_times", QueuedRequestHandlerResponseDTO)
+@sender(tcp_client, "dice_roller.roll_times", QueuedEndpointResponseDTO)
 async def sender_dice_roller_roll_times(sides: int, how_many: int):
     return RollTimesRequestDto(sides=sides, how_many=how_many)
 

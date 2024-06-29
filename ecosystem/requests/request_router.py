@@ -5,8 +5,8 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from .handler_base import HandlerBase
 from .queued_handler_base import QueuedRequestHandlerBase
+from .status import Status
 
-from ..logs import EcoLogger
 from ..data_transfer_objects import RequestDTO
 from ..exceptions import UnknownRouteKeyException
 from ..util import SingletonType
@@ -15,7 +15,6 @@ from ..state_keepers import StatisticsKeeper
 
 # --------------------------------------------------------------------------------
 class RequestRouter(metaclass=SingletonType):
-    __logger           : EcoLogger              = EcoLogger()
     __statistics_keeper: StatisticsKeeper       = StatisticsKeeper()
     __routing_table    : Dict[str, HandlerBase] = {}
 
@@ -34,9 +33,8 @@ class RequestRouter(metaclass=SingletonType):
 
     async def route_request(self, request: RequestDTO) -> PydanticBaseModel:
         if request.route_key not in self.__routing_table.keys():
-            raise UnknownRouteKeyException(request.route_key)
+            raise UnknownRouteKeyException(Status.ROUTE_KEY_UNKNOWN.value, request.route_key)
 
-        # self.__logger.info(f"Routing for key [{request.route_key}]")
         self.__statistics_keeper.increment(f"endpoint_call_counts.{request.route_key}.call_count")
         return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
 

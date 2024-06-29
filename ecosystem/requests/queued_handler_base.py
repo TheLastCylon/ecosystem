@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+import logging
 
 from pydantic import BaseModel as PydanticBaseModel
 from abc import ABC, abstractmethod
@@ -7,22 +8,14 @@ from typing import Any, Type, TypeVar, Generic, List
 
 
 from .handler_base import HandlerBase
+from .status import Status
 
+from ..data_transfer_objects import QueuedEndpointResponseDTO
 from ..queues import SqlPersistedQueue
-
 from ..state_keepers import StatisticsKeeper
 from ..exceptions import ReceivingPausedException
-from ..logs import EcoLogger
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
-
-
-# --------------------------------------------------------------------------------
-# When using a communications queue, to buffer incoming data, the response to the
-# immediate request is just an acknowledgement that the message was received and
-# validated. No more, no less.
-class QueuedRequestHandlerResponseDTO(PydanticBaseModel):
-    uid: str
 
 
 # --------------------------------------------------------------------------------
@@ -42,7 +35,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     _receiving_paused       : bool                                = True
     _processing_paused      : bool                                = True
     statistics_keeper       : StatisticsKeeper                    = StatisticsKeeper()
-    log                     : EcoLogger                           = EcoLogger()
+    log                     : logging.Logger                      = logging.getLogger()
     directory               : str                                 = None
     queue_file_name_base    : str                                 = None
     queue_file_name_in      : str                                 = None
@@ -235,10 +228,10 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
         if self._receiving_paused:
-            raise ReceivingPausedException(self._route_key)
+            raise ReceivingPausedException(Status.APPLICATION_BUSY.value, self._route_key)
 
         data_to_queue = QueuedRequestDTO(uid = str(request_uuid), retries = 0, request = request_data)
-        response      = QueuedRequestHandlerResponseDTO(
+        response      = QueuedEndpointResponseDTO(
             uid = str(await self.incoming_queue.push_back(data_to_queue, request_uuid))
         )
         await self.__check_process_queue()

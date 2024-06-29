@@ -2,13 +2,15 @@ import json
 import os
 
 
-from .config_models import ConfigApplication
-from .config_models import ConfigApplicationInstance
-from .config_models import ConfigLogging
-from .config_models import ConfigStatisticsKeeper
-from .config_models import ConfigTCP
-from .config_models import ConfigUDP
-from .config_models import ConfigUDS
+from .config_models import (
+    ConfigApplication,
+    ConfigApplicationInstance,
+    ConfigLogging,
+    ConfigStatisticsKeeper,
+    ConfigTCP,
+    ConfigUDP,
+    ConfigUDS,
+)
 
 
 # --------------------------------------------------------------------------------
@@ -83,23 +85,20 @@ def env_get_stats(prefix: str) -> ConfigStatisticsKeeper:
 
 # --------------------------------------------------------------------------------
 def env_get_logging(prefix: str) -> ConfigLogging:
-    logging_config = ConfigLogging(
-        directory         = "/tmp",
-        max_size_in_bytes = 10737418240, # (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
-        max_files         = 10
-    )
+    logging_config = ConfigLogging()
 
     env_log_dir_str = os.environ.get(f"{prefix}_LOG_DIR")
-    if env_log_dir_str and os.path.isdir(env_log_dir_str):
-        logging_config.directory = env_log_dir_str
-
     env_log_msz_str = os.environ.get(f"{prefix}_LOG_MSZ")
-    if env_log_msz_str and int(env_log_msz_str):
-        logging_config.max_size_in_bytes = int(env_log_msz_str)
-
     env_log_mxf_str = os.environ.get(f"{prefix}_LOG_MXF")
+
+    if env_log_dir_str and os.path.isdir(env_log_dir_str):
+        logging_config.file_logging.directory = env_log_dir_str
+
+    if env_log_msz_str and int(env_log_msz_str):
+        logging_config.file_logging.max_size_in_bytes = int(env_log_msz_str)
+
     if env_log_mxf_str and int(env_log_mxf_str):
-        logging_config.max_files = int(env_log_mxf_str)
+        logging_config.file_logging.max_files = int(env_log_mxf_str)
 
     return logging_config
 
@@ -130,7 +129,7 @@ def load_config_from_environment(app_name: str, app_instance: str) -> ConfigAppl
 
     app_instance_config.stats_keeper   = stats_keeper_config
     app_instance_config.logging        = logging_config
-    app_config                         = ConfigApplication(name = app_name)
+    app_config                         = ConfigApplication(name = app_name, running_instance = app_instance)
     app_config.instances[app_instance] = app_instance_config
     return app_config
 

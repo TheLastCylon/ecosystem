@@ -14,7 +14,7 @@ So, keep that in mind when you are looking at the examples. They might not work 
 
 - Before you start, take a look at the [Json Protocol](./the_protocol.md)
 - [The simplest Ecosystem server](examples/base.md)
-- [The obligatory Echo-server](./examples/echo/server.md)
+- [The obligatory Echo-server (a.k.a Introducing the endpoint decorator)](./examples/echo/server.md)
 - [And now, the Echo-client](./examples/echo/client.md)
 - [A better Echo-client (a.k.a Introducing the sender decorator)](./examples/echo/better_client.md)
 - [Roll the dice](./examples/dice_roller/dice_roller.md)

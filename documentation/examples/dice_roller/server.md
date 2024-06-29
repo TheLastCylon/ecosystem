@@ -2,14 +2,10 @@
 
 ## The Code
 
-### [server.py](../../../examples/dice_roller/server.py)
+### [dice_roller_example.py](../../../examples/dice_roller/dice_roller_example.py)
 ```python
-from ecosystem import ApplicationBase
-from ecosystem import ConfigApplication
-from ecosystem import ConfigApplicationInstance
-from ecosystem import ConfigTCP
-from ecosystem import ConfigUDP
-from ecosystem import ConfigUDS
+from ecosystem.application_base import ApplicationBase
+from ecosystem.configuration import ConfigTCP, ConfigUDP, ConfigUDS
 
 # Pycharm complains that we aren't using these imports.
 # But the act of importing is what does the work we need to get done.
@@ -20,24 +16,15 @@ from .handlers import ( # noqa
     dice_roller_roll_times
 )
 
-app_config          = ConfigApplication(name = "dice_roller_example")
-app_instance_config = ConfigApplicationInstance(
-    instance_id     = "0",
-    tcp             = ConfigTCP(host="127.0.0.1", port=8888),
-    udp             = ConfigUDP(host="127.0.0.1", port=8889),
-    uds             = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT"),
-    queue_directory = "/tmp"
-)
-app_config.instances[app_instance_config.instance_id] = app_instance_config
-
 
 # --------------------------------------------------------------------------------
 class DiceRollerExampleServer(ApplicationBase):
     def __init__(self):
-        super().__init__(
-            app_config.name,
-            app_config
-        )
+        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8888)
+        self._configuration.udp             = ConfigUDP(host="127.0.0.1", port=8889)
+        self._configuration.uds             = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+        self._configuration.queue_directory = "/tmp"
+        super().__init__()
 
 
 # --------------------------------------------------------------------------------
@@ -77,7 +64,7 @@ import random
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem import endpoint
+from ecosystem.requests import endpoint
 
 from ..dtos import RollRequestDto, RollResponseDto
 
@@ -116,7 +103,7 @@ import random
 from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem import endpoint
+from ecosystem.requests import endpoint
 
 from ..dtos import GuessResponseDto
 
@@ -208,17 +195,16 @@ So, with that in mind, here's the code:
 import uuid
 import asyncio
 import random
+import logging
 
-from ecosystem import EcoLogger
-from ecosystem import queued_endpoint
-
+from ecosystem.requests import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 
 
 @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 async def dice_roller_roll_times(request_uuid: uuid.UUID, request: RollTimesRequestDto) -> bool:
-    log     = EcoLogger()
+    log     = logging.getLogger()
     numbers = list(range(1, request.sides))
 
     log.info(f"roll_times[{request_uuid}]: Processing.")
@@ -259,12 +245,16 @@ Just like the normal `endpoint`, a `queued_endpoint` needs:
 
 If you've been paying attention, you'll notice that the function we declared there, returns a bool. NOT a response DTO.
 
-The response DTO of a `queued_endpoint`, is always `QueuedRequestHandlerResponseDTO`.
+The response DTO of a `queued_endpoint`, is always `QueuedEndpointResponseDTO`.
 
-It is declared in `ecosystem/requests/queued_handler_base.py` and looks like this:
+It is declared in `ecosystem/data_transfer_objects/queued_endpoint_response.py` and looks like this:
 
 ```python
-class QueuedRequestHandlerResponseDTO(PydanticBaseModel):
+from pydantic import BaseModel as PydanticBaseModel
+
+
+# --------------------------------------------------------------------------------
+class QueuedEndpointResponseDTO(PydanticBaseModel):
     uid: str
 ```
 
@@ -278,13 +268,13 @@ The answer of course is:
 
 Because the response DTO for a queued endpoint, is already defined!
 
-It is: `QueuedRequestHandlerResponseDTO`
+It is: `QueuedEndpointResponseDTO`
 
 ## Conclusion
 
 All of the above boils down to three things you need to understand at this stage:
 1. Most of the time, you'll need two DTOs: A request and response DTO.
 2. Some of the time you'll use `EmptyDTO` as your request DTO.
-3. Yet fewer times you'll have only a request DTO, and use `QueuedRequestHandlerResponseDTO` for the response.
+3. Yet fewer times you'll have only a request DTO, and use `QueuedEndpointResponseDTO` for the response.
 
 Now, let's move on and look at the [client](./client.md).

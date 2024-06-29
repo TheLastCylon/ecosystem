@@ -2,13 +2,9 @@
 
 We've seen how to create an [Echo-server](./server.md) with Ecosystem, now let's take a look at making an Echo-client.
 
-Again though, please do not use this as an example of how to lay out your production projects!
-
-We'll get to good project structure later. Right now, just get a grip on the basics.
-
 In order to test this client, get into your terminal and go to the directory you have cloned this repository into, then:
 
-1. Start the [Echo-server](./server.md) with: `python -m examples.echo.server -i 0`
+1. Start the [Echo-server](./server.md) with: `python -m examples.echo.echo_example -i 0`
 2. Get into another terminal and start the Echo-client with: `python -m examples.echo.client`
 
 You should see a prompt like this:
@@ -44,10 +40,10 @@ You can find this code in [examples/echo/client.py](../../../examples/echo/clien
  1: import asyncio
  2: 
  3: from typing import cast
- 4: from ecosystem.clients import TCPClient, UDPClient, UDSClient
- 5: 
- 6: from .server import EchoRequestDto
- 7: from .server import EchoResponseDto
+ 4: 
+ 5: from ecosystem.clients import TCPClient, UDPClient, UDSClient
+ 6: 
+ 7: from .dtos import EchoRequestDto, EchoResponseDto
  8: 
  9: client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
 10: client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
@@ -112,21 +108,19 @@ From line 1 to 7 we are just doing imports.
  1: import asyncio
  2: 
  3: from typing import cast
- 4: from ecosystem.clients import TCPClient, UDPClient, UDSClient
- 5: 
- 6: from .server import EchoRequestDto
- 7: from .server import EchoResponseDto
+ 4: 
+ 5: from ecosystem.clients import TCPClient, UDPClient, UDSClient
+ 6: 
+ 7: from .dtos import EchoRequestDto, EchoResponseDto
 ```
 
-We import `asyncio` on line 1. Don't freak out if you've never used `asyncio` or find it hard to understand. Ecosystem abstracts most of that away for you.
+We import `asyncio` on line 1. Again: Don't freak out if you've never used `asyncio` or find it hard to understand. Ecosystem abstracts most of that away for you.
 
 On line 3 we import `cast` from `typing`, this isn't strictly necessary, but it does make for good coding practice when we want our type hinting in our IDEs to work properly.
 
-Line 4 is where we get the TCP, UDP and UDS client classes from Ecosystem.
+Line 5 is where we get the TCP, UDP and UDS client classes from Ecosystem.
 
-In lines 6 and 7, we grab the request and response DTOs we used in the [Echo-server](./server.md), directly from its source.
-
-THIS IS BAD PRACTICE! DON'T DO IT IN YOUR PRODUCTION CODE!
+And on lines 7, we grab the request and response DTOs we created in [examples/echo/dtos.py](../../../examples/echo/dtos.py).
 
 ### Instantiating the clients
 ```python
@@ -237,7 +231,7 @@ Along with some nice output, so we can see what's going on in the terminal.
 
 Yea, the `main` function here is nothing more than a loop that accepts our input and passes it to where we send it.
 
-On line 62 we call the `main` function with `asyncio.run(main())`, again though: Don't freak out if you've not used `asyncio`, we'll get to that. It's not nearly as hard as people tell you it is.
+On line 62 we call the `main` function with `asyncio.run(main())`.
 
 ## Conclusion
 At this point you have a solid grip on what goes into making a client with Ecosystem.

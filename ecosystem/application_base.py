@@ -2,8 +2,10 @@ import os
 import asyncio
 import signal
 import argparse
+import logging
 
-from .logs import EcoLogger
+from .logs import EcoLogger # noqa This sets up the logger for us, we don't need anything from the import
+from .configuration import AppConfiguration
 
 from .requests.request_router import RequestRouter
 
@@ -18,16 +20,9 @@ from .state_keepers import (
     StatisticsKeeper
 )
 
-from .configuration import (
-    ConfigApplication,
-    load_config_from_file,
-    load_config_from_environment,
-)
-
 from .util import SingletonType
 
 from .exceptions import (
-    InstanceConfigurationNotFoundException,
     InstanceAlreadyRunningException,
     TerminationSignalException
 )
@@ -55,19 +50,20 @@ from .standard_endpoints import ( # noqa
 
 # --------------------------------------------------------------------------------
 class ApplicationBase(metaclass=SingletonType):
-    argument_parser       : argparse.ArgumentParser = argparse.ArgumentParser()
     command_line_args     : argparse.Namespace      = None
-    logger                : EcoLogger               = EcoLogger()
+    logger                : logging.Logger          = logging.getLogger()
     __request_router      : RequestRouter           = RequestRouter()
     __statistics_keeper   : StatisticsKeeper        = StatisticsKeeper()
     __error_state_list    : ErrorStateList          = ErrorStateList()
     __running             : bool                    = False
-    __configuration       : ConfigApplication       = None
-    __application_name    : str                     = None
-    __application_instance: str                     = None
+    _configuration        : AppConfiguration        = AppConfiguration()
     __server_tcp          : TCPServer               = None
     __server_udp          : UDPServer               = None
     __server_uds          : UDSServer               = None
+
+    # --------------------------------------------------------------------------------
+    def __init__(self):
+        self.__configure_basics()
 
     # --------------------------------------------------------------------------------
     @staticmethod
@@ -107,13 +103,7 @@ class ApplicationBase(metaclass=SingletonType):
         self.__stop_servers()
         self.__shut_down_queued_handlers()
         # TODO: Shut down queued senders
-        self.logger.info(f"Instance [{self.__application_instance}] of application [{self.__application_name}] shutdown.")
-
-    # --------------------------------------------------------------------------------
-    def __init__(self, name: str, configuration: ConfigApplication = None):
-        self.__configure_argument_parser()
-        self.__configuration = configuration
-        self.__configure_basics(name)
+        self.logger.info(f"Instance [{self._configuration.instance}] of application [{self._configuration.name}] shutdown.")
 
     # --------------------------------------------------------------------------------
     @staticmethod
@@ -133,101 +123,51 @@ class ApplicationBase(metaclass=SingletonType):
 
     # --------------------------------------------------------------------------------
     def __lock_file_check(self):
-        instance_config = self.__configuration.instances[self.__application_instance]
-        lock_file_name  = f"{self.__application_name}-{self.__application_instance}.lock"
-        lock_file_path  = f"{instance_config.lock_directory}/{lock_file_name}"
+        lock_file_name  = f"{self._configuration.name}-{self._configuration.instance}.lock"
+        lock_file_path  = f"{self._configuration.lock_directory}/{lock_file_name}"
         if os.path.exists(lock_file_path):
             with open(lock_file_path, "r") as lock_file:
                 process_id = int(lock_file.readline())
             if self.__process_id_check(process_id):
-                raise InstanceAlreadyRunningException(self.__application_name, self.__application_instance, process_id)
+                raise InstanceAlreadyRunningException(self._configuration.name, self._configuration.instance, process_id)
             os.remove(lock_file_path)
         self.__create_lock_file(lock_file_path)
 
     # --------------------------------------------------------------------------------
-    def __load_configuration(self):
-        if not self.__configuration:
-            if not self.command_line_args.config:
-                self.__configuration = load_config_from_environment(self.__application_name, self.__application_instance)
-            else:
-                self.__configuration = load_config_from_file(self.command_line_args.config)
-
-        if self.__application_instance not in self.__configuration.instances.keys():
-            raise InstanceConfigurationNotFoundException(self.__application_name, self.__application_instance)
-
-    # --------------------------------------------------------------------------------
-    def __configure_basics(self, name: str) -> None:
-        self.__application_name     = name
-        self.__application_instance = self.command_line_args.instance
-
-        self.__load_configuration()
+    def __configure_basics(self) -> None:
         self.__lock_file_check()
 
-        self.logger.setup(
-            self.__application_name,
-            self.__application_instance,
-            self.__configuration.instances[self.__application_instance].logging
-        )
-
         self.__statistics_keeper.set_gather_period(
-            self.__configuration.instances[self.__application_instance].stats_keeper.gather_period
+            self._configuration.stats_keeper.gather_period
         )
         self.__statistics_keeper.set_history_length(
-            self.__configuration.instances[self.__application_instance].stats_keeper.history_length
+            self._configuration.stats_keeper.history_length
         )
 
         self.__configure_communication_servers()
 
     # --------------------------------------------------------------------------------
-    def __configure_argument_parser(self):
-        self.argument_parser.add_argument(
-            "-i", "--instance",
-            type     = str,
-            required = False,
-            help     = 'The instance id this invocation of the script needs to run as. Default:"0"',
-            default  = "0"
-        )
-
-        self.argument_parser.add_argument(
-            "-c", "--console",
-            type     = bool,
-            required = False,
-            help     = "Start the application as a console application, rather than a daemon. Default:False",
-            default  = False
-        )
-
-        self.argument_parser.add_argument(
-            "-C", "--config",
-            type     = str,
-            required = False,
-            help     = "Specify a configuration file to load for this invocation. Default:None",
-            default  = None
-        )
-
-        self.command_line_args = self.argument_parser.parse_args()
-
-    # --------------------------------------------------------------------------------
     def __configure_communication_servers(self):
-        if self.__configuration.instances[self.__application_instance].tcp:
-            self.__server_tcp = TCPServer(self.__configuration.instances[self.__application_instance].tcp)
+        if self._configuration.tcp:
+            self.__server_tcp = TCPServer(self._configuration.tcp)
 
-        if self.__configuration.instances[self.__application_instance].udp:
-            self.__server_udp = UDPServer(self.__configuration.instances[self.__application_instance].udp)
+        if self._configuration.udp:
+            self.__server_udp = UDPServer(self._configuration.udp)
 
-        if self.__configuration.instances[self.__application_instance].uds:
-            uds_config = self.__configuration.instances[self.__application_instance].uds
+        if self._configuration.uds:
+            uds_config = self._configuration.uds
             if uds_config.socket_file_name == "DEFAULT":
-                uds_config.socket_file_name = f"{self.__application_name}_{self.__application_instance}_uds.sock"
+                uds_config.socket_file_name = f"{self._configuration.name}_{self._configuration.instance}_uds.sock"
             self.__server_uds = UDSServer(uds_config)
 
     # --------------------------------------------------------------------------------
     async def __setup_queued_handlers(self):
-        queue_directory = self.__configuration.instances[self.__application_instance].queue_directory
+        queue_directory = self._configuration.queue_directory
         for queued_handler in self.__request_router.get_queued_handlers():
             await queued_handler.setup(
                 queue_directory,
-                self.__application_name,
-                self.__application_instance
+                self._configuration.name,
+                self._configuration.instance
             )
 
     # --------------------------------------------------------------------------------

@@ -3,7 +3,7 @@ import random
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem import endpoint
+from ecosystem.requests import endpoint
 
 from ..dtos import RollRequestDto, RollResponseDto
 
