@@ -1,9 +1,6 @@
 # TODO
 
 ## For MVP
-- [ ] Investigate logging and exactly how that works.
-- [ ] Investigate sqlalchemy for use with Postgres, along with migrations done with Alembic.
-
 - [ ] Ecosystem JavaScript client
 
 - [ ] Queued sender: delay between send attempts (user defined back-off function?)
