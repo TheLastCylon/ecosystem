@@ -12,12 +12,19 @@
   - [ ] UDP communications.
   - [ ] UDS communications.
 
-- [ ] Documentation: Handlers
-- [ ] Documentation: Queued endpoints, remember pause and unpause
-- [ ] Documentation: Application base
-- [ ] Documentation: Logging
+- [ ] Documentation: Queued endpoints
+  - [ ] max uncommited
+  - [ ] max retries
+  - [ ] manipulation through standard endpoints and the queued handler keeper
+- [ ] Documentation: Accessing configuration in code.
+- [ ] Documentation: The statistics keeper, why it exists and how to use it.
+- [ ] Documentation: The error keeper, why it exists and how to use it.
+- [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+  - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
+  - This host listened on, can be adjusted to do filtering already.
+  - UDS connections can only be done on the same machine, so that's filtered by default.
 
 ## Beyond MVP
 - [ ] LRU cache
@@ -89,6 +96,9 @@
 - [X] Documentation: Application configuration
   - [X] using environment variables
   - [X] using configuration files
+- [X] Documentation: Handlers
+- [X] Documentation: Application base
+- [X] Documentation: Logging
 
 # Possibly won't do:
 

@@ -20,7 +20,7 @@ Even your environment variables that have nothing to do with Ecosystem, can star
 
 What follows below, is a list of Ecosystem environment variables, that set things for all Ecosystem applications, running on the same machine.
 
-For directories/folders:
+### For directories/folders:
 - `ECOENV_DEFAULT_DIR`
   - Set the default location for LOG and LOCK files ONLY.
   - Defaults:
@@ -40,7 +40,7 @@ For directories/folders:
     - Queue databases are simply too important to have their location left up to some kind of computed default.
     - Ecosystem forces you to be explicit about this, because losing these sqlite files, or having them in a location that you do not consciously know and keep track of, can cause disasters.
 
-For logging:
+### For logging:
 - `ECOENV_LOG_FORMAT`
   - Sets the format for log entries.
   - This is the format as specified and used by Python's logger.
@@ -71,13 +71,29 @@ For logging:
   - The size, in bytes, log files may reach before being rotated.
   - Default: 10737418240 from `(1024*1024*1024)*10 = 10,737,418,240` i.e. 10 mega-bytes
 
-For statistics:
+A word on log file names:
+
+For an Ecosystem application, it's log file will always have the name `{application name}-{insance}.log`
+Rotated log file names will be named `{application name}-{insance}.log.{rotation number}`
+
+That means:
+- For an application name: `my_cool_application`
+- Running as instance: `0`
+- The log file being written to will always be: `my_cool_application-0.log`
+- Rotated log file names will look like:
+  - `my_cool_application-0.log.1`, `my_cool_application-0.log.2`, `my_cool_application-0.log.3`, `my_cool_application-0.log.4`, `my_cool_application-0.log.5`
+- The lower the appended number, the younger the rotated file is.
+- Conversely: The higher it is, the older the logs are.
+
+
+### For statistics:
 - `ECOENV_STAT_GP`
   - The **Stat**istics **G**athering **P**eriod, in seconds.
   - Default: 300 i.e. 5 Minutes
 - `ECOENV_STAT_HL`
   - The number of statistic period histories to keep. i.e. **Stat**istic **H**istory **L**ength.
   - Default: 12 i.e. 1 hour's worth of default gather period entries
+
 
 
 ## Application level configuration
