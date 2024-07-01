@@ -2,7 +2,7 @@ import asyncio
 
 from ..stream_server_base import StreamServerBase
 
-from ...configuration import ConfigTCP
+from ...configuration.config_models import ConfigTCP
 
 
 # --------------------------------------------------------------------------------

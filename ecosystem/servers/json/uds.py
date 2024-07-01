@@ -3,7 +3,7 @@ import socket
 
 from ..stream_server_base import StreamServerBase
 
-from ...configuration import ConfigUDS
+from ...configuration.config_models import ConfigUDS
 
 
 # --------------------------------------------------------------------------------

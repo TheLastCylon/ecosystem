@@ -2,7 +2,7 @@ import asyncio
 
 from ..server_base import ServerBase
 
-from ...configuration import ConfigUDP
+from ...configuration.config_models import ConfigUDP
 from ...exceptions import IncompleteMessageException
 
 

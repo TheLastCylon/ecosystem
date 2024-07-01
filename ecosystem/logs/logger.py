@@ -3,7 +3,7 @@ import sys
 
 from .compressed_rotating_file_handler import CompressedRotatingFileHandler, RotatingFileHandler
 
-from ..configuration import AppConfiguration, ConfigLogging
+from ..configuration.config_models import AppConfiguration, ConfigLogging
 from ..util import SingletonType
 
 

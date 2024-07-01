@@ -5,7 +5,7 @@ import argparse
 import logging
 
 from .logs import EcoLogger # noqa This sets up the logger for us, we don't need anything from the import
-from .configuration import AppConfiguration
+from .configuration.config_models import AppConfiguration
 
 from .requests.request_router import RequestRouter
 

@@ -64,7 +64,7 @@ You can find this code in [examples/echo/client.py](../../../examples/echo/clien
 25: 
 26: # --------------------------------------------------------------------------------
 27: async def uds_send(message):
-28:     response = await client_udp.send_message("echo", EchoRequestDto(message = message), EchoResponseDto)
+28:     response = await client_uds.send_message("echo", EchoRequestDto(message = message), EchoResponseDto)
 29:     return cast(EchoResponseDto, response)
 30: 
 31: 

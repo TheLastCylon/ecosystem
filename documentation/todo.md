@@ -15,7 +15,6 @@
 - [ ] Documentation: Handlers
 - [ ] Documentation: Queued endpoints, remember pause and unpause
 - [ ] Documentation: Application base
-- [ ] Documentation: Application configuration
 - [ ] Documentation: Logging
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
@@ -87,6 +86,9 @@
     - [X] roll_times endpoint
   - [X] Client
 - [X] Documentation: sender
+- [X] Documentation: Application configuration
+  - [X] using environment variables
+  - [X] using configuration files
 
 # Possibly won't do:
 

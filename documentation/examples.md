@@ -21,3 +21,6 @@ So, keep that in mind when you are looking at the examples. They might not work 
   - [The DTOs](./examples/dice_roller/the_dtos.md)
   - [The server](./examples/dice_roller/server.md)
   - [The Client](./examples/dice_roller/client.md)
+- [Configuration, done right](./configuration/configuration.md)
+  - [Using environment variables](./configuration/through_environment_variables.md)
+  - [Using configuration files](./configuration/through_configuration_files.md)

@@ -25,7 +25,7 @@ async def udp_send(message):
 
 # --------------------------------------------------------------------------------
 async def uds_send(message):
-    response = await client_udp.send_message("echo", EchoRequestDto(message = message), EchoResponseDto)
+    response = await client_uds.send_message("echo", EchoRequestDto(message = message), EchoResponseDto)
     return cast(EchoResponseDto, response)
 
 

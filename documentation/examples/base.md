@@ -81,7 +81,7 @@ Here it is:
 
 ```python
  1: from ecosystem.application_base import ApplicationBase
- 2: from ecosystem.configuration import ConfigTCP, ConfigUDP, ConfigUDS
+ 2: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
  3:                                                                                          
  4:                                                                                          
  5: # --------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ On line 1 and 2 we import the stuff we'll need from Ecosystem.
 
 ```python
  1: from ecosystem.application_base import ApplicationBase
- 2: from ecosystem.configuration import ConfigTCP, ConfigUDP, ConfigUDS
+ 2: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
 ```
 
 - `ApplicationBase` is the class from which we will derive our application's class,
