@@ -183,7 +183,7 @@ That means:
 2. Being run as instance: `feeds_cats`
 3. Where an environment variable named `ECOENV_EXTRA_MY_COOL_APPLICATION_FEEDS_CATS_DATABASE_NAME` has been created.
 4. There will, in the instance configuration available in your application at runtime, be an entry named `DATABASE_NAME`, that has been set to the value of `ECOENV_EXTRA_MY_COOL_APPLICATION_FEEDS_CATS_DATABASE_NAME`
-5. You'll be able to access it using something like: `self._configuration.extra['DATABASE_NAME']`
+5. Take a look at [Getting configuration in code](./getting_config_from_code.md), for details on how you can access it.
 
 Again: Yes. I know. You're welcome. It's my pleasure, I assure you!
 
