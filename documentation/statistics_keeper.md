@@ -23,7 +23,7 @@ data on the fly. You can slap an RRD Graphing Solution like
 
 So why spend the money?
 
-Why not just have a statistics reporting, and an endpoint, in your applications?
+Why not just have statistics tracking, reporting and an endpoint, in your applications?
 
 ## Ecosystem statistics.
 
