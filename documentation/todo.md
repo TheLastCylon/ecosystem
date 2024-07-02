@@ -17,7 +17,6 @@
   - [ ] max retries
   - [ ] manipulation through standard endpoints and the queued handler keeper
 - [ ] Documentation: Accessing configuration in code.
-- [ ] Documentation: The statistics keeper, why it exists and how to use it.
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 - [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
 
@@ -99,6 +98,7 @@
 - [X] Documentation: Handlers
 - [X] Documentation: Application base
 - [X] Documentation: Logging
+- [X] Documentation: The statistics keeper, why it exists and how to use it.
 
 # Possibly won't do:
 

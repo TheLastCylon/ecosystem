@@ -7,5 +7,6 @@
 - [Ecosystem application configuration](./configuration/configuration.md)
   - [Through environment variables](./configuration/through_environment_variables.md)
   - [Through configuration files](./configuration/through_configuration_files.md)
+- [Statistics made easy](./statistics_keeper.md)
 - [Why do this?](./why.md)
 - [TODO (as in: The stuff still pending)](./todo.md)

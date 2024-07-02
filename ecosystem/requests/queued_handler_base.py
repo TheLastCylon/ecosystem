@@ -143,7 +143,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             QueuedRequestDTO,
             self.max_uncommited
         )
-        self.statistics_keeper.add_persisted_queue(f"queued_handler_sizes.{self._route_key}.incoming", self.incoming_queue)
+        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.incoming", self.incoming_queue)
 
     # --------------------------------------------------------------------------------
     def __setup_error_queue(self):
@@ -152,7 +152,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             QueuedRequestDTO,
             self.max_uncommited
         )
-        self.statistics_keeper.add_persisted_queue(f"queued_handler_sizes.{self._route_key}.error", self.error_queue)
+        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.error", self.error_queue)
 
     # --------------------------------------------------------------------------------
     def __configure_queue_names(
