@@ -131,28 +131,3 @@ even move items back into the incoming queue database, at runtime, from outside
 your application.
 
 You can learn more about that if you look at: [Standard endpoints for queue management](./standard_endpoints_for_management.md)
-
----
-## Standard endpoints, for queued endpoint management:
-
-Ecosystem provides a host of standard endpoints ripe and ready for you to use,
-when you need to get down and dirty with queues.
-
-They are:
-- `eco.queued_handler.data`
-- `eco.queued_handler.receiving.pause`
-- `eco.queued_handler.receiving.unpause`
-- `eco.queued_handler.processing.pause`
-- `eco.queued_handler.processing.unpause`
-- `eco.queued_handler.all.pause`
-- `eco.queued_handler.all.unpause`
-- `eco.queued_handler.errors.get_first_10`
-- `eco.queued_handler.errors.reprocess.all`
-- `eco.queued_handler.errors.clear`
-- `eco.queued_handler.errors.reprocess.one`
-- `eco.queued_handler.errors.pop_request`
-- `eco.queued_handler.errors.inspect_request`
-
-
---------------------------------------------------------------------------------
-
