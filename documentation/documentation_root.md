@@ -9,5 +9,9 @@
   - [Through configuration files](./configuration/through_configuration_files.md)
   - [Getting to the configuration, in code](./configuration/getting_config_from_code.md)
 - [Statistics made easy](./statistics_keeper.md)
+- Queued Endpoints
+  - [What they are and how they work](./queued_endpoints/queued_endpoints.md)
+  - [The technical side of `queued_endpoint`](./queued_endpoints/technical_stuff.md)
+  - [Standard endpoints for queue management](./queued_endpoints/standard_endpoints_for_management.md)
 - [Why do this?](./why.md)
 - [TODO (as in: The stuff still pending)](./todo.md)

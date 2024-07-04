@@ -13,9 +13,10 @@
   - [ ] UDS communications.
 
 - [ ] Documentation: Queued endpoints
-  - [ ] max uncommited
-  - [ ] max retries
+  - [X] max uncommited
+  - [X] max retries
   - [ ] manipulation through standard endpoints and the queued handler keeper
+
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 - [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
 
@@ -99,6 +100,7 @@
 - [X] Documentation: Logging
 - [X] Documentation: The statistics keeper, why it exists and how to use it.
 - [X] Documentation: Accessing configuration in code.
+- [X] Ecosystem command line tool
 
 # Possibly won't do:
 
@@ -115,3 +117,13 @@
   - WHY:
     - This is done through interrupt handling already.
     - It might get re-visited if remote shut-down of an application becomes a requirement.
+
+# Ideas that might not see the light of day.
+
+- For `queued_endpoints`.
+  - Make max uncommited an environment variable.
+    - Should it be?
+    - We have `extra` for use by developers, should that not rather be used?
+  - Create a standard `endpoint` that allows for setting of `max_uncommited` on the fly?
+
+

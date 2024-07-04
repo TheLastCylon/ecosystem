@@ -38,10 +38,6 @@ class QueuedRequestDTO(PydanticBaseModel):
     request: Any
 
 
-# We need to:
-#   - receive the request [DONE]
-#   - put the request in the incoming queue [DONE]
-#   - somehow process the stuff in the queue
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     running                 : bool                                = False
@@ -86,6 +82,12 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def unpause_processing(self):
         self._processing_paused = False
 
+    def is_receiving_paused(self):
+        return self._receiving_paused
+
+    def is_processing_paused(self):
+        return self._processing_paused
+
     # --------------------------------------------------------------------------------
     async def incoming_queue_size(self) -> int:
         return await self.incoming_queue.size()
@@ -126,15 +128,15 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self._processing_paused = False
 
     # --------------------------------------------------------------------------------
-    async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> bool:
+    async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _T | None:
         self._processing_paused = True
         queued_request = await self.error_queue.pop_uuid(request_uid)
         if not queued_request:
-            return False
+            return None
         await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
         await self.__check_process_queue()
         self._processing_paused = False
-        return True
+        return self.request_dto_type(**queued_request.request)
 
     # --------------------------------------------------------------------------------
     def __setup_incoming_queue(self):
@@ -163,9 +165,9 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     ):
         app_instance_string           = f"{application_name}-{instance_id}"
         self.directory                = directory
-        self.queue_file_name_base     = f"{app_instance_string}-{self._route_key}-queue"
-        self.queue_file_name_in       = f"{self.queue_file_name_base}-incoming"
-        self.queue_file_name_error    = f"{self.queue_file_name_base}-error"
+        self.queue_file_name_base     = f"{app_instance_string}-{self._route_key}-queue-"
+        self.queue_file_name_in       = f"{self.queue_file_name_base}incoming.sqlite"
+        self.queue_file_name_error    = f"{self.queue_file_name_base}error.sqlite"
         self.incoming_queue_file_path = f"{self.directory}/{self.queue_file_name_in}"
         self.error_queue_file_path    = f"{self.directory}/{self.queue_file_name_error}"
 

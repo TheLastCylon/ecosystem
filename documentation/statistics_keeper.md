@@ -49,7 +49,21 @@ Then use this `netcat` command from your terminal:
 echo '{"route_key": "eco.statistics.get", "data": {"type": "current"}, "uid": "abcdef01-abcd-abcd-abcd-abcdef012345"}' | nc localhost 8888
 ```
 
-You'll get a response that, if you put it through a JSON beautifier of some kind, will look like this:
+If you don't have `netcat` on your machine, try the Ecosystem command line tool with:
+
+```shell
+python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat current
+```
+
+The output from the Ecosystem command line tool won't be the exact same as the
+responses discussed below. All the data will be there though, and it will be
+beautified for you.
+
+I'm showing protocol level responses in this document, because one will typically
+want to use that when using an RRD Graphing solution.
+
+For the raw responses, you'll get a response that, if you put it through a JSON
+beautifier of some kind, will look like this:
 
 ```json
 {
@@ -111,13 +125,21 @@ Well, hold on to your hat anyway: This gets better!
 
 ---
 ### The last gathered statistical period
-The response you saw above, is just for the current 5-minute period of statistical gathering.
+
+The response you saw above, is just for the current 5-minute period of statistical
+gathering.
 
 Allow the [dice roller example](./examples/dice_roller/dice_roller.md) to run
 more than 5 minutes, and you'll be able to use this `netcat` command from your terminal:
 
 ```shell
 echo '{"route_key": "eco.statistics.get", "data": {"type": "gathered"}, "uid": "abcdef01-abcd-abcd-abcd-abcdef012345"}' | nc localhost 8888
+```
+
+If you'd rather play with the Ecosystem command line tool, use this:
+
+```shell
+python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat gathered
 ```
 
 The response you get, is all the gathered statistics, for the last gathering
@@ -206,6 +228,12 @@ run for about 15 minutes, you'll be able to use this `netcat` command, from your
 
 ```shell
 echo '{"route_key": "eco.statistics.get", "data": {"type": "full"}, "uid": "abcdef01-abcd-abcd-abcd-abcdef012345"}' | nc localhost 8888
+```
+
+Again, here's the Ecosystem command line tool, equivalent:
+
+```shell
+python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat full
 ```
 
 Here's what I got:
