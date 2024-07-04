@@ -24,9 +24,9 @@ You can configure this location at machine, application and instance level.
 ## What are they named?
 
 - For the incoming queue:
-  - `{application name}-{instnace}-{route key}-queue-incoming.sqlite`
+  - `{application name}-{instance}-{route key}-queue-incoming.sqlite`
 - For the error queue:
-  - `{application name}-{instnace}-{route key}-queue-error.sqlite`
+  - `{application name}-{instance}-{route key}-queue-error.sqlite`
 
 That means:
 
@@ -51,4 +51,4 @@ If you are resorting to this, something has gone very, very, very wrong!
 
 There are also better ways of doing things, through Ecosystem.
 
-More on that later though.
+Take a look at [standard endpoints for queue management](./standard_endpoints_for_management.md)
