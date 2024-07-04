@@ -84,7 +84,7 @@ They can also serve as a stop-gap measure, for when you have to have a queueing
 solution right now, but have to wait for it to be put in place.
 
 ---
-## How far can you push Ecosystem's `queued_endipont`
+## How far can you push Ecosystem's `queued_endpoint`
 
 This is dependant upon your hardware and quite a bit more upon your file system.
 

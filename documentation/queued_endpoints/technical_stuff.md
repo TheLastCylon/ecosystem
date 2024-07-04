@@ -62,7 +62,7 @@ The next thing to consider is of course: Risk to the business.
 When you set `max_uncommited` to a value of `100`, what you are saying in terms
 of a business is:
 
-In the even to of catastrophic failure, I'm okay with loosing `100` of the
+In the event of catastrophic failure, I'm okay with loosing `100` of the
 messages in this queue.
 
 So, take the time and: **Think** about what you'll need.
