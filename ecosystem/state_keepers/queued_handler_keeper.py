@@ -32,7 +32,7 @@ class QueuedHandlerKeeper(metaclass=SingletonType):
     # --------------------------------------------------------------------------------
     async def __get_queue_information(self, route_key: str) -> Dict[str, Any]:
         return {
-            "incoming"         : await self.__queued_handlers[route_key].incoming_queue_size(),
+            "pending"          : await self.__queued_handlers[route_key].pending_queue_size(),
             "error"            : await self.__queued_handlers[route_key].error_queue_size(),
             "receiving_paused" : self.__queued_handlers[route_key].is_receiving_paused(),
             "processing_paused": self.__queued_handlers[route_key].is_processing_paused()

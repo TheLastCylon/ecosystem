@@ -21,8 +21,8 @@ class ErrorQueueItemRequestDto(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class QueuedEndpointDatabaseSizesDto(PydanticBaseModel):
-    incoming: int
-    error   : int
+    pending: int
+    error  : int
 
 
 # --------------------------------------------------------------------------------
@@ -47,8 +47,8 @@ def make_queued_endpoint_information_dto(route_key: str, queue_info_dict: Dict[s
         receiving_paused  = queue_info_dict["receiving_paused"],
         processing_paused = queue_info_dict["processing_paused"],
         database_sizes    = QueuedEndpointDatabaseSizesDto(
-            incoming = queue_info_dict["incoming"],
-            error    = queue_info_dict["error"]
+            pending = queue_info_dict["pending"],
+            error   = queue_info_dict["error"]
         )
     )
 
@@ -65,7 +65,7 @@ async def eco_queued_handler_data(request_uuid: uuid.UUID, request) -> PydanticB
     return QueuedHandlerManagerResponseDto(
         queue_data   = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
         request_data = None,
-        message      = "Queue data retrieved."
+        message      = f"Queued Endpoint[{data.queue_route_key}]: Data retrieved.",
     )
 
 
@@ -80,7 +80,7 @@ async def eco_queued_handler_receiving_pause(request_uuid: uuid.UUID, request) -
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Paused RECEIVING for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Paused RECEIVING.",
     )
 
 
@@ -95,7 +95,7 @@ async def eco_queued_handler_receiving_unpause(request_uuid: uuid.UUID, request)
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"UN-Paused RECEIVING for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: UN-Paused RECEIVING.",
     )
 
 
@@ -110,7 +110,7 @@ async def eco_queued_handler_processing_pause(request_uuid: uuid.UUID, request) 
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Paused PROCESSING for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Paused PROCESSING.",
     )
 
 
@@ -125,7 +125,7 @@ async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"UN-Paused PROCESSING for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: UN-Paused PROCESSING.",
     )
 
 
@@ -140,7 +140,7 @@ async def eco_queued_handler_all_pause(request_uuid: uuid.UUID, request) -> Pyda
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Paused ALL for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Paused ALL.",
     )
 
 
@@ -155,7 +155,7 @@ async def eco_queued_handler_all_unpause(request_uuid: uuid.UUID, request) -> Py
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"UN-Paused ALL for queue with route key: [{data.queue_route_key}]"
+        message    = f"Queued Endpoint[{data.queue_route_key}]: UN-Paused ALL.",
     )
 
 
@@ -170,7 +170,7 @@ async def eco_queued_handler_errors_get_first_10(request_uuid: uuid.UUID, reques
 
     return QueuedHandlerManagerResponseDto(
         queue_data = uuid_list,
-        message    = f"Retrieved first 10 UUIDs for error queue with route key: [{data.queue_route_key}]."
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Retrieved first 10 UUIDs for error database."
     )
 
 
@@ -185,7 +185,7 @@ async def eco_queued_handler_errors_reprocess_all(request_uuid: uuid.UUID, reque
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Error queue for route key [{data.queue_route_key}] now being reprocessed."
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Error database entries, moved to incoming database."
     )
 
 
@@ -200,7 +200,7 @@ async def eco_queued_handler_errors_clear(request_uuid: uuid.UUID, request) -> P
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Error queue for route key [{data.queue_route_key}] has been cleared."
+        message    = f"Queued Endpoint[{data.queue_route_key}]: Error database cleared."
     )
 
 
@@ -223,7 +223,7 @@ async def eco_queued_handler_errors_reprocess_one(request_uuid: uuid.UUID, reque
     return QueuedHandlerManagerResponseDto(
         queue_data   = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"REPROCESSING request with uid [{data.request_uid}] in error database with route key[{data.queue_route_key}]."
+        message      = f"Queued Endpoint[{data.queue_route_key}]: Error database entry[{data.request_uid}] moved to incoming database."
     )
 
 
@@ -245,7 +245,7 @@ async def eco_queued_handler_errors_pop_request(request_uuid: uuid.UUID, request
     return QueuedHandlerManagerResponseDto(
         queue_data   = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"POPPED request with UUID[{data.request_uid}] from error queue database with route key[{data.queue_route_key}]."
+        message      = f"Queued Endpoint[{data.queue_route_key}]: POPPED Error database entry[{data.request_uid}]."
     )
 
 
@@ -267,5 +267,5 @@ async def eco_queued_handler_errors_inspect_request(request_uuid: uuid.UUID, req
     return QueuedHandlerManagerResponseDto(
         queue_data   = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"INSPECTING request with UUID[{data.request_uid}] from error queue database with route key[{data.queue_route_key}]."
+        message      = f"Queued Endpoint[{data.queue_route_key}]: INSPECTING Error database entry[{data.request_uid}]."
     )

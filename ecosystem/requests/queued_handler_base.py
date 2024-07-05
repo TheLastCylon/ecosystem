@@ -4,14 +4,13 @@ import logging
 
 from pydantic import BaseModel as PydanticBaseModel
 from abc import ABC, abstractmethod
-from typing import Any, Type, TypeVar, Generic, List
-
+from typing import Type, TypeVar, Generic, List
 
 from .handler_base import HandlerBase
 from .status import Status
 
 from ..data_transfer_objects import QueuedEndpointResponseDTO
-from ..queues import SqlPersistedQueue
+from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 
 
@@ -32,31 +31,18 @@ class QueuedRequestHandlerReceivingPausedException(QueuedRequestHandlerException
 
 
 # --------------------------------------------------------------------------------
-class QueuedRequestDTO(PydanticBaseModel):
-    uid    : str
-    retries: int = 0
-    request: Any
-
-
-# --------------------------------------------------------------------------------
 class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
-    running                 : bool                                = False
-    _receiving_paused       : bool                                = True
-    _processing_paused      : bool                                = True
-    statistics_keeper       : StatisticsKeeper                    = StatisticsKeeper()
-    log                     : logging.Logger                      = logging.getLogger()
-    directory               : str                                 = None
-    queue_file_name_base    : str                                 = None
-    queue_file_name_in      : str                                 = None
-    queue_file_name_error   : str                                 = None
-    max_uncommited          : int                                 = None
-    max_retries             : int                                 = None
-    incoming_queue_file_path: str                                 = None
-    error_queue_file_path   : str                                 = None
-    incoming_queue          : SqlPersistedQueue[QueuedRequestDTO] = None
-    error_queue             : SqlPersistedQueue[QueuedRequestDTO] = None
-    on_shutdown_future      : asyncio.Future                      = None
-    shutdown                : bool                                = False
+    running                : bool             = False
+    _receiving_paused      : bool             = True
+    _processing_paused     : bool             = True
+    __processing_scheduled : bool             = False
+    statistics_keeper      : StatisticsKeeper = StatisticsKeeper()
+    log                    : logging.Logger   = logging.getLogger()
+    max_uncommited         : int              = None
+    max_retries            : int              = None
+    queue                  : PendingQueue     = None
+    on_shutdown_future     : asyncio.Future   = None
+    shutdown               : bool             = False
 
     def __init__(
         self,
@@ -75,12 +61,14 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     def unpause_receiving(self):
         self._receiving_paused = False
+        self.__check_process_queue()
 
     def pause_processing(self):
         self._processing_paused = True
 
     def unpause_processing(self):
         self._processing_paused = False
+        self.__check_process_queue()
 
     def is_receiving_paused(self):
         return self._receiving_paused
@@ -89,87 +77,65 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         return self._processing_paused
 
     # --------------------------------------------------------------------------------
-    async def incoming_queue_size(self) -> int:
-        return await self.incoming_queue.size()
+    async def pending_queue_size(self) -> int:
+        return await self.queue.get_pending_size()
 
     # --------------------------------------------------------------------------------
     async def error_queue_size(self) -> int:
-        return await self.error_queue.size()
+        return await self.queue.get_error_size()
 
     # --------------------------------------------------------------------------------
-    async def error_queue_clear(self) -> int:
-        return await self.error_queue.clear()
+    async def error_queue_clear(self):
+        await self.queue.clear_error_queue()
 
     # --------------------------------------------------------------------------------
     async def get_first_x_error_uuids(self, how_many: int = 1) -> List[str]:
-        return await self.error_queue.get_first_x_uuids(how_many)
+        return await self.queue.get_first_x_error_uuids(how_many)
 
     # --------------------------------------------------------------------------------
     async def pop_request_from_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        queued_request = await self.error_queue.pop_uuid(request_uid)
+        queued_request = await self.queue.pop_error_q_uuid(request_uid)
         if not queued_request:
             return None
-        return self.request_dto_type(**queued_request.request)
+        return self.request_dto_type(**queued_request)
 
     # --------------------------------------------------------------------------------
     async def inspect_request_in_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        queued_request = await self.error_queue.inspect_uuid(request_uid)
+        queued_request = await self.queue.inspect_error_q_uuid(request_uid)
         if not queued_request:
             return None
-        return self.request_dto_type(**queued_request.request)
+        return self.request_dto_type(**queued_request)
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue(self):
         self._processing_paused = True
-        while not await self.error_queue.is_empty():
-            queued_request = await self.error_queue.pop_front()
-            await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
-        await self.__check_process_queue()
+        await self.queue.move_all_error_to_pending()
+        self.__check_process_queue()
         self._processing_paused = False
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _T | None:
         self._processing_paused = True
-        queued_request = await self.error_queue.pop_uuid(request_uid)
-        if not queued_request:
-            return None
-        await self.incoming_queue.push_back(queued_request, uuid.UUID(queued_request.uid))
-        await self.__check_process_queue()
+        queued_request = await self.queue.move_one_error_to_pending(request_uid)
+        self.__check_process_queue()
         self._processing_paused = False
-        return self.request_dto_type(**queued_request.request)
+        return self.request_dto_type(**queued_request)
 
     # --------------------------------------------------------------------------------
-    def __setup_incoming_queue(self):
-        self.incoming_queue = SqlPersistedQueue[QueuedRequestDTO](
-            self.incoming_queue_file_path,
-            QueuedRequestDTO,
-            self.max_uncommited
-        )
-        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.incoming", self.incoming_queue)
-
-    # --------------------------------------------------------------------------------
-    def __setup_error_queue(self):
-        self.error_queue = SqlPersistedQueue[QueuedRequestDTO](
-            self.error_queue_file_path,
-            QueuedRequestDTO,
-            self.max_uncommited
-        )
-        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.error", self.error_queue)
-
-    # --------------------------------------------------------------------------------
-    def __configure_queue_names(
+    def __configure_queue(
         self,
         directory       : str,
         application_name: str,
         instance_id     : str,
     ):
-        app_instance_string           = f"{application_name}-{instance_id}"
-        self.directory                = directory
-        self.queue_file_name_base     = f"{app_instance_string}-{self._route_key}-queue-"
-        self.queue_file_name_in       = f"{self.queue_file_name_base}incoming.sqlite"
-        self.queue_file_name_error    = f"{self.queue_file_name_base}error.sqlite"
-        self.incoming_queue_file_path = f"{self.directory}/{self.queue_file_name_in}"
-        self.error_queue_file_path    = f"{self.directory}/{self.queue_file_name_error}"
+        app_instance_string = f"{application_name}-{instance_id}"
+        self.queue = PendingQueue(
+            directory,
+            f"{app_instance_string}-{self._route_key}-endpoint",
+            self.max_uncommited
+        )
+        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.pending", self.queue.pending_q)
+        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.error"  , self.queue.error_q)
 
     # --------------------------------------------------------------------------------
     async def setup(
@@ -180,13 +146,11 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     ):
         route_key = self.get_route_key()
         self.log.info(f"Queued handler [{route_key}] setup.")
-        self.__configure_queue_names(directory, application_name, instance_id)
-        self.__setup_incoming_queue()
-        self.__setup_error_queue()
+        self.__configure_queue(directory, application_name, instance_id)
         self.unpause_receiving()
         self.unpause_processing()
 
-        await self.__check_process_queue()
+        self.__check_process_queue()
 
         loop = asyncio.get_running_loop()
         self.on_shutdown_future = loop.create_future()
@@ -204,8 +168,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         if not self.running and self.shutdown:
             route_key = self.get_route_key()
             self.log.info(f"Queued handler [{route_key}] stopping.")
-            self.incoming_queue.shut_down()
-            self.error_queue.shut_down()
+            self.queue.shut_down()
             self.on_shutdown_future.set_result(True)
             self.log.info(f"Queued handler [{route_key}] stopped.")
 
@@ -217,17 +180,19 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def _process_queue(self):
         self.running = True
-        while not self._processing_paused and not await self.incoming_queue.is_empty():
-            queued_request      = await self.incoming_queue.pop_front()
-            queued_request_uid  = uuid.UUID(queued_request.uid)
-            queued_request_data = self.request_dto_type(**queued_request.request)
-            if not await self.process_queued_request(queued_request_uid, queued_request_data):
-                queued_request.retries += 1
-                if queued_request.retries >= self.max_retries:
-                    await self.error_queue.push_back(queued_request, queued_request_uid)
+        while not self._processing_paused and await self.queue.has_pending():
+            queued_item  = await self.queue.pop()
+            request_uid  = uuid.UUID(queued_item.uid)
+            request_data = self.request_dto_type(**queued_item.data)
+            retries      = queued_item.retries
+            if not await self.process_queued_request(request_uid, request_data):
+                retries += 1
+                if retries >= self.max_retries:
+                    await self.queue.push_error(request_uid, request_data, "Max retries reached.")
                 else:
-                    await self.incoming_queue.push_back(queued_request, queued_request_uid)
-        self.running = False
+                    await self.queue.push_pending(request_uid, request_data, retries)
+        self.running                = False
+        self.__processing_scheduled = False
         self.__shut_down_check()
 
     # --------------------------------------------------------------------------------
@@ -237,18 +202,16 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # TODO: Investigate if we need process scheduled check here, as for queued sender?
     # --------------------------------------------------------------------------------
-    async def __check_process_queue(self):
-        if not self.running:
+    def __check_process_queue(self):
+        if not self.running and not self.__processing_scheduled:
+            self.__processing_scheduled = True
             asyncio.create_task(self._process_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
 
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
         if self._receiving_paused:
             raise QueuedRequestHandlerReceivingPausedException(self._route_key)
-
-        data_to_queue = QueuedRequestDTO(uid = str(request_uuid), retries = 0, request = request_data)
-        response      = QueuedEndpointResponseDTO(
-            uid = str(await self.incoming_queue.push_back(data_to_queue, request_uuid))
-        )
-        await self.__check_process_queue()
+        await self.queue.push_pending(request_uuid, request_data, 0)
+        response = QueuedEndpointResponseDTO(uid = str(request_uuid))
+        self.__check_process_queue()
         return response

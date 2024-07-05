@@ -15,6 +15,7 @@ from .servers import (
     UDSServer,
 )
 
+from .state_keepers.queued_sender_keeper import QueuedSenderKeeper
 from .state_keepers.error_state_list import ErrorStateList
 from .state_keepers.statistics_keeper import StatisticsKeeper
 
@@ -41,8 +42,6 @@ from .standard_endpoints import ( # noqa
     eco_queued_handler_receiving_pause,
     eco_queued_handler_receiving_unpause,
 
-    eco_queued_sender_all_pause,
-    eco_queued_sender_all_unpause,
     eco_queued_sender_data,
     eco_queued_sender_errors_clear,
     eco_queued_sender_errors_get_first_10,
@@ -50,8 +49,6 @@ from .standard_endpoints import ( # noqa
     eco_queued_sender_errors_pop_request,
     eco_queued_sender_errors_reprocess_all,
     eco_queued_sender_errors_reprocess_one,
-    eco_queued_sender_retry_process_pause,
-    eco_queued_sender_retry_process_unpause,
     eco_queued_sender_send_process_pause,
     eco_queued_sender_send_process_unpause,
 
@@ -198,6 +195,17 @@ class ApplicationBase(metaclass=SingletonType):
             )
 
     # --------------------------------------------------------------------------------
+    async def __setup_queued_senders(self):
+        queued_sender_keeper = QueuedSenderKeeper()
+        queue_directory = self._configuration.queue_directory
+        for queued_senders in queued_sender_keeper.get_queued_senders():
+            await queued_senders.setup(
+                queue_directory,
+                self._configuration.name,
+                self._configuration.instance
+            )
+
+    # --------------------------------------------------------------------------------
     def __shut_down_queued_handlers(self):
         for queued_handler in self.__request_router.get_queued_handlers():
             queued_handler.shut_down()
@@ -262,8 +270,15 @@ class ApplicationBase(metaclass=SingletonType):
         tasks = []
 
         await self.__setup_queued_handlers()
+        await self.__setup_queued_senders()
+
         for queued_handler in self.__request_router.get_queued_handlers():
             task = asyncio.create_task(queued_handler.wait_for_shutdown())
+            tasks.append(task)
+
+        queued_sender_keeper = QueuedSenderKeeper()
+        for queued_sender in queued_sender_keeper.get_queued_senders():
+            task = asyncio.create_task(queued_sender.wait_for_shutdown())
             tasks.append(task)
 
         tasks.append(asyncio.create_task(self.__start_stats_keeper()))

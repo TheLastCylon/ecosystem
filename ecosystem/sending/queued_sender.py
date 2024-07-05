@@ -17,7 +17,7 @@ _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 #       - what happens when you need to send to multiple clients with the same route_key
 #       - perhaps use an identifier that names the queue for a particular client?
 #       - isn't that what the broadcaster is supposed to be?
-#   - [ ] create standard endpoints for managing send queues
+#   - [X] create standard endpoints for managing send queues
 #   - [ ] improve command line tool for doing the management of send queues
 #   - [ ] rate limiting
 # --------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def queued_sender(
     max_retries      : int = 0,
 ):
     def inner_decorator(function):
-        keeper                 = QueuedSenderKeeper()
+        queued_sender_keeper   = QueuedSenderKeeper()
         queued_sender_instance = QueuedSenderClass[_RequestDTOType, _ResponseDTOType](
             client,
             route_key,
@@ -39,7 +39,7 @@ def queued_sender(
             max_uncommited,
             max_retries
         )
-        keeper.add_queued_sender(queued_sender_instance)
+        queued_sender_keeper.add_queued_sender(queued_sender_instance)
 
         async def wrapper(*args, **kwargs):
             await queued_sender_instance.push_message(

@@ -19,8 +19,6 @@ from .queued_handler_manager import (
 )
 
 from .queued_sender_manager import (
-    eco_queued_sender_all_pause,
-    eco_queued_sender_all_unpause,
     eco_queued_sender_data,
     eco_queued_sender_errors_clear,
     eco_queued_sender_errors_get_first_10,
@@ -28,8 +26,6 @@ from .queued_sender_manager import (
     eco_queued_sender_errors_pop_request,
     eco_queued_sender_errors_reprocess_all,
     eco_queued_sender_errors_reprocess_one,
-    eco_queued_sender_retry_process_pause,
-    eco_queued_sender_retry_process_unpause,
     eco_queued_sender_send_process_pause,
     eco_queued_sender_send_process_unpause,
 )

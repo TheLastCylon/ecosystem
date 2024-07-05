@@ -14,6 +14,10 @@ class QueuedSenderKeeper(metaclass=SingletonType):
         pass
 
     # --------------------------------------------------------------------------------
+    def get_queued_senders(self) -> List[QueuedSenderClass]:
+        return [x for x in self.__queued_senders.values()]
+
+    # --------------------------------------------------------------------------------
     def has_route_key(self, route_key: str) -> bool:
         if route_key not in self.__queued_senders.keys():
             return False
@@ -31,15 +35,12 @@ class QueuedSenderKeeper(metaclass=SingletonType):
 
     # --------------------------------------------------------------------------------
     async def __get_queue_information(self, route_key: str) -> Dict[str, Any]:
-        queue_sizes = await self.__queued_senders[route_key].get_queue_sizes()
         return {
             "sizes": {
-                "send" : queue_sizes["send"],
-                "retry": queue_sizes["retry"],
-                "error": queue_sizes["error"],
+                "pending": await self.__queued_senders[route_key].pending_queue_size(),
+                "error"  : await self.__queued_senders[route_key].error_queue_size(),
             },
             "send_process_paused" : self.__queued_senders[route_key].is_send_process_paused(),
-            "retry_process_paused": self.__queued_senders[route_key].is_retry_process_paused(),
         }
 
     # --------------------------------------------------------------------------------
@@ -56,40 +57,12 @@ class QueuedSenderKeeper(metaclass=SingletonType):
         self.__queued_senders[route_key].unpause_send_process()
         return await self.__get_queue_information(route_key)
 
-    # --------------------------------------------------------------------------------
-    async def pause_retry_process(self, route_key: str):
-        if route_key not in self.__queued_senders.keys():
-            return None
-        self.__queued_senders[route_key].pause_retry_process()
-        return await self.__get_queue_information(route_key)
-
-    # --------------------------------------------------------------------------------
-    async def un_pause_retry_process(self, route_key: str):
-        if route_key not in self.__queued_senders.keys():
-            return None
-        self.__queued_senders[route_key].unpause_retry_process()
-        return await self.__get_queue_information(route_key)
-
-    # --------------------------------------------------------------------------------
-    async def pause_all(self, route_key: str):
-        if route_key not in self.__queued_senders.keys():
-            return None
-        self.__queued_senders[route_key].pause_all()
-        return await self.__get_queue_information(route_key)
-
-    # --------------------------------------------------------------------------------
-    async def un_pause_all(self, route_key: str):
-        if route_key not in self.__queued_senders.keys():
-            return None
-        self.__queued_senders[route_key].un_pause_all()
-        return await self.__get_queue_information(route_key)
-
     # Request popping
     # --------------------------------------------------------------------------------
-    async def pop_request(self, route_key: str, request_uid: uuid.UUID, from_database: str = 'error'):
+    async def pop_request_from_error_queue(self, route_key: str, request_uid: uuid.UUID):
         if route_key not in self.__queued_senders.keys():
             return None
-        request = await self.__queued_senders[route_key].pop_request(request_uid, from_database)
+        request = await self.__queued_senders[route_key].pop_request_from_error_queue(request_uid)
         if request is None:
             return False
         queue_information = await self.__get_queue_information(route_key)
@@ -98,10 +71,10 @@ class QueuedSenderKeeper(metaclass=SingletonType):
 
     # Request inspection
     # --------------------------------------------------------------------------------
-    async def inspect_request(self, route_key: str, request_uid: uuid.UUID, from_database: str = 'error'):
+    async def inspect_request_in_error_queue(self, route_key: str, request_uid: uuid.UUID,):
         if route_key not in self.__queued_senders.keys():
             return None
-        request = await self.__queued_senders[route_key].inspect_request(request_uid, from_database)
+        request = await self.__queued_senders[route_key].inspect_request_in_error_queue(request_uid)
         if request is None:
             return False
         queue_information = await self.__get_queue_information(route_key)
@@ -109,10 +82,10 @@ class QueuedSenderKeeper(metaclass=SingletonType):
         return queue_information
 
     # --------------------------------------------------------------------------------
-    async def get_first_10_uuids(self, route_key, from_database: str = 'error') -> List[str] | None:
+    async def get_first_x_error_uuids(self, route_key) -> List[str] | None:
         if route_key not in self.__queued_senders.keys():
             return None
-        return await self.__queued_senders[route_key].get_first_x_uuids(10, from_database)
+        return await self.__queued_senders[route_key].get_first_x_error_uuids(10)
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue(self, route_key: str):

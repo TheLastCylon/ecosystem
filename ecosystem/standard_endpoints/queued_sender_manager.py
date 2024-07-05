@@ -21,16 +21,14 @@ class ErrorQueueItemRequestDto(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class QueuedSenderDatabaseSizesDto(PydanticBaseModel):
-    send : int
-    retry: int
-    error: int
+    pending: int
+    error  : int
 
 
 # --------------------------------------------------------------------------------
 class QueuedSenderInformationDto(PydanticBaseModel):
     route_key           : str
     send_process_paused : bool
-    retry_process_paused: bool
     database_sizes      : QueuedSenderDatabaseSizesDto
 
 
@@ -46,11 +44,9 @@ def make_queued_sender_information_dto(route_key: str, queue_info_dict: Dict[str
     return QueuedSenderInformationDto(
         route_key            = route_key,
         send_process_paused  = queue_info_dict["send_process_paused"],
-        retry_process_paused = queue_info_dict["retry_process_paused"],
         database_sizes       = QueuedSenderDatabaseSizesDto(
-            send  = queue_info_dict["sizes"]["send"],
-            retry = queue_info_dict["sizes"]["retry"],
-            error = queue_info_dict["sizes"]["error"]
+            pending = queue_info_dict["sizes"]["pending"],
+            error   = queue_info_dict["sizes"]["error"]
         )
     )
 
@@ -102,71 +98,11 @@ async def eco_queued_sender_send_process_unpause(request_uuid: uuid.UUID, reques
 
 
 # --------------------------------------------------------------------------------
-@endpoint("eco.queued_sender.retry_process.pause", QueuedSenderManagerRequestDto)
-async def eco_queued_sender_retry_process_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                 = cast(QueuedSenderManagerRequestDto, request)
-    queued_sender_keeper = QueuedSenderKeeper()
-    queue_info_dict      = await queued_sender_keeper.pause_retry_process(data.queue_route_key)
-    if not queue_info_dict:
-        return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
-
-    return QueuedSenderManagerResponseDto(
-        queue_data = make_queued_sender_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Queued Sender[{data.queue_route_key}]: Paused RETRY PROCESS."
-    )
-
-
-# --------------------------------------------------------------------------------
-@endpoint("eco.queued_sender.retry_process.unpause", QueuedSenderManagerRequestDto)
-async def eco_queued_sender_retry_process_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                 = cast(QueuedSenderManagerRequestDto, request)
-    queued_sender_keeper = QueuedSenderKeeper()
-    queue_info_dict      = await queued_sender_keeper.un_pause_retry_process(data.queue_route_key)
-    if not queue_info_dict:
-        return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
-
-    return QueuedSenderManagerResponseDto(
-        queue_data = make_queued_sender_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Queued Sender[{data.queue_route_key}]: UN-Paused RETRY PROCESS."
-    )
-
-
-# --------------------------------------------------------------------------------
-@endpoint("eco.queued_sender.all.pause", QueuedSenderManagerRequestDto)
-async def eco_queued_sender_all_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                 = cast(QueuedSenderManagerRequestDto, request)
-    queued_sender_keeper = QueuedSenderKeeper()
-    queue_info_dict      = await queued_sender_keeper.pause_all(data.queue_route_key)
-    if not queue_info_dict:
-        return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
-
-    return QueuedSenderManagerResponseDto(
-        queue_data = make_queued_sender_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Queued Sender[{data.queue_route_key}]: Paused ALL."
-    )
-
-
-# --------------------------------------------------------------------------------
-@endpoint("eco.queued_sender.all.unpause", QueuedSenderManagerRequestDto)
-async def eco_queued_sender_all_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data                  = cast(QueuedSenderManagerRequestDto, request)
-    queued_sender_keeper = QueuedSenderKeeper()
-    queue_info_dict       = await queued_sender_keeper.un_pause_all(data.queue_route_key)
-    if not queue_info_dict:
-        return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
-
-    return QueuedSenderManagerResponseDto(
-        queue_data = make_queued_sender_information_dto(data.queue_route_key, queue_info_dict),
-        message    = f"Queued Sender[{data.queue_route_key}]: UN-Paused ALL."
-    )
-
-
-# --------------------------------------------------------------------------------
 @endpoint("eco.queued_sender.errors.get_first_10", QueuedSenderManagerRequestDto)
 async def eco_queued_sender_errors_get_first_10(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                 = cast(QueuedSenderManagerRequestDto, request)
     queued_sender_keeper = QueuedSenderKeeper()
-    uuid_list            = await queued_sender_keeper.get_first_10_uuids(data.queue_route_key)
+    uuid_list            = await queued_sender_keeper.get_first_x_error_uuids(data.queue_route_key)
     if uuid_list is None:
         return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
 
@@ -238,7 +174,7 @@ async def eco_queued_sender_errors_pop_request(request_uuid: uuid.UUID, request)
     if not request_uid:
         return QueuedSenderManagerResponseDto(message=f"[{data.request_uid}] is not a valid UUID.")
 
-    queue_info_dict = await queued_sender_keeper.pop_request(data.queue_route_key, uuid.UUID(data.request_uid))
+    queue_info_dict = await queued_sender_keeper.pop_request_from_error_queue(data.queue_route_key, request_uid)
     if queue_info_dict is None:
         return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
     elif not queue_info_dict:
@@ -260,7 +196,7 @@ async def eco_queued_sender_errors_inspect_request(request_uuid: uuid.UUID, requ
     if not request_uid:
         return QueuedSenderManagerResponseDto(message=f"[{data.request_uid}] is not a valid UUID.")
 
-    queue_info_dict = await queued_sender_keeper.inspect_request(data.queue_route_key, uuid.UUID(data.request_uid))
+    queue_info_dict = await queued_sender_keeper.inspect_request_in_error_queue(data.queue_route_key, uuid.UUID(data.request_uid))
     if queue_info_dict is None:
         return QueuedSenderManagerResponseDto(message=f"No queued sender with route key: [{data.queue_route_key}]")
     elif not queue_info_dict:
