@@ -30,6 +30,9 @@ class SenderBase(Generic[_RequestDTOType, _ResponseDTOType], ABC):
         self._request_dto_type  = request_dto_type
         self._response_dto_type = response_dto_type
 
+    def get_route_key(self) -> str:
+        return self._route_key
+
     @abstractmethod
     async def send(self, *args, **kwargs):
         pass

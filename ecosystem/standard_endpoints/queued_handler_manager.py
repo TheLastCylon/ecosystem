@@ -5,6 +5,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests import endpoint
 from ..state_keepers.queued_handler_keeper import QueuedHandlerKeeper
+from ..util.utility_functions import string_to_uuid
 
 
 # --------------------------------------------------------------------------------
@@ -40,14 +41,6 @@ class QueuedHandlerManagerResponseDto(PydanticBaseModel):
 
 
 # --------------------------------------------------------------------------------
-def string_to_uuid(value: str) -> uuid.UUID | bool:
-    try:
-        return uuid.UUID(value)
-    except ValueError:
-        return False
-
-
-# --------------------------------------------------------------------------------
 def make_queued_endpoint_information_dto(route_key: str, queue_info_dict: Dict[str, Any]) -> QueuedEndpointInformationDto:
     return QueuedEndpointInformationDto(
         route_key         = route_key,
@@ -62,7 +55,7 @@ def make_queued_endpoint_information_dto(route_key: str, queue_info_dict: Dict[s
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.queued_handler.data", QueuedHandlerManagerRequestDto)
-async def eco_queued_handler_size(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def eco_queued_handler_data(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     queue_info_dict       = await queued_handler_keeper.get_queue_information(data.queue_route_key)
@@ -138,7 +131,7 @@ async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.queued_handler.all.pause", QueuedHandlerManagerRequestDto)
-async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def eco_queued_handler_all_pause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     queue_info_dict       = await queued_handler_keeper.pause_all_for_queued_handler(data.queue_route_key)
@@ -153,7 +146,7 @@ async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.queued_handler.all.unpause", QueuedHandlerManagerRequestDto)
-async def eco_queued_handler_processing_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def eco_queued_handler_all_unpause(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     queue_info_dict       = await queued_handler_keeper.unpause_all_for_queued_handler(data.queue_route_key)
@@ -172,7 +165,7 @@ async def eco_queued_handler_errors_get_first_10(request_uuid: uuid.UUID, reques
     data                  = cast(QueuedHandlerManagerRequestDto, request)
     queued_handler_keeper = QueuedHandlerKeeper()
     uuid_list             = await queued_handler_keeper.get_first_10_error_uuids(data.queue_route_key)
-    if uuid_list == None: # noqa Python returns true when testing for "not uuid_list" and the list is empty. We need to explicitly check None here as an empty list is valid.
+    if uuid_list is None:
         return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(
@@ -203,8 +196,7 @@ async def eco_queued_handler_errors_clear(request_uuid: uuid.UUID, request) -> P
     queued_handler_keeper = QueuedHandlerKeeper()
     queue_info_dict       = await queued_handler_keeper.clear_error_queue(data.queue_route_key)
     if not queue_info_dict:
-        return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]"
-        )
+        return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(
         queue_data = make_queued_endpoint_information_dto(data.queue_route_key, queue_info_dict),
@@ -223,9 +215,9 @@ async def eco_queued_handler_errors_reprocess_one(request_uuid: uuid.UUID, reque
 
     queue_info_dict = await queued_handler_keeper.reprocess_error_queue_request_uid(data.queue_route_key, uuid.UUID(data.request_uid))
 
-    if queue_info_dict == None: # noqa Testing for None explicitly, as that means there is no queue for the specified router key.
+    if queue_info_dict is None:
         return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]")
-    elif queue_info_dict == False: # noqa Testing for Fale explicitly, as that means there is no request with the specified UUID
+    elif not queue_info_dict:
         return QueuedHandlerManagerResponseDto(message=f"No request with uid [{data.request_uid}] in error queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(
@@ -245,9 +237,9 @@ async def eco_queued_handler_errors_pop_request(request_uuid: uuid.UUID, request
         return QueuedHandlerManagerResponseDto(message=f"[{data.request_uid}] is not a valid UUID.")
 
     queue_info_dict = await queued_handler_keeper.pop_request_from_error_queue(data.queue_route_key, uuid.UUID(data.request_uid))
-    if queue_info_dict == None: # noqa Testing for None explicitly, as that means there is no queue for the specified router key.
+    if queue_info_dict is None:
         return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]")
-    elif queue_info_dict == False: # noqa Testing for Fale explicitly, as that means there is no request with the specified UUID
+    elif not queue_info_dict:
         return QueuedHandlerManagerResponseDto(message=f"No request with uid [{data.request_uid}] in error queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(
@@ -267,9 +259,9 @@ async def eco_queued_handler_errors_inspect_request(request_uuid: uuid.UUID, req
         return QueuedHandlerManagerResponseDto(message=f"[{data.request_uid}] is not a valid UUID.")
 
     queue_info_dict = await queued_handler_keeper.inspect_request_from_error_queue(data.queue_route_key, uuid.UUID(data.request_uid))
-    if queue_info_dict == None: # noqa Testing for None explicitly, as that means there is no queue for the specified router key.
+    if queue_info_dict is None:
         return QueuedHandlerManagerResponseDto(message=f"No queue for route key: [{data.queue_route_key}]")
-    elif queue_info_dict == False: # noqa Testing for Fale explicitly, as that means there is no request with the specified UUID
+    elif not queue_info_dict:
         return QueuedHandlerManagerResponseDto(message=f"No request with uid [{data.request_uid}] in error queue for route key: [{data.queue_route_key}]")
 
     return QueuedHandlerManagerResponseDto(

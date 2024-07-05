@@ -34,6 +34,7 @@ class RequestRouter(metaclass=SingletonType):
     def register_handler(self, handler: HandlerBase):
         if handler.get_route_key() not in self.__routing_table:
             self.__routing_table[handler.get_route_key()] = handler
+            self.__statistics_keeper.set_statistic_value(f"endpoint_call_counts.{handler.get_route_key()}.call_count", 0)
         else:
             raise Exception(f"Handler command id [{handler.get_route_key()}] already exists")
 

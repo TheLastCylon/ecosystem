@@ -19,14 +19,14 @@ _T = TypeVar("_T", bound=PydanticBaseModel)
 
 
 # --------------------------------------------------------------------------------
-class QueueingExceptionBase(Exception):
+class QueuedRequestHandlerExceptionBase(Exception):
     def __init__(self, status: int, message: str):
         self.status: int = status
         super().__init__(f"status: [{status}] message: [{message}]")
 
 
 # --------------------------------------------------------------------------------
-class ReceivingPausedException(QueueingExceptionBase):
+class QueuedRequestHandlerReceivingPausedException(QueuedRequestHandlerExceptionBase):
     def __init__(self, route_key: str):
         super().__init__(Status.APPLICATION_BUSY.value, f"Receiving on '{route_key}' has been paused.")
 
@@ -235,6 +235,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     async def process_queued_request(self, request_uuid: uuid.UUID, request: _T) -> bool:
         pass
 
+    # TODO: Investigate if we need process scheduled check here, as for queued sender?
     # --------------------------------------------------------------------------------
     async def __check_process_queue(self):
         if not self.running:
@@ -243,7 +244,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
         if self._receiving_paused:
-            raise ReceivingPausedException(self._route_key)
+            raise QueuedRequestHandlerReceivingPausedException(self._route_key)
 
         data_to_queue = QueuedRequestDTO(uid = str(request_uuid), retries = 0, request = request_data)
         response      = QueuedEndpointResponseDTO(

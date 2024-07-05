@@ -1,7 +1,6 @@
 import uuid
 
 from typing import Dict, List, Any
-from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests.queued_handler import QueuedHandler
 from ..util import SingletonType

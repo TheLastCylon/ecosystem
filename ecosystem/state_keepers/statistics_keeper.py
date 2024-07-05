@@ -34,7 +34,7 @@ class StatisticsKeeper(metaclass=SingletonType):
         self.__statistics_current['timestamp'] = int(current_time)
         self.__statistics_current['uptime']    = int(current_time)-self.__start_time
         for key in self.__persisted_queues.keys():
-            await self.set_statistic_value(key, await self.__persisted_queues[key].size())
+            self.set_statistic_value(key, await self.__persisted_queues[key].size())
 
     async def get_current_statistics(self) -> Dict[str, Any]:
         await self.__update_current_statistics()
@@ -49,7 +49,7 @@ class StatisticsKeeper(metaclass=SingletonType):
     async def get_full_gathered_statistics(self) -> List[Dict[str, Any]]:
         return self.__statistics_history
 
-    async def set_statistic_value(self, key: str, value: float):
+    def set_statistic_value(self, key: str, value: float):
         keys = key.split('.')
         self.__deep_set(self.__statistics_current, keys, value)
 
