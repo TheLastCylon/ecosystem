@@ -2,10 +2,10 @@ import json
 
 from typing import List
 
-from ...standard_endpoints.queued_handler_manager import (
-    QueuedHandlerManagerRequestDto,
-    QueuedHandlerManagerResponseDto,
-    ErrorQueueItemRequestDto
+from ...data_transfer_objects.queue_management import (
+    QManagementRequestDto,
+    QManagementItemRequestDto,
+    QManagementResponseDto
 )
 
 from ...sending.sender_base import SenderBase
@@ -13,13 +13,13 @@ from ...clients import ClientBase
 
 
 # --------------------------------------------------------------------------------
-def print_response(response: QueuedHandlerManagerResponseDto):
+def print_response(response: QManagementResponseDto):
     print("================================================================================")
     print(f"{response.message}")
     print("--------------------------------------------------------------------------------")
     if isinstance(response.queue_data, List):
         print(f"First 10 error UUIDs:\n{json.dumps(response.queue_data, indent=4)}")
-    else:
+    elif response.queue_data is not None:
         print(f"Queue information:\n{response.queue_data.model_dump_json(indent=4)}")
     if response.request_data:
         print("--------------------------------------------------------------------------------")
@@ -28,33 +28,33 @@ def print_response(response: QueuedHandlerManagerResponseDto):
 
 
 # --------------------------------------------------------------------------------
-class QueuedEndpointManagerSenderBase(SenderBase[QueuedHandlerManagerRequestDto, QueuedHandlerManagerResponseDto]):
+class QueueManagementSenderBase(SenderBase[QManagementRequestDto, QManagementResponseDto]):
     def __init__(self, client: ClientBase, route_key: str):
         super().__init__(
             client,
             route_key,
-            QueuedHandlerManagerRequestDto,
-            QueuedHandlerManagerResponseDto
+            QManagementRequestDto,
+            QManagementResponseDto
         )
 
     async def send(self, queue_route_key: str):
-        request_data = QueuedHandlerManagerRequestDto(queue_route_key=queue_route_key)
+        request_data = QManagementRequestDto(queue_route_key=queue_route_key)
         response = await self.send_data(request_data)
         print_response(response)
 
 
 # --------------------------------------------------------------------------------
-class ErrorQueueManagerBase(SenderBase[ErrorQueueItemRequestDto, QueuedHandlerManagerResponseDto]):
+class QueueManagementItemSenderBase(SenderBase[QManagementItemRequestDto, QManagementResponseDto]):
     def __init__(self, client: ClientBase, route_key: str):
         super().__init__(
             client,
             route_key,
-            ErrorQueueItemRequestDto,
-            QueuedHandlerManagerResponseDto
+            QManagementItemRequestDto,
+            QManagementResponseDto
         )
 
     async def send(self, queue_route_key: str, request_uid: str):
-        request_data = ErrorQueueItemRequestDto(
+        request_data = QManagementItemRequestDto(
             queue_route_key = queue_route_key,
             request_uid     = request_uid
         )

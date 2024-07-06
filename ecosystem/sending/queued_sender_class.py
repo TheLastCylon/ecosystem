@@ -17,14 +17,16 @@ class QueuedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], QueuedSender
         route_key        : str,
         request_dto_type : Type[_RequestDTOType],
         response_dto_type: Type[_ResponseDTOType] = EmptyDto,
-        max_uncommited   : int = 0,
-        max_retries      : int = 0,
+        wait_period      : float                  = 0,
+        max_uncommited   : int                    = 0,
+        max_retries      : int                    = 0,
     ):
         super().__init__(
             client,
             route_key,
             request_dto_type,
             response_dto_type,
+            wait_period,
             max_uncommited,
             max_retries
         )

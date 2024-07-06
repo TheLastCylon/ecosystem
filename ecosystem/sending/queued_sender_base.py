@@ -27,6 +27,7 @@ class QueuedSenderBase(
     statistics_keeper        : StatisticsKeeper = StatisticsKeeper()
     log                      : logging.Logger   = logging.getLogger()
     __send_process_scheduled : bool             = False
+    wait_period              : float            = 0,
     max_uncommited           : int              = None
     max_retries              : int              = None
     queue                    : PendingQueue     = None
@@ -39,8 +40,9 @@ class QueuedSenderBase(
         route_key        : str,
         request_dto_type : Type[_RequestDTOType],
         response_dto_type: Type[_ResponseDTOType] = EmptyDto,
-        max_uncommited   : int = 0,
-        max_retries      : int = 0,
+        wait_period      : float                  = 0,
+        max_uncommited   : int                    = 0,
+        max_retries      : int                    = 0,
     ):
         super().__init__(
             client,
@@ -48,6 +50,7 @@ class QueuedSenderBase(
             request_dto_type,
             response_dto_type
         )
+        self.wait_period      = wait_period
         self.max_uncommited   = max_uncommited
         self.max_retries      = max_retries
 
@@ -93,7 +96,8 @@ class QueuedSenderBase(
             request_data = self._request_dto_type(**queued_item.data)
             retries      = queued_item.retries
             try:
-                # TODO: Some kind of delay between send attempts
+                if self.wait_period > 0:
+                    await asyncio.sleep(self.wait_period)
                 await self.send_data(request_data, request_uid)
             except (ServerBusyException, CommunicationsMaxRetriesReached) as e: # Only retry sending, if the sending is retryable
                 retries += 1

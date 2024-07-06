@@ -36,10 +36,8 @@ class QueuedSenderKeeper(metaclass=SingletonType):
     # --------------------------------------------------------------------------------
     async def __get_queue_information(self, route_key: str) -> Dict[str, Any]:
         return {
-            "sizes": {
-                "pending": await self.__queued_senders[route_key].pending_queue_size(),
-                "error"  : await self.__queued_senders[route_key].error_queue_size(),
-            },
+            "pending"             : await self.__queued_senders[route_key].pending_queue_size(),
+            "error"               : await self.__queued_senders[route_key].error_queue_size(),
             "send_process_paused" : self.__queued_senders[route_key].is_send_process_paused(),
         }
 

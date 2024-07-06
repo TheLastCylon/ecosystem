@@ -1,29 +1,23 @@
 # TODO
 
 ## For MVP
-- [ ] Ecosystem JavaScript client
-
-- [ ] Queued sender: delay between send attempts (user defined back-off function?)
-- [ ] Queued sender: keeper
-- [ ] Queued sender: queue manipulation handler
-
-- [ ] Test Timeout on communications.
-  - [ ] TCP communications
-  - [ ] UDP communications.
-  - [ ] UDS communications.
-
 - [ ] Documentation: Queued endpoints
   - [X] max uncommited
   - [X] max retries
   - [ ] manipulation through standard endpoints and the queued handler keeper
 
+- [ ] Documentation: Queued senders
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 - [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
 
-- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
-  - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
-  - This host listened on, can be adjusted to do filtering already.
-  - UDS connections can only be done on the same machine, so that's filtered by default.
+- [ ] Make a Queued sender example.
+
+- [ ] Ecosystem JavaScript client
+
+- [ ] Test Timeout on communications.
+  - [ ] TCP communications
+  - [ ] UDP communications.
+  - [ ] UDS communications.
 
 ## Beyond MVP
 - [ ] LRU cache
@@ -36,6 +30,11 @@
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
 
 - [ ] Sequenced Broadcaster
+
+- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+  - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
+  - This host listened on, can be adjusted to do filtering already.
+  - UDS connections can only be done on the same machine, so that's filtered by default.
 
 # Done
 - [X] Make communication channels optional
@@ -101,6 +100,12 @@
 - [X] Documentation: The statistics keeper, why it exists and how to use it.
 - [X] Documentation: Accessing configuration in code.
 - [X] Ecosystem command line tool
+- [X] Queued sender: keeper
+- [X] Queued sender: queue manipulation handler
+- [X] enhance stats keeper to report on queued senders
+- [X] create standard endpoints for managing send queues
+- [X] improve command line tool for doing the management of send queues
+- [X] Queued sender: delay between send attempts (user defined back-off function?) i.e. Rate limiting
 
 # Possibly won't do:
 
