@@ -126,7 +126,7 @@ class ApplicationBase(metaclass=SingletonType):
         self.logger.info("Doing Shutdown.")
         self.__stop_servers()
         self.__shut_down_queued_handlers()
-        # TODO: Shut down queued senders
+        self.__shut_down_queued_senders()
         self.logger.info(f"Instance [{self._configuration.instance}] of application [{self._configuration.name}] shutdown.")
 
     # --------------------------------------------------------------------------------
@@ -209,6 +209,13 @@ class ApplicationBase(metaclass=SingletonType):
     def __shut_down_queued_handlers(self):
         for queued_handler in self.__request_router.get_queued_handlers():
             queued_handler.shut_down()
+
+    # --------------------------------------------------------------------------------
+    @staticmethod
+    def __shut_down_queued_senders():
+        queued_sender_keeper = QueuedSenderKeeper()
+        for queued_sender in queued_sender_keeper.get_queued_senders():
+            queued_sender.shut_down()
 
     # --------------------------------------------------------------------------------
     def start(self):

@@ -74,6 +74,12 @@ class QueuedSenderBase(
             asyncio.create_task(self.__process_send_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
 
     # --------------------------------------------------------------------------------
+    def shut_down(self):
+        self.pause_send_process()
+        self.shutdown = True
+        self.__shut_down_check()
+
+    # --------------------------------------------------------------------------------
     def __shut_down_check(self):
         if not self.running and self.shutdown:
             route_key = self.get_route_key()
