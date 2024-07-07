@@ -15,7 +15,7 @@ be better to explain this with a less abstract example:
 
 Imagine a factory worker, who's responsible for adding a stamp on a sheet of paper.
 
-There is a metal box, labeled "incoming", where sheets of paper needing to be stamped,
+There is a metal box, labeled "pending", where sheets of paper needing to be stamped,
 arrive. When there are sheets in that box, a conveyer system grabs them and gives
 them to the worker, one at a time.
 
@@ -34,7 +34,7 @@ What the worker does not know is:
 - The paper they place in the box labeled "True", gets sent to a customer.
 - The paper they place in the box labeled "False", gets recycled. Eventually ending up in front of the worker again, as a clean sheet of paper.
 
-The metal box labeled "incoming", is just a buffer. Giving the worker the
+The metal box labeled "pending", is just a buffer. Giving the worker the
 freedom to focus on one sheet of paper at a time, and do the job of stamping,
 to the highest standard possible.
 

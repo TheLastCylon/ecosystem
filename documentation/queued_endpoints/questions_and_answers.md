@@ -5,7 +5,7 @@
 
 As discussed in
 [configuration through environment variables](../configuration/through_environment_variables.md),
-the location of where your queue databases is, set using the `ECOENV_QUEUE_DIR` environment variable.
+the location of where your queue databases are kept, is set using the `ECOENV_QUEUE_DIR` environment variable.
 
 There is no default for this! You have to set it explicitly.
 
@@ -24,9 +24,9 @@ You can configure this location at machine, application and instance level.
 ## What are they named?
 
 - For the incoming queue:
-  - `{application name}-{instance}-{route key}-queue-incoming.sqlite`
+  - `{application name}-{instance}-{route key}-endpoint-pending.sqlite`
 - For the error queue:
-  - `{application name}-{instance}-{route key}-queue-error.sqlite`
+  - `{application name}-{instance}-{route key}-endpoint-error.sqlite`
 
 That means:
 
@@ -34,9 +34,9 @@ That means:
 - Being run as instance: `0`
 - Having a `queued_endpoint`, where the route key is `dice_roller.roll_times`
 - The incoming queue file name will be:
-  - `dice_roller_example-0-dice_roller.roll_times-queue-incoming.sqlite` 
+  - `dice_roller_example-0-dice_roller.roll_times-endpoint-pending.sqlite` 
 - The error queue file name will be:
-  - `dice_roller_example-0-dice_roller.roll_times-queue-error.sqlite`
+  - `dice_roller_example-0-dice_roller.roll_times-endpoint-error.sqlite`
 
 ---
 ## Can I access them using `sqlite` from the command line.

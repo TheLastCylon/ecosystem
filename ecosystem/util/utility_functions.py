@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 
 
 # --------------------------------------------------------------------------------
@@ -18,3 +19,14 @@ def string_to_uuid(value: str) -> uuid.UUID | bool:
         return uuid.UUID(value)
     except ValueError:
         return False
+
+
+# --------------------------------------------------------------------------------
+def run_soon(function):
+    def called_task(loop, *args, **kwargs):
+        loop.create_task(function(*args, **kwargs))
+
+    def wrapper(*args, **kwargs):
+        loop = asyncio.get_running_loop()
+        loop.call_soon(called_task, loop, *args, **kwargs)
+    return wrapper

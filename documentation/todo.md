@@ -9,6 +9,7 @@
 - [ ] Documentation: Queued senders
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 - [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
+- [ ] Documentation: The run_soon decorator. I LOVE PYTHON DECORATORS!!!
 
 - [ ] Make a Queued sender example.
 
@@ -18,6 +19,8 @@
   - [ ] TCP communications
   - [ ] UDP communications.
   - [ ] UDS communications.
+
+- [ ] Get Ecosystem ready for PyPI. Yes, we are that close.
 
 ## Beyond MVP
 - [ ] LRU cache
