@@ -7,6 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from .sender_base import SenderBase
 
+from ..util.fire_and_forget_tasks import fire_and_forget_task
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues.pending_queue import PendingQueue
@@ -71,7 +72,7 @@ class QueuedSenderBase(
     def __check_process_send_queue(self):
         if not self.running and not self.__send_process_scheduled:
             self.__send_process_scheduled = True
-            asyncio.create_task(self.__process_send_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
+            fire_and_forget_task(self.__process_send_queue())
 
     # --------------------------------------------------------------------------------
     def shut_down(self):
@@ -105,7 +106,7 @@ class QueuedSenderBase(
                 if self.wait_period > 0:
                     await asyncio.sleep(self.wait_period)
                 await self.send_data(request_data, request_uid)
-            except (ServerBusyException, CommunicationsMaxRetriesReached) as e: # Only retry sending, if the sending is retryable
+            except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
                 retries += 1
                 if retries >= self.max_retries:
                     await self.queue.push_error(request_uid, request_data, "Max retries reached.")

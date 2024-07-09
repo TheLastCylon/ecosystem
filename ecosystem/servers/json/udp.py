@@ -37,7 +37,7 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
     # --------------------------------------------------------------------------------
     async def __process_received_data(self, received_data: str, address):
         response_dict = await self._route_request(received_data)
-        response_str  = response_dict.json()
+        response_str  = response_dict.model_dump_json()
         # self._logger.info(f"Send response:\n {response_str}")
         self.__transport.sendto(response_str.encode(), address)
 
@@ -73,10 +73,3 @@ class UDPServer(asyncio.DatagramProtocol, ServerBase):
     async def serve(self):
         if self._running:
             await self.__create_datagram_listener()
-
-
-# try:
-#     server = JsonProtocolUDPServer('127.0.0.1', 8888)
-#     server.run()
-# except KeyboardInterrupt:
-#     print("Interrupted")

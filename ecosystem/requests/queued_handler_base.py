@@ -9,6 +9,7 @@ from typing import Type, TypeVar, Generic, List
 from .handler_base import HandlerBase
 from .status import Status
 
+from ..util.fire_and_forget_tasks import fire_and_forget_task
 from ..data_transfer_objects import QueuedEndpointResponseDTO
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
@@ -205,7 +206,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def __check_process_queue(self):
         if not self.running and not self.__processing_scheduled:
             self.__processing_scheduled = True
-            asyncio.create_task(self._process_queue()) # noqa PyCharm warns me that this is not awaited, but it should not be.
+            fire_and_forget_task(self._process_queue())
 
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:

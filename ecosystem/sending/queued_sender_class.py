@@ -1,3 +1,5 @@
+import uuid
+
 from typing import Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -31,5 +33,5 @@ class QueuedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], QueuedSender
             max_retries
         )
 
-    async def push_message(self, message: _RequestDTOType):
-        await self.enqueue(message)
+    async def push_message(self, message: _RequestDTOType, request_uuid: uuid.UUID = None):
+        await self.enqueue(message, request_uuid)

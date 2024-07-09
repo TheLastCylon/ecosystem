@@ -36,7 +36,6 @@ class StreamClientBase(ClientBase, ABC):
             raise CommunicationsEmptyResponse()
 
         response_str = data.decode()
-
         writer.close()
         await writer.wait_closed()
         return response_str
@@ -46,14 +45,13 @@ class StreamClientBase(ClientBase, ABC):
         while self.retry_count < self.max_retries and not self.success:
             try:
                 response_str = await self._send_message(request)
-                self.success  = True
+                self.success = True
                 return response_str
-            except (TimeoutError, ConnectionResetError, BrokenPipeError, asyncio.TimeoutError):
-                await asyncio.sleep(self.retry_delay)
+            except (TimeoutError, ConnectionResetError, BrokenPipeError, asyncio.TimeoutError) as e:
                 self.retry_count += 1
+                if self.retry_count >= self.max_retries:
+                    raise CommunicationsMaxRetriesReached()
+                else:
+                    await asyncio.sleep(self.retry_delay)
             except Exception as e:
                 raise CommunicationsNonRetryable(str(e))
-
-        if not self.success:
-            if self.retry_count >= self.max_retries:
-                raise CommunicationsMaxRetriesReached()

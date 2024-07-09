@@ -35,8 +35,10 @@ def queued_sender(
         queued_sender_keeper.add_queued_sender(queued_sender_instance)
 
         async def wrapper(*args, **kwargs):
-            await queued_sender_instance.push_message(
-                await function(*args, **kwargs)
-            )
+            request_uid_to_use = None
+            if "request_uid" in kwargs.keys():
+                request_uid_to_use = kwargs["request_uid"]
+
+            await queued_sender_instance.push_message(await function(*args, **kwargs), request_uid_to_use)
         return wrapper
     return inner_decorator

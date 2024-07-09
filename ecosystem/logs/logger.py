@@ -89,7 +89,7 @@ class EcoLogger(metaclass=SingletonType):
 
         self.__logger.setLevel(self.__level)
         # This switches asyncio logging to level WARNING
-        logging.getLogger('asyncio').setLevel(logging.WARNING)
+        # logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
 # --------------------------------------------------------------------------------

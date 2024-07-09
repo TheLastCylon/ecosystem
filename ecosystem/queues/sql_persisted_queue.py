@@ -64,7 +64,7 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
         queue_uuid = uid or uuid.uuid4()
         new_record = QueueRecord(
             record_uuid   = queue_uuid.bytes,
-            object_string = object_to_queue.json()
+            object_string = object_to_queue.model_dump_json()
         )
         new_record.record_id = await self.__get_min_record_id() - 1
         await self.__write_record(new_record)
@@ -75,7 +75,7 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
         queue_uuid = uid or uuid.uuid4()
         new_record = QueueRecord(
             record_uuid   = queue_uuid.bytes,
-            object_string = object_to_queue.json()
+            object_string = object_to_queue.model_dump_json()
         )
         new_record.record_id = await self.__get_max_record_id() + 1
         await self.__write_record(new_record)

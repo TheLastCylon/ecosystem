@@ -1,6 +1,5 @@
 import uuid
 import json
-import asyncio
 
 from abc import ABC, abstractmethod
 from typing import Type
@@ -85,8 +84,8 @@ class ClientBase(ABC):
         self.success     = False
         self.retry_count = 0
         request          = RequestDTO(uid=str(uuid_to_use), route_key = route_key, data = data)
-        request_str      = request.json()
-        response_str     = await asyncio.create_task(self._send_message_retry_loop(f"{request_str}\n"))
+        request_str      = request.model_dump_json()
+        response_str     = await self._send_message_retry_loop(f"{request_str}\n")
         response_dict    = json.loads(response_str)
         response         = ResponseDTO(**response_dict)
 
