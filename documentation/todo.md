@@ -10,15 +10,13 @@
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 - [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
 - [ ] Documentation: The run_soon decorator. I LOVE PYTHON DECORATORS!!!
+- [ ] Documentation: The Fun Factory example
 
 - [ ] Make a Queued sender example.
 
-- [ ] Ecosystem JavaScript client
+- [ ] Cacti (RRD Graphing Tool) example
 
-- [ ] Test Timeout on communications.
-  - [ ] TCP communications
-  - [ ] UDP communications.
-  - [ ] UDS communications.
+- [ ] Ecosystem JavaScript client
 
 - [ ] Get Ecosystem ready for PyPI. Yes, we are that close.
 
@@ -109,6 +107,12 @@
 - [X] create standard endpoints for managing send queues
 - [X] improve command line tool for doing the management of send queues
 - [X] Queued sender: delay between send attempts (user defined back-off function?) i.e. Rate limiting
+- [X] Test Timeout on communications.
+  - [X] TCP communications
+  - [X] UDP communications.
+  - [X] UDS communications.
+
+
 
 # Possibly won't do:
 
