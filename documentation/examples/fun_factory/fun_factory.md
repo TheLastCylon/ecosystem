@@ -73,6 +73,7 @@ The real demonstrations for this example, are in `[router]`.
 
 So, let's do a brief overview of each of the components, then we'll look at `[router]` in detail.
 
+---
 #### `[client]`
 Is a message generator.
 
@@ -99,6 +100,7 @@ The code for it can be found in [examples/fun_factory/router/client.py](../../..
     - Nothing prevents you from running multiple instance of `[client]`, from multiple terminals. The system will deal with it.
     - Just remember: It's your CPU, not mine.
 
+---
 #### `[fortunes]`
 Responds with a fortune-cookie fortune, or quote, obtained from a text file.
 
@@ -107,6 +109,7 @@ Responds with a fortune-cookie fortune, or quote, obtained from a text file.
 - Run using: `python -m examples.fun_factory.fortunes.fortune -i 0`
 - The Code is located in: `examples/fun_factory/fortunes`
 
+---
 #### `[joker]`
 Responds with a dad joke, contained in a text file.
 
@@ -115,6 +118,7 @@ Responds with a dad joke, contained in a text file.
 - Run using: `python -m examples.fun_factory.joker.joker -i 0`
 - The Code is located in: `examples/fun_factory/joker`
 
+---
 #### `[lottery]`
 Is a component that generates lottery numbers.
 
@@ -123,6 +127,7 @@ Is a component that generates lottery numbers.
 - Run using: `python -m examples.fun_factory.lottery.lottery -i 0`
 - The Code is located in: `examples/fun_factory/lottery`
 
+---
 #### `[magic_eight_ball]`
 Responds to a question, with a typical magic 8-ball answer.
 
@@ -130,6 +135,7 @@ Responds to a question, with a typical magic 8-ball answer.
 - Run using: `python -m examples.fun_factory.magic_eight_ball.magic_eight_ball -i 0`
 - The Code is located in: `examples/fun_factory/magic_eight_ball`
 
+---
 #### `[time_reporter]`
 Responds with the current time, in a nice format.
 
@@ -137,6 +143,7 @@ Responds with the current time, in a nice format.
 - Run using: `python -m examples.fun_factory.time_reporter.time_reporter -i 0`
 - The Code is located in: `examples/fun_factory/time_reporter`
 
+---
 #### `[tracker]`
 Is basically a message logger, that keeps requests received and responded too, by `[router]`, in a database
 
@@ -144,6 +151,7 @@ Is basically a message logger, that keeps requests received and responded too, b
 - Run using: `python -m examples.fun_factory.tracker.tracker -i 0`
 - The Code is located in: `examples/fun_factory/tracker`
 
+---
 #### `[router]`
 Is the message router,
 

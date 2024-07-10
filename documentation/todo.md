@@ -6,15 +6,9 @@
   - [X] max retries
   - [ ] manipulation through standard endpoints and the queued handler keeper
 
-- [ ] Documentation: Queued senders
 - [ ] Documentation: The error keeper, why it exists and how to use it.
-- [ ] Documentation: Taking control of, and using UUIDs, used in the protocol
-- [ ] Documentation: The run_soon decorator. I LOVE PYTHON DECORATORS!!!
-- [ ] Documentation: The Fun Factory example
 
-- [ ] Make a Queued sender example.
-
-- [ ] Cacti (RRD Graphing Tool) example
+- [ ] RRD Graphing Tool example.
 
 - [ ] Ecosystem JavaScript client
 
@@ -114,6 +108,11 @@
   - [X] TCP communications
   - [X] UDP communications.
   - [X] UDS communications.
+- [X] Documentation: Queued senders
+- [X] Documentation: Taking control of, and using UUIDs, used in the protocol
+- [X] Documentation: The run_soon decorator. I LOVE PYTHON DECORATORS!!!
+- [X] Documentation: The Fun Factory example
+- [X] Make a Queued sender example.
 
 
 
