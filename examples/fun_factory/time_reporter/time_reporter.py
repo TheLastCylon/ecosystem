@@ -7,7 +7,7 @@ from .endpoints import get_time # noqa
 # --------------------------------------------------------------------------------
 class CurrentTimeServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=5555)
+        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8500)
         super().__init__()
 
 

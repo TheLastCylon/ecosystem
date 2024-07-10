@@ -7,7 +7,7 @@ from .endpoints import pick_numbers_endpoint # noqa
 # --------------------------------------------------------------------------------
 class NumberPickerServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=3333)
+        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8300)
         super().__init__()
 
 

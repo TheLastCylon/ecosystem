@@ -24,3 +24,4 @@ So, keep that in mind when you are looking at the examples. They might not work 
 - [Configuration, done right](./configuration/configuration.md)
   - [Using environment variables](./configuration/through_environment_variables.md)
   - [Using configuration files](./configuration/through_configuration_files.md)
+- [The Fun Factory example (a.k.a Queued senders, request uuids and what run_soon is for)](./examples/fun_factory/fun_factory.md)

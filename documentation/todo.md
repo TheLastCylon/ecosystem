@@ -32,6 +32,9 @@
 
 - [ ] Sequenced Broadcaster
 
+- [ ] Persistent client connections
+  - As in, clients connect once and don't close the connection until shut down or having to re-connect for some reason.
+
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
   - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
   - This host listened on, can be adjusted to do filtering already.

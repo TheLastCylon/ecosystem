@@ -7,7 +7,7 @@ from .endpoints import process_message # noqa
 # --------------------------------------------------------------------------------
 class RouterServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=6666)
+        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8600)
         self._configuration.queue_directory = '/tmp'
         super().__init__()
 

@@ -7,7 +7,7 @@ from .endpoints import get_fortune # noqa
 # --------------------------------------------------------------------------------
 class FortuneServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=1111)
+        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8100)
         super().__init__()
 
 

@@ -7,7 +7,7 @@ from ecosystem.clients import TCPClient
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
-router_client = TCPClient(server_host='127.0.0.1', server_port=6666)
+router_client = TCPClient(server_host='127.0.0.1', server_port=8600)
 
 MESSAGE_OPTIONS = [
     "fortune",

@@ -71,28 +71,20 @@ beautifier of some kind, will look like this:
       "statistics" : {
          "endpoint_call_counts" : {
             "dice_roller" : {
-               "guess" : {
-                  "call_count" : 20
-               },
-               "roll" : {
-                  "call_count" : 20
-               },
-               "roll_times" : {
-                  "call_count" : 20
-               }
+               "guess"     : { "call_count" : 20 },
+               "roll"      : { "call_count" : 20 },
+               "roll_times": { "call_count" : 20 }
             },
             "eco" : {
                "statistics" : {
-                  "get" : {
-                     "call_count" : 2
-                  }
+                  "get" : { "call_count" : 2 }
                }
             }
          },
          "queued_endpoint_sizes" : {
             "dice_roller" : {
                "roll_times" : {
-                  "error" : 32,
+                  "error"    : 32,
                   "incoming" : 0
                }
             }
@@ -167,28 +159,20 @@ Here's what I got:
       "statistics" : {
          "endpoint_call_counts" : {
             "dice_roller" : {
-               "guess" : {
-                  "call_count" : 0
-               },
-               "roll" : {
-                  "call_count" : 0
-               },
-               "roll_times" : {
-                  "call_count" : 0
-               }
+               "guess"      : { "call_count" : 0 },
+               "roll"       : { "call_count" : 0 },
+               "roll_times" : { "call_count" : 0 }
             },
             "eco" : {
                "statistics" : {
-                  "get" : {
-                     "call_count" : 1
-                  }
+                  "get" : { "call_count" : 1 }
                }
             }
          },
          "queued_endpoint_sizes" : {
             "dice_roller" : {
                "roll_times" : {
-                  "error" : 32,
+                  "error"    : 32,
                   "incoming" : 0
                }
             }
@@ -245,28 +229,20 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 0
-                     }
+                     "get" : { "call_count" : 0 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
+                     "error"    : 32,
                      "incoming" : 0
                   }
                }
@@ -277,28 +253,20 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"      : { "call_count" : 0 },
+                  "roll"       : { "call_count" : 0 },
+                  "roll_times" : { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 0
-                     }
+                     "get" : { "call_count" : 0 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
+                     "error"    : 32,
                      "incoming" : 0
                   }
                }
@@ -309,28 +277,20 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 1
-                     }
+                     "get" : { "call_count" : 1 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
+                     "error"    : 32,
                      "incoming" : 0
                   }
                }
@@ -341,28 +301,20 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 1
-                     }
+                     "get" : { "call_count" : 1 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
+                     "error"    : 32,
                      "incoming" : 0
                   }
                }
@@ -373,28 +325,20 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 0
-                     }
+                     "get" : { "call_count" : 0 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
+                     "error"    : 32,
                      "incoming" : 0
                   }
                }
@@ -405,29 +349,21 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 0
-                     }
+                     "get" : { "call_count" : 0 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
-                     "incoming" : 0
+                     "error"   : 32,
+                     "incoming": 0
                   }
                }
             },
@@ -437,29 +373,21 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 0
-                  },
-                  "roll" : {
-                     "call_count" : 0
-                  },
-                  "roll_times" : {
-                     "call_count" : 0
-                  }
+                  "guess"     : { "call_count" : 0 },
+                  "roll"      : { "call_count" : 0 },
+                  "roll_times": { "call_count" : 0 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 0
-                     }
+                     "get" : { "call_count" : 0 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
-                     "incoming" : 0
+                     "error"   : 32,
+                     "incoming": 0
                   }
                }
             },
@@ -469,29 +397,21 @@ Here's what I got:
          {
             "endpoint_call_counts" : {
                "dice_roller" : {
-                  "guess" : {
-                     "call_count" : 20
-                  },
-                  "roll" : {
-                     "call_count" : 20
-                  },
-                  "roll_times" : {
-                     "call_count" : 20
-                  }
+                  "guess"     : { "call_count" : 20 },
+                  "roll"      : { "call_count" : 20 },
+                  "roll_times": { "call_count" : 20 }
                },
                "eco" : {
                   "statistics" : {
-                     "get" : {
-                        "call_count" : 2
-                     }
+                     "get" : { "call_count" : 2 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : {
-                     "error" : 32,
-                     "incoming" : 0
+                     "error"   : 32,
+                     "incoming": 0
                   }
                }
             },

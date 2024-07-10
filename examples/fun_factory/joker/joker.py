@@ -7,7 +7,7 @@ from .endpoints import get_joke # noqa
 # --------------------------------------------------------------------------------
 class DadJokeServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=2222)
+        self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8200)
         super().__init__()
 
 
