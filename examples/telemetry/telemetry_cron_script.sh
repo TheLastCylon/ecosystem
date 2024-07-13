@@ -1,10 +1,10 @@
 # --------------------------------------------------------------------------------
 # This is where you'll need to put the information for your instance of InfluxDB.
 # --------------------------------------------------------------------------------
-# INFLUX_URL=#<<Your Influx URL here>> On a local installation that defaults to http://localhost:8086)
-# INFLUX_ORG=#<<Your Influx Organisation Name Here>>
-# INFLUX_BUCKET=#<<Your Bucket Name Here>>
-# INFLUX_TOKEN=#<<Your Influx API Token Here.>> WARNING: In a production environment, this should not be hard coded, set it using an environment variable.>>
+INFLUX_URL=#<<Your Influx URL here>> On a local installation that defaults to http://localhost:8086)
+INFLUX_ORG=#<<Your Influx Organisation Name Here>>
+INFLUX_BUCKET=#<<Your Bucket Name Here>>
+INFLUX_TOKEN=#<<Your Influx API Token Here.>> WARNING: In a production environment, this should not be hard coded, set it using an environment variable.>>
 
 # --------------------------------------------------------------------------------
 # I have to do the next two lines on my system, you might not need to.
