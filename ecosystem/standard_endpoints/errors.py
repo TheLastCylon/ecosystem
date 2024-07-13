@@ -3,7 +3,7 @@ import uuid
 from typing import Dict, List, Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
-from ..requests import endpoint
+from ..requests.endpoint import endpoint
 from ..state_keepers.error_state_list import ErrorStateList
 
 

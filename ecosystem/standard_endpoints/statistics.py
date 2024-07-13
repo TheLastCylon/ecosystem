@@ -2,19 +2,9 @@ import uuid
 from typing import Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
-from ..requests import endpoint
+from ..requests.endpoint import endpoint
 from ..state_keepers.statistics_keeper import StatisticsKeeper
-
-
-# --------------------------------------------------------------------------------
-class StatsRequestDto(PydanticBaseModel):
-    type: str
-
-
-# --------------------------------------------------------------------------------
-class StatsResponseDto(PydanticBaseModel):
-    statistics: Any
-
+from ..data_transfer_objects import StatsRequestDto, StatsResponseDto
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.statistics.get", StatsRequestDto)

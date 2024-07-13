@@ -1,4 +1,4 @@
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 from ecosystem.data_transfer_objects import EmptyDto
 
 from .tcp_config import tcp_client

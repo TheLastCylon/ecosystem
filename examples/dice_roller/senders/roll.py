@@ -1,4 +1,4 @@
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 
 from .tcp_config import tcp_client
 from ..dtos import RollRequestDto, RollResponseDto

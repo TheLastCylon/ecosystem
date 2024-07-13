@@ -5,7 +5,7 @@ import logging
 from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests import endpoint
+from ecosystem.requests.endpoint import endpoint
 
 from .dtos import NumberPickerRequestDto, NumberPickerResponseDto
 

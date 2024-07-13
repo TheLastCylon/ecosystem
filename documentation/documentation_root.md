@@ -8,7 +8,8 @@
   - [Through environment variables](./configuration/through_environment_variables.md)
   - [Through configuration files](./configuration/through_configuration_files.md)
   - [Getting to the configuration, in code](./configuration/getting_config_from_code.md)
-- [Statistics made easy](./statistics_keeper.md)
+- [Statistics (Real-time Telemetry) made easy](./statistics_keeper.md)
+  - [Real-Time Telemetry Example](./examples/telemetry/telemetry.md)
 - Queued Endpoints
   - [What they are and how they work](./queued_endpoints/queued_endpoints.md)
   - [The technical side of `queued_endpoint`](./queued_endpoints/technical_stuff.md)

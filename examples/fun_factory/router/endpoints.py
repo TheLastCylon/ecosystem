@@ -5,7 +5,7 @@ import time
 from typing import cast, List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests import endpoint
+from ecosystem.requests.endpoint import endpoint
 from ecosystem.util.fire_and_forget_tasks import run_soon
 
 from .dtos import RouterRequestDto, RouterResponseDto

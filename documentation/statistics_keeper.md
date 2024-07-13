@@ -1,4 +1,4 @@
-# The statistics keeper.
+# Statistics (Real-time Telemetry) made easy. 
 
 ## Why it exists.
 
@@ -9,32 +9,49 @@ In every single business, one needs to know things like:
 - And way, way more.
 
 I've seen businesses go to ridiculous lengths to get these kinds of answers from
-their systems. To the extent where they resort to transmitting their raw logs to
-a 3rd party service, that gathers these statistics for them.
+their systems. To the extent where they resort to log aggregation, or even
+transmitting their raw logs to a 3rd party service.
 
-Of course, given how easy it is to just get your applications to report on what
-it has done, is doing, how much of what it is doing and has done, when and
-for how long. I've never seen the point behind spending money on a service
-like that.
+Given how easy it is to just get your applications to report their own telemetry,
+I've never seen the point behind either log aggregation or spending money on a
+3rd party service for this. Besides, neither of those solutions give you
+real-time telemetry.
 
-Once you have an endpoint in your application, that allows you to get to this
-data on the fly. You can slap an RRD Graphing Solution like
-[Cacti](https://www.cacti.net/) in front of it, and there you go ... Job done!
+Once you have an endpoint in an application, that allows you to get its telemetry
+on the fly. You can put a real-time analytics solution like
+[InfluxDB](https://www.influxdata.com/) in place, and simply feed it the
+application's telemetry, through something as simple as a cron job.
+And there you go ... Job done!
 
-So why spend the money?
+If you find that hard to believe, here's an image of a dashboard I put
+together for the [Fun Factory example](./examples/fun_factory/fun_factory.md).
 
-Why not just have statistics tracking, reporting and an endpoint, in your applications?
+![Alt Text](./images/fun_factory_statistics_2.png)
 
-## Ecosystem statistics.
+What you are looking at there, is real-time telemetry, retrieved from an entire
+system. It includes the number of times every endpoint in each of the services
+was called, as well as the queue sizes for both the `[router]` and `[tracker]`
+services.
 
-Yes! Ecosystem provides a lot of statistics gathering, "auto-magically".
+So. Why not just have telemetry tracking, reporting and an endpoint, in your
+applications?
+
+Why waste money on 3rd party services, or live without real-time telemetry, when
+all of that could be part of your system already?
+
+## The Ecosystem statistics keeper.
+
+Yes! Ecosystem provides a lot of statistics gathering, out of the box.
 
 Just having an `endpoint` in your application causes Ecosystem to start tracking
-data about that endpoint. Same thing for `queued_endpoints`.
+data about that endpoint. The same thing happens for `queued_endpoint` and
+`queued_sender`.
 
-And no, you don't have to write a single line of code for it!
+And no, you don't have to write a single line of code for it! Just the act
+of decorating a function with `endpoint`, `queued_endpoint` or `queued_sender`,
+does this for you already.
 
-Even the endpoint that allows you to retrieve the statistical data, already exists!
+Even the endpoint that allows you to retrieve the telemetry data, already exists!
 
 That end point is: `eco.statistics.get`
 
@@ -43,8 +60,10 @@ That end point is: `eco.statistics.get`
 Go ahead, start up the [dice roller example](./examples/dice_roller/dice_roller.md)
 and run its [client](./examples/dice_roller/client.md) a dozen or so times.
 
-Then use this `netcat` command from your terminal:
+Then you can use either `netcat`, or the Ecosystem command line tool from your
+terminal:
 
+For `netcat` use this command:
 ```shell
 echo '{"route_key": "eco.statistics.get", "data": {"type": "current"}, "uid": "abcdef01-abcd-abcd-abcd-abcdef012345"}' | nc localhost 8888
 ```
@@ -59,11 +78,12 @@ The output from the Ecosystem command line tool won't be the exact same as the
 responses discussed below. All the data will be there though, and it will be
 beautified for you.
 
-I'm showing protocol level responses in this document, because one will typically
-want to use that when using an RRD Graphing solution.
+**Note:** I'm showing protocol level responses in this document, because one will typically
+want to use that when writing data to a real-time analytics database, rather than
+the responses from a command line tool.
 
-For the raw responses, you'll get a response that, if you put it through a JSON
-beautifier of some kind, will look like this:
+With the raw responses, you'll get something like what we have below, if you put
+it through a JSON beautifier of some kind first:
 
 ```json
 {
@@ -486,12 +506,7 @@ stats_keeper.increment("log.this.statistic", 5)
 stats_keeper.decrement("log.this.statistic", 5)
 ```
 
-So yea, the next project on which you find yourself transmitting your logs to
-some third party in order to get your hands on this kind of information,
-just remember:
+All of this, without resorting to log aggregation, or transmitting logs to 3rd
+parties for analysis.
 
-A fraction of the money you spend on that, could have gone towards putting down
-an RRD Graphing solution. The rest ... Well ... That could have gone to your
-pocket.
-
-Ecosystem ... Statistics ... Job! Done!
+Ecosystem ... Job! Done!

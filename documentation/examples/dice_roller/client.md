@@ -35,7 +35,7 @@ This is genuinely nothing more than a set-up of the `TCPClient` instance we'll b
 
 #### [senders/roll.py](../../../examples/dice_roller/senders/roll.py)
 ```python
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 
 from .tcp_config import tcp_client
 from ..dtos import RollRequestDto, RollResponseDto
@@ -63,7 +63,7 @@ The `roll_a_dice` function is where `sender_dice_roller_roll` is called, along w
 
 #### [senders/guess.py](../../../examples/dice_roller/senders/guess.py)
 ```python
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 from ecosystem.data_transfer_objects import EmptyDto
 
 from .tcp_config import tcp_client
@@ -92,7 +92,7 @@ Then we create `do_some_guessing`, which does nothing more than call `sender_dic
 
 #### [senders/roll_times.py](../../../examples/dice_roller/senders/roll_times.py)
 ```python
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 from ecosystem.data_transfer_objects import QueuedEndpointResponseDTO
 
 from .tcp_config import tcp_client

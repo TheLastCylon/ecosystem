@@ -47,7 +47,7 @@ Here's the code:
  3:                                                                                          
  4: from ecosystem.application_base import ApplicationBase
  5: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ecosystem.requests import endpoint
+ 6: from ecosystem.requests.endpoint import endpoint
  7:                                                                                          
  8: from .dtos import EchoRequestDto, EchoResponseDto
  9:                                                                                          
@@ -89,7 +89,7 @@ Here's the code:
  3:                                                                                          
  4: from ecosystem.application_base import ApplicationBase
  5: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ecosystem.requests import endpoint
+ 6: from ecosystem.requests.endpoint import endpoint
  7:                                                                                          
  8: from .dtos import EchoRequestDto, EchoResponseDto
 ```

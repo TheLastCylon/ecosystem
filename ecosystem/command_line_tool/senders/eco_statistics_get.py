@@ -1,6 +1,6 @@
 import json
 
-from ...standard_endpoints.statistics import StatsRequestDto, StatsResponseDto
+from ...data_transfer_objects import StatsRequestDto, StatsResponseDto
 from ...clients.client_base import ClientBase
 from ...sending.sender_base import SenderBase
 

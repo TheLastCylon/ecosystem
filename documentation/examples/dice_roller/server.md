@@ -64,7 +64,7 @@ import random
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests import endpoint
+from ecosystem.requests.endpoint import endpoint
 
 from ..dtos import RollRequestDto, RollResponseDto
 
@@ -103,7 +103,7 @@ import random
 from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests import endpoint
+from ecosystem.requests.endpoint import endpoint
 
 from ..dtos import GuessResponseDto
 
@@ -189,7 +189,11 @@ This is NOT a silver bullet, or in any way a means of totally avoiding having to
 
 It is however, a solution that fills the gap between not needing carrier-grade solutions, and factually having to hand over cash for them.
 
-So, with that in mind, here's the code:
+For more on this, take a look at the documentation for:
+- [Queued endpoints](../../queued_endpoints/queued_endpoints.md) and
+- [Queued endpoints, the technical stuff](../../queued_endpoints/technical_stuff.md)
+
+Let us move on with this example though.
 
 ```python
 import uuid
@@ -197,7 +201,7 @@ import asyncio
 import random
 import logging
 
-from ecosystem.requests import queued_endpoint
+from ecosystem.requests.queued_endpoint import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 

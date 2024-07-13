@@ -26,10 +26,9 @@ from .exceptions.exception_base import ExceptionBase
 # Pycharm complains that we aren't using these imports,
 # but the import is what does the work of getting everything up and
 # running. So we do a noqa comment here.
-from .standard_endpoints import ( # noqa
-    eco_error_states_clear,
-    eco_error_states_get,
-
+from .standard_endpoints.statistics import eco_statistics_get # noqa
+from .standard_endpoints.errors import eco_error_states_get, eco_error_states_clear # noqa
+from .standard_endpoints.queued_handler_manager import ( # noqa
     eco_queued_handler_data,
     eco_queued_handler_errors_clear,
     eco_queued_handler_errors_get_first_10,
@@ -41,7 +40,8 @@ from .standard_endpoints import ( # noqa
     eco_queued_handler_processing_unpause,
     eco_queued_handler_receiving_pause,
     eco_queued_handler_receiving_unpause,
-
+)
+from .standard_endpoints.queued_sender_manager import ( # noqa
     eco_queued_sender_data,
     eco_queued_sender_errors_clear,
     eco_queued_sender_errors_get_first_10,
@@ -52,7 +52,6 @@ from .standard_endpoints import ( # noqa
     eco_queued_sender_send_process_pause,
     eco_queued_sender_send_process_unpause,
 
-    eco_statistics_get,
 )
 
 

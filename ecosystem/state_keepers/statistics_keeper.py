@@ -7,15 +7,16 @@ from typing import Any, Dict, List
 
 from ..util import SingletonType
 from ..queues import SqlPersistedQueue
-
+from ..configuration.config_models import AppConfiguration
 
 # --------------------------------------------------------------------------------
 class StatisticsKeeper(metaclass=SingletonType):
+    __config             : AppConfiguration             = AppConfiguration()
     __running           : bool                         = False
     __logger            : logging.Logger               = logging.getLogger()
     __gather_period     : int                          = 300
     __history_length    : int                          = 12
-    __start_time        : int                          = int(time.time())
+    __start_time        : float                        = time.time()
     __statistics_current: Dict[str, Any]               = {}
     __statistics_history: List[Dict[str, Any]]         = []
     __persisted_queues  : Dict[str, SqlPersistedQueue] = {}
@@ -31,8 +32,13 @@ class StatisticsKeeper(metaclass=SingletonType):
 
     async def __update_current_statistics(self):
         current_time = time.time()
-        self.__statistics_current['timestamp'] = int(current_time)
-        self.__statistics_current['uptime']    = int(current_time)-self.__start_time
+
+        self.__statistics_current['timestamp']               = current_time
+        self.__statistics_current['uptime']                  = current_time - self.__start_time
+        self.__statistics_current['application']             = {}
+        self.__statistics_current['application']['name']     = self.__config.name
+        self.__statistics_current['application']['instance'] = self.__config.instance
+
         for key in self.__persisted_queues.keys():
             self.set_statistic_value(key, await self.__persisted_queues[key].size())
 

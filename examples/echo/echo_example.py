@@ -3,7 +3,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from ecosystem.application_base import ApplicationBase
 from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
-from ecosystem.requests import endpoint
+from ecosystem.requests.endpoint import endpoint
 
 from .dtos import EchoRequestDto, EchoResponseDto
 

@@ -2,7 +2,7 @@ import sys
 import asyncio
 import random
 
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 from ecosystem.clients import TCPClient
 
 from .dtos import RouterRequestDto, RouterResponseDto
