@@ -8,8 +8,6 @@
 
 - [ ] Documentation: The error keeper, why it exists and how to use it.
 
-- [ ] RRD Graphing Tool example.
-
 - [ ] Ecosystem JavaScript client
 
 - [ ] Get Ecosystem ready for PyPI. Yes, we are that close.
@@ -113,8 +111,7 @@
 - [X] Documentation: The run_soon decorator. I LOVE PYTHON DECORATORS!!!
 - [X] Documentation: The Fun Factory example
 - [X] Make a Queued sender example.
-
-
+- [X] RRD Graphing Tool example.
 
 # Possibly won't do:
 
