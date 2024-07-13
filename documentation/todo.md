@@ -7,6 +7,9 @@
   - [ ] manipulation through standard endpoints and the queued handler keeper
 
 - [ ] Documentation: The error keeper, why it exists and how to use it.
+  - Example: a service needing to be communicated to goes down.
+  - Setting of the error state when that happens.
+  - Clearing of the error state when it is resolved.
 
 - [ ] Ecosystem JavaScript client
 
@@ -29,8 +32,8 @@
 
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
   - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
-  - This host listened on, can be adjusted to do filtering already.
-  - UDS connections can only be done on the same machine, so that's filtered by default.
+    - The host listened on, can be adjusted to do filtering already.
+  - UDS connections can only be done on the same machine, so that is filtered by default.
 
 # Done
 - [X] Make communication channels optional
