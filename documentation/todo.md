@@ -1,11 +1,6 @@
 # TODO
 
 ## For MVP
-- [ ] Documentation: Queued endpoints
-  - [X] max uncommited
-  - [X] max retries
-  - [ ] manipulation through standard endpoints and the queued handler keeper
-
 - [ ] Documentation: The error keeper, why it exists and how to use it.
   - Example: a service needing to be communicated to goes down.
   - Setting of the error state when that happens.
@@ -115,6 +110,10 @@
 - [X] Documentation: The Fun Factory example
 - [X] Make a Queued sender example.
 - [X] RRD Graphing Tool example.
+- [X] Documentation: Queued endpoints
+  - [X] max uncommited
+  - [X] max retries
+  - [X] manipulation through standard endpoints and the queued handler keeper
 
 # Possibly won't do:
 

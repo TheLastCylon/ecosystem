@@ -1,78 +1,69 @@
-# Queued endpoints: Standard endpoints, for management:
+# Queue management: Standard endpoints
 
-Ecosystem provides a host of standard endpoints ripe and ready for you to use,
-when you need to get down and dirty with queues.
+We do not live in a perfect world. Things can and do go wrong, the world of
+software and distributed systems is no exception. Any tools that can help in the
+mitigation of loss when things do go wrong, are invaluable.
 
-They are:
+Therefore, Ecosystem provides a host of standard endpoints in your applications.
+Ripe and ready for you to use, when you need to get down and dirty with queues.
+
+I am listing them here, for the sake of completeness, and the fact that you might
+want to create your own queue management scripts. However, you'll most likely
+want to use [the Ecosystem command line tool](../command_line_tool.md) before doing that.
+
+---
+## For `queued_endpoint`
 - `eco.queued_handler.data`
+  - For getting information about a queue.
 - `eco.queued_handler.receiving.pause`
+  - For stopping the receiving of messages.
+  - The causes your application to respond to clients, with a server-busy response,
+    rather than allowing the message to enter the queue.
 - `eco.queued_handler.receiving.unpause`
+  - For allowing receiving again.
 - `eco.queued_handler.processing.pause`
+  - For stopping the processing of a queue.
+  - In other words, the queue will still get messages put into it, they just won't
+    be processed.
 - `eco.queued_handler.processing.unpause`
+  - For allowing processing again.
 - `eco.queued_handler.all.pause`
+  - This stops both the receiving and processing of queues.
 - `eco.queued_handler.all.unpause`
+  - This resumes both receiving and processing of queues.
 - `eco.queued_handler.errors.get_first_10`
+  - Gets you the UUIDs of the first 10 messages in the `error` database of a queue.
 - `eco.queued_handler.errors.reprocess.all`
+  - Moves all messages in the `error` database of a queue, to the `pending` database.
 - `eco.queued_handler.errors.clear`
+  - DELETES all entries in the `error` database of a queue.
 - `eco.queued_handler.errors.reprocess.one`
+  - Moves one specified message, from the `error` database to the back of the
+    `pending` database.
 - `eco.queued_handler.errors.pop_request`
+  - DELETES one specified message from the `error` database of a queue
 - `eco.queued_handler.errors.inspect_request`
+  - Allows you to look at one specified message in the `error` database of a queue
 
-More detail will follow as I get to update this document.
-
-For now, you can use the Ecosystem command line tool to play.
-
-Try this:
-
-```shell
-python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -a qem -rk dice_roller.roll_times -dt
-```
-
-Until I get to flesh out this document, you can rely on the help output of this tool with:
-
-```shell
-python -m ecosystem.command_line_tool.cli -h
-```
-
-It should look something like this:
-
-```
-usage: cli.py [-h] -st {tcp,udp,uds} -sd <server details> [-ac {stat,qem}] [-stat {current,gathered,full} | -rk <route_key>] [-dt | -pr | -pp | -pa | -ur | -up | -ua | -e10 | -rp1 | -rpa | -ins | -pop | -clr] [-rid <request uuid>]
-
-options:
-  -h, --help            show this help message and exit
-  -st {tcp,udp,uds}, --server_type {tcp,udp,uds}
-                        The type of server you want to interact with.
-  -sd <server details>, --server_details <server details>
-                        Connection details for the server. If TCP or UDP, format should be HOST:PORT. If UDS, the path to the socket file.
-  -ac {stat,qem}, --action {stat,qem}
-                        The action you want to perform. 'stat' = get statistics or 'qem' = queued endpoint management. Default is 'stat'.
-  -stat {current,gathered,full}, --statistics_type {current,gathered,full}
-                        The statistics type you want to retrieve. Default is 'current'.
-  -rk <route_key>, --route_key <route_key>
-                        The route key of the queue you wish to interact with.
-  -dt, --data           Get data about a queue.
-  -pr, --pause_receiving
-                        Pause receiving on a queue.
-  -pp, --pause_processing
-                        Pause processing on a queue.
-  -pa, --pause_all      Pause both receiving and processing on a queue.
-  -ur, --unpause_receiving
-                        UN-Pause receiving on a queue.
-  -up, --unpause_processing
-                        UN-Pause processing on a queue.
-  -ua, --unpause_all    UN-Pause both receiving and processing on a queue.
-  -e10, --error_10      Get the first 10 uuids in an error queue.
-  -rp1, --reprocess_one
-                        Reprocess a specified entry in an error queue. [Requires -rid].
-  -rpa, --reprocess_all
-                        Reprocess all entries in an error queue.
-  -ins, --inspect_request
-                        View a request on an error queue. [Requires -rid].
-  -pop, --pop_request   Pop a request from an error queue. [Requires -rid].
-  -clr, --clear         Clear an error queue completely. WARNING: All requests in the error queue are deleted!
-  -rid <request uuid>, --request_uid <request uuid>
-                        The UUID for an item in a queue.
-```
-
-To be continued ...
+---
+### For `queued_sender`
+- `eco.queued_sender.data`
+    - For getting information about a queue.
+- `eco.queued_sender.send_process.pause`
+  - Stops the processing of messages in the queue.
+  - i.e. Stops sending messages in the `pending` database of a queue.
+- `eco.queued_sender.send_process.unpause`
+  - Resumes the processing of messages in the queue.
+- `eco.queued_sender.errors.get_first_10`
+  - Gets you the UUIDs of the first 10 messages in the `error` database of a queue.
+- `eco.queued_sender.errors.reprocess.all`
+  - Moves all messages in the `error` database of a queue, to the `pending` database.
+- `eco.queued_sender.errors.clear`
+  - DELETES all entries in the `error` database of a queue.
+- `eco.queued_sender.errors.reprocess.one`
+  - Moves one specified message, from the `error` database to the back of the
+    `pending` database.
+- `eco.queued_sender.errors.pop_request`
+  - DELETES one specified message from the `error` database of a queue
+- `eco.queued_sender.errors.inspect_request`
+  - Allows you to look at one specified message in the `error` database of a queue
