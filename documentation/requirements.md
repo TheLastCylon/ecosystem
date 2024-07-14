@@ -2,8 +2,8 @@
 | Requirement                                    | Version    |
 |------------------------------------------------|------------|
 | [python](https://www.python.org/)              | \>= 3.11.4 |
-| [sqlalchemy](https://sqlalchemy.org)           | \>= 2.0.17 |
-| [pydantic](https://docs.pydantic.dev/latest/)  | \>= 2.7.4  |
+| [sqlalchemy](https://sqlalchemy.org)           | \>= 2.0.31 |
+| [pydantic](https://docs.pydantic.dev/latest/)  | \>= 2.8.2  |
 
 
 ## Python
@@ -26,7 +26,7 @@ with double underscore? That one had me baffled for a while.
 All the queue solutions in Ecosystem, rely on [SqlAlchemy](https://sqlalchemy.org)
 and [Sqlite](https://sqlite.org).
 
-I tested with version 2.0.17, lower versions might work though. Let me know if
+I tested with version 2.0.31, lower versions might work though. Let me know if
 they do, and I'll start a list of what works and what does not.
 
 Side note: The people doing [SqlAlchemy](https://sqlalchemy.org) and
@@ -35,7 +35,7 @@ solutions are pretty damn amazing. So, from me to all the people involved with
 these: Thank you. You Rock!
 
 ## Pydantic
-I tested with version 2.7.4, lower versions might work but do keep in mind that
+I tested with version 2.8.2, lower versions might work but do keep in mind that
 it's untested.
 
 Also: Without [Pydantic](https://docs.pydantic.dev/latest/), Ecosystem would

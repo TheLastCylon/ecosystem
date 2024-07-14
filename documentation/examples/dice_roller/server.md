@@ -190,8 +190,8 @@ This is NOT a silver bullet, or in any way a means of totally avoiding having to
 It is however, a solution that fills the gap between not needing carrier-grade solutions, and factually having to hand over cash for them.
 
 For more on this, take a look at the documentation for:
-- [Queued endpoints](../../queued_endpoints/queued_endpoints.md) and
-- [Queued endpoints, the technical stuff](../../queued_endpoints/technical_stuff.md)
+- [Queued endpoints](../../queueds/queued_endpoints.md) and
+- [Queued endpoints, the technical stuff](../../queueds/technical_stuff.md)
 
 Let us move on with this example though.
 

@@ -220,13 +220,13 @@ The other parameters you can set are:
      set it to `0`. The default for this is also `0`.
 2. `max_uncommited`:
    - As discussed in the
-     [technical stuff for `queued_endpoint`](../../queued_endpoints/technical_stuff.md),
+     [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),
      this tells each of the sql databases for your queues, how many inserts and deletes
      it should allow, before doing a commit. For this example, I set it to `1000`. The
      default for this is `0`
 3. `max_retries`:
    - Again, as discussed in
-     [technical stuff for `queued_endpoint`](../../queued_endpoints/technical_stuff.md),
+     [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),
      this tells Ecosystem how many times it should try sending a message, before giving
      up on it and moving it to the `error` database of the queue.
    - It's important to note, that Ecosystem will only retry sending, if it makes

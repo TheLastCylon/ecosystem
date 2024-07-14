@@ -16,10 +16,12 @@ All of them.
 
 Even your environment variables that have nothing to do with Ecosystem, can start with `ECOENV_`
 
+---
 ## Machine level configuration
 
 What follows below, is a list of Ecosystem environment variables, that set things for all Ecosystem applications, running on the same machine.
 
+---
 ### For directories/folders:
 - `ECOENV_DEFAULT_DIR`
   - Set the default location for LOG and LOCK files ONLY.
@@ -40,6 +42,7 @@ What follows below, is a list of Ecosystem environment variables, that set thing
     - Queue databases are simply too important to have their location left up to some kind of computed default.
     - Ecosystem forces you to be explicit about this, because losing these sqlite files, or having them in a location that you do not consciously know and keep track of, can cause disasters.
 
+---
 ### For logging:
 - `ECOENV_LOG_FORMAT`
   - Sets the format for log entries.
@@ -86,7 +89,8 @@ That means:
 - Conversely: The higher it is, the older the logs are.
 
 
-### For statistics:
+---
+### For statistics/telemetry:
 - `ECOENV_STAT_GP`
   - The **Stat**istics **G**athering **P**eriod, in seconds.
   - Default: 300 i.e. 5 Minutes
@@ -96,6 +100,7 @@ That means:
 
 
 
+---
 ## Application level configuration
 
 You can adjust any of the above at application level, merely by creating an environment variable that also contains:
@@ -108,6 +113,7 @@ That means:
 2. If you wanted instances of it, to have their log files in a location other than that set with `ECOENV_LOG_DIR`.
 3. All you have to do, is create an environment variable named `ECOENV_LOG_DIR_MY_COOL_APPLICATION`, that is set to the location you wish to use.
 
+---
 ## Instance level configuration
 
 To take this down to instance level, you append the instance id, in uppercase, to the application level variable name.
@@ -166,6 +172,7 @@ So yes, you can choose to administer it yourself. Personally though, I enjoy NOT
 
 And now, let's take a look at something a little bit ... Extra.
 
+---
 ### Extra!
 
 I'm rather certain my fellow Software Developers out there, will appreciate this nifty little feature.
