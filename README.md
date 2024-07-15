@@ -25,7 +25,7 @@ As such, the "out-of-the-box" features include:
   - Instance
 - File Logging and log rotation, by default.
 
-For more, take a look at the [documentation](./documentation/documentation_root.md).
+For more, take a look at the [documentation](https://github.com/TheLastCylon/ecosystem/blob/main/documentation/documentation_root.md) on GitHub.
 
 ## License
 

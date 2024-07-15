@@ -1,7 +1,7 @@
 import asyncio
 
 from ecosystem.clients import TCPClient, UDPClient, UDSClient
-from ecosystem.sending import sender
+from ecosystem.sending.sender import sender
 
 from .dtos import EchoRequestDto, EchoResponseDto
 

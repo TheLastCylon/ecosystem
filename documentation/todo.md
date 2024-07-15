@@ -6,11 +6,12 @@
   - Setting of the error state when that happens.
   - Clearing of the error state when it is resolved.
 
-- [ ] Ecosystem JavaScript client
 
 - [ ] Get Ecosystem ready for PyPI. Yes, we are that close.
 
 ## Beyond MVP
+- [ ] Ecosystem Node.js client
+
 - [ ] LRU cache
 
 - [ ] Sequenced Queued Sender
