@@ -20,9 +20,13 @@ you can guess what the other one is.
 So yes. The project will continue to be known as Ecosystem, the package however,
 will have the name `ekosis`.
 
-And now for ... The documentation:
+---
+## Installation
+
+`pip install ekosis`
 
 ---
+## Documentation
 - [Requirements](./requirements.md)
 - [Ecosystem on Windows](./ecosystem_on_windows.md)
 - [Ecosystem on POSIX](./ecosystem_on_posix.md)
