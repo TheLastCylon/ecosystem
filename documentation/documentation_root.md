@@ -8,7 +8,7 @@ Why is the package name `ekosis`?
 
 Well, it was supposed to be `ecosystem`, but apparently this is not allowed by
 PyPi. So, I had to make a choice: Stick with the name I like for this, or
-completely alter everything and break away from the name completely.
+alter everything and break away from it completely.
 
 Well, I'm stubborn. So I stuck with it.
 
