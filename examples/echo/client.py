@@ -2,7 +2,7 @@ import asyncio
 
 from typing import cast
 
-from ecosystem.clients import TCPClient, UDPClient, UDSClient
+from ekosis.clients import TCPClient, UDPClient, UDSClient
 
 from .dtos import EchoRequestDto, EchoResponseDto
 

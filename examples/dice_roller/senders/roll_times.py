@@ -1,5 +1,5 @@
-from ecosystem.sending.sender import sender
-from ecosystem.data_transfer_objects import QueuedEndpointResponseDTO
+from ekosis.sending.sender import sender
+from ekosis.data_transfer_objects import QueuedEndpointResponseDTO
 
 from .tcp_config import tcp_client
 from ..dtos import RollTimesRequestDto

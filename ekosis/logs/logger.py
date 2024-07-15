@@ -93,5 +93,5 @@ class EcoLogger(metaclass=SingletonType):
 
 
 # --------------------------------------------------------------------------------
-ecosystem_logger = EcoLogger()
-ecosystem_logger.setup()
+ekosis_logger = EcoLogger()
+ekosis_logger.setup()

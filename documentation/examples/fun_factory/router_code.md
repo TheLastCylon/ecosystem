@@ -24,15 +24,16 @@ The relevant files for `[router]` are:
 Let's take a look at each of them in turn.
 
 ### [clients.py](../../../examples/fun_factory/router/clients.py)
-```python
-from ecosystem.clients import TCPClient
 
-fortunes_client      = TCPClient("127.0.0.1", 8100)
-joker_client         = TCPClient("127.0.0.1", 8200)
-lottery_client       = TCPClient("127.0.0.1", 8300)
-magic8ball_client    = TCPClient("127.0.0.1", 8400)
-time_reporter_client = TCPClient("127.0.0.1", 8500)
-tracker_client       = TCPClient("127.0.0.1", 8700)
+```python
+from ekosis.clients import TCPClient
+
+fortunes_client=TCPClient("127.0.0.1", 8100)
+joker_client=TCPClient("127.0.0.1", 8200)
+lottery_client=TCPClient("127.0.0.1", 8300)
+magic8ball_client=TCPClient("127.0.0.1", 8400)
+time_reporter_client=TCPClient("127.0.0.1", 8500)
+tracker_client=TCPClient("127.0.0.1", 8700)
 ```
 
 There is nothing special here. Just setup of clients that will be used with the `sender` and `queued_sender` decorator, in [senders.py](../../../examples/fun_factory/router/senders.py)
@@ -55,20 +56,21 @@ class RouterResponseDto(PydanticBaseModel):
 Again, nothing you've not seen in previous examples. Just some DTOs we'll be using with the `endpiont` decorator in [endpoints.py](../../../examples/fun_factory/router/endpoints.py)
 
 ### [router.py](../../../examples/fun_factory/router/router.py)
-```python
-from ecosystem.application_base import ApplicationBase
-from ecosystem.configuration.config_models import ConfigTCP
 
-from .endpoints import process_message # noqa
+```python
+from ekosis.application_base import ApplicationBase
+from ekosis.configuration.config_models import ConfigTCP
+
+from .endpoints import process_message  # noqa
 
 
 # --------------------------------------------------------------------------------
 class RouterServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8600)
-        self._configuration.queue_directory = '/tmp'
-        self._configuration.stats_keeper.gather_period  = 60
-        self._configuration.stats_keeper.history_length = 60       
+        self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8600)
+        self._configuration.queue_directory='/tmp'
+        self._configuration.stats_keeper.gather_period=60
+        self._configuration.stats_keeper.history_length=60
         super().__init__()
 
 
@@ -79,7 +81,7 @@ def main():
 
 
 # --------------------------------------------------------------------------------
-if __name__ == '__main__':
+if __name__=='__main__':
     main()
 ```
 
@@ -95,10 +97,11 @@ Now we start getting to the guts of this, lets take a look at [senders.py](../..
 ### [senders.py](../../../examples/fun_factory/router/senders.py) 
 
 #### The imports
+
 ```python
-from ecosystem.sending.sender import sender
-from ecosystem.sending.queued_sender import queued_sender
-from ecosystem.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
+from ekosis.sending.sender import sender
+from ekosis.sending.queued_sender import queued_sender
+from ekosis.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
 ```
 You know about `EmptyDto`, `QueuedEndpointResponseDTO` and the `sender` decorator already.
 
@@ -299,20 +302,12 @@ import time
 from typing import cast, List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests.endpoint import endpoint
-from ecosystem.util.fire_and_forget_tasks import run_soon
+from ekosis.requests.endpoint import endpoint
+from ekosis.util.fire_and_forget_tasks import run_soon
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
-from .senders import (
-    get_fortune,
-    get_joke,
-    pick_numbers,
-    get_prediction,
-    get_time,
-    log_request,
-    log_response
-)
+from .senders import (get_fortune, get_joke, pick_numbers, get_prediction, get_time, log_request, log_response)
 ```
 
 Everything up to the import for `run_soon`, you have seen before. We'll get to looking at `run_soon` ... Soon. `:)`

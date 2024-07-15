@@ -10,7 +10,7 @@ are running. So doing things like:
 Go ahead and run it with `-h` to see the help output.
 
 ```shell
-python -m ecosystem.command_line_tool.cli -h
+python -m ekosis.command_line_tool.cli -h
 ```
 
 What follows are examples of how to use it for common use cases.
@@ -19,14 +19,14 @@ What follows are examples of how to use it for common use cases.
 ## Getting application statistics
 ### for the current statistics gathering period
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac stat
 ```
 or
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac stat \
@@ -34,7 +34,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 ### for the last gathered period
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac stat \
@@ -42,7 +42,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 ### for the full list of historic periods
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac stat \
@@ -53,7 +53,7 @@ python -m ecosystem.command_line_tool.cli \
 ## Managing queues created through `queued_endpoint`
 ### Getting data about the queue
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -63,7 +63,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Pause and unpause receiving
 #### pause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -72,7 +72,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 #### unpause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -83,7 +83,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Pause and unpause processing
 #### pause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -92,7 +92,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 #### unpause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -103,7 +103,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Pause and unpause both receiving and processing
 #### pause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -112,7 +112,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 #### unpause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -122,7 +122,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Get the UUIDs for the first 10 entries in the `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -132,7 +132,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Move one specified entry in the `error` database to the `pending` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -143,7 +143,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Move all `error` database entries to the `pending` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -153,7 +153,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Delete one specified entry from `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -164,7 +164,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Inspect one specified entry in the `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -176,7 +176,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Delete all entries in the `error` database
 USE THIS WITH EXTREME CAUTION, MESSAGES CAN NOT BE RETRIEVED!!!
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8888 \
   -ac qem \
@@ -189,7 +189,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Getting data about the queue
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -199,7 +199,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Pause and unpause sending
 #### pause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -208,7 +208,7 @@ python -m ecosystem.command_line_tool.cli \
 ```
 #### unpause
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -218,7 +218,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Get the UUIDs for the first 10 entries in the `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -228,7 +228,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Move one specified entry in the `error` database to the `pending` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -239,7 +239,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Move all `error` database entries to the `pending` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -249,7 +249,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Delete one specified entry from `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -260,7 +260,7 @@ python -m ecosystem.command_line_tool.cli \
 
 ### Inspect one specified entry in the `error` database
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \
@@ -272,7 +272,7 @@ python -m ecosystem.command_line_tool.cli \
 ### Delete all entries in the `error` database
 USE THIS WITH EXTREME CAUTION, MESSAGES CAN NOT BE RETRIEVED!!!
 ```shell
-python -m ecosystem.command_line_tool.cli \
+python -m ekosis.command_line_tool.cli \
   -st tcp \
   -sd 127.0.0.1:8600 \
   -ac qsm \

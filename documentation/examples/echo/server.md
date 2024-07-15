@@ -42,56 +42,109 @@ Yes, an Ecosystem ... Echo-server.
 Here's the code:
 
 ```python
- 1: import uuid
- 2: from pydantic import BaseModel as PydanticBaseModel
- 3:                                                                                          
- 4: from ecosystem.application_base import ApplicationBase
- 5: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ecosystem.requests.endpoint import endpoint
- 7:                                                                                          
- 8: from .dtos import EchoRequestDto, EchoResponseDto
- 9:                                                                                          
-10:                                                                                          
-11: # --------------------------------------------------------------------------------
-12: @endpoint("echo", EchoRequestDto)
-13: async def echo_this_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-14:     return EchoResponseDto(message = request.message)
-15:                                                                                          
-16:                                                                                          
-17: # --------------------------------------------------------------------------------
-18: class EchoExampleServer(ApplicationBase):
-19:     def __init__(self):
-20:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
-21:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
-22:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-23:         super().__init__()
-24:                                                                                          
-25:                                                                                          
-26: # --------------------------------------------------------------------------------
-27: def main():
-28:     with EchoExampleServer() as app:
-29:         app.start()
-30:                                                                                          
-31:                                                                                          
-32: # --------------------------------------------------------------------------------
-33: if __name__ == '__main__':
-34:     try:
-35:         main()
+ 1:
+import uuid
+
+2:
+from pydantic import BaseModel as PydanticBaseModel
+
+3:
+4:
+from ekosis.application_base import ApplicationBase
+
+5:
+from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+
+6:
+from ekosis.requests.endpoint import endpoint
+
+7:
+8:
+from .dtos import EchoRequestDto, EchoResponseDto
+
+9:
+10:
+11:  # --------------------------------------------------------------------------------
+12:
+
+
+@endpoint("echo", EchoRequestDto)
+
+
+13:
+
+
+async def echo_this_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+
+
+    14:
+return EchoResponseDto(message=request.message)
+15:
+16:
+17:  # --------------------------------------------------------------------------------
+18:
+
+
+class EchoExampleServer(ApplicationBase):
+
+
+    19:
+
+
+def __init__(self):
+
+
+    20: self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8888)
+21: self._configuration.udp=ConfigUDP(host="127.0.0.1", port=8889)
+22: self._configuration.uds=ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+23: super().__init__()
+24:
+25:
+26:  # --------------------------------------------------------------------------------
+27:
+
+
+def main():
+
+
+    28:
+with EchoExampleServer() as app:
+    29: app.start()
+30:
+31:
+32:  # --------------------------------------------------------------------------------
+33:
+if __name__=='__main__':
+    34:
+try:
+    35: main()
 36:     except Exception as e:
-37:         print(str(e))
+37: print(str(e))
 38:
 ```
 
 ### Imports
+
 ```python
- 1: import uuid
- 2: from pydantic import BaseModel as PydanticBaseModel
- 3:                                                                                          
- 4: from ecosystem.application_base import ApplicationBase
- 5: from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ecosystem.requests.endpoint import endpoint
- 7:                                                                                          
- 8: from .dtos import EchoRequestDto, EchoResponseDto
+ 1:
+import uuid
+
+2:
+from pydantic import BaseModel as PydanticBaseModel
+
+3:
+4:
+from ekosis.application_base import ApplicationBase
+
+5:
+from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+
+6:
+from ekosis.requests.endpoint import endpoint
+
+7:
+8:
+from .dtos import EchoRequestDto, EchoResponseDto
 ```
 
 1. Line 1 gives us the python `uuid` stuff we'll need with creating an endpoint.

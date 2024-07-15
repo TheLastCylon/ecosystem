@@ -3,7 +3,7 @@ import asyncio
 import random
 import logging
 
-from ecosystem.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.queued_endpoint import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 

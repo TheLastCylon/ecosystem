@@ -41,7 +41,7 @@ class CompressedRotatingFileHandler(RotatingFileHandler):
         will create new files with the name specified in file_path, having extensions
         ".1.gz", ".2.gz" etc. appended.
 
-        e.g. With backup_count at 5 and a ecosystem file name of "app.log", you would get
+        e.g. With backup_count at 5 and a ekosis file name of "app.log", you would get
         "app.log",
         "app.log.1.gz",
         "app.log.2.gz", ... to "app.log.5.gz".
@@ -70,7 +70,7 @@ class CompressedRotatingFileHandler(RotatingFileHandler):
              gzip.open(destination_file_name, 'wb') as destination_file:
             destination_file.writelines(source_file)
 
-    # Override the ecosystem doRollover method because we want to add compression to this.
+    # Override the ekosis doRollover method because we want to add compression to this.
     def doRollover(self):
         if self.stream:
             self.stream.close()

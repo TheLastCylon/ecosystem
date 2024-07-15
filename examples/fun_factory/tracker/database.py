@@ -6,7 +6,7 @@ from typing import cast, Any
 from sqlalchemy import create_engine, Column, BINARY, String, Float, BigInteger, func
 from sqlalchemy.orm import sessionmaker
 
-from ecosystem.util.singleton import SingletonType
+from ekosis.util.singleton import SingletonType
 
 OrmBaseClass = sqlalchemy.orm.declarative_base()
 

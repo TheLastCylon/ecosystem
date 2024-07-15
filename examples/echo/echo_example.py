@@ -1,9 +1,9 @@
 import uuid
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.application_base import ApplicationBase
-from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
-from ecosystem.requests.endpoint import endpoint
+from ekosis.application_base import ApplicationBase
+from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+from ekosis.requests.endpoint import endpoint
 
 from .dtos import EchoRequestDto, EchoResponseDto
 

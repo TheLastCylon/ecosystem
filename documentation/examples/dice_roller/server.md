@@ -3,14 +3,15 @@
 ## The Code
 
 ### [dice_roller_example.py](../../../examples/dice_roller/dice_roller_example.py)
+
 ```python
-from ecosystem.application_base import ApplicationBase
-from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+from ekosis.application_base import ApplicationBase
+from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
 
 # Pycharm complains that we aren't using these imports.
 # But the act of importing is what does the work we need to get done.
 # So I add a noqa comment to let it know, that I know what I'm doing here.
-from .handlers import ( # noqa
+from .handlers import (  # noqa
     dice_roller_guess,
     dice_roller_roll,
     dice_roller_roll_times
@@ -20,10 +21,10 @@ from .handlers import ( # noqa
 # --------------------------------------------------------------------------------
 class DiceRollerExampleServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8888)
-        self._configuration.udp             = ConfigUDP(host="127.0.0.1", port=8889)
-        self._configuration.uds             = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-        self._configuration.queue_directory = "/tmp"
+        self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8888)
+        self._configuration.udp=ConfigUDP(host="127.0.0.1", port=8889)
+        self._configuration.uds=ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+        self._configuration.queue_directory="/tmp"
         super().__init__()
 
 
@@ -34,7 +35,7 @@ def main():
 
 
 # --------------------------------------------------------------------------------
-if __name__ == '__main__':
+if __name__=='__main__':
     main()
 ```
 
@@ -58,21 +59,22 @@ Let's move on and take a look at the endpoints.
 ### The endpoints
 
 #### [handlers/roll.py](../../../examples/dice_roller/handlers/roll.py)
+
 ```python
 import uuid
 import random
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests.endpoint import endpoint
+from ekosis.requests.endpoint import endpoint
 
 from ..dtos import RollRequestDto, RollResponseDto
 
 
 @endpoint("dice_roller.roll", RollRequestDto)
 async def dice_roller_roll(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    numbers = list(range(1, request.sides))
-    return RollResponseDto(result = random.choice(numbers))
+    numbers=list(range(1, request.sides))
+    return RollResponseDto(result=random.choice(numbers))
 ```
 
 Here you'll note that we import our DTOs in:
@@ -96,6 +98,7 @@ Keep that in mind. It is one of the things you can do to "play-nice" with Ecosys
 Yes, of course that pun was on purpose! :D
 
 #### [handlers/guess.py](../../../examples/dice_roller/handlers/guess.py)
+
 ```python
 import uuid
 import random
@@ -103,15 +106,15 @@ import random
 from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests.endpoint import endpoint
+from ekosis.requests.endpoint import endpoint
 
 from ..dtos import GuessResponseDto
 
 
 @endpoint("dice_roller.guess")
 async def dice_roller_guess(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    return GuessResponseDto(number = random.choice(numbers))
+    numbers: List[int]=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    return GuessResponseDto(number=random.choice(numbers))
 ```
 
 Here we import our request dto with:
@@ -141,7 +144,7 @@ When we do this, we are basically saying: This endpoint does not need data.
 
 Typically, one would use something like this, when all the server needs to know, is that the endpoint was called.
 
-Behind the scenes, Ecosystem sets the request DTO to `EmptyDTO`, declared in `ecosystem/data_transfer_objects/empty.py`
+Behind the scenes, Ecosystem sets the request DTO to `EmptyDTO`, declared in `ekosis/data_transfer_objects/empty.py`
 
 It looks like this:
 ```python
@@ -201,24 +204,24 @@ import asyncio
 import random
 import logging
 
-from ecosystem.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.queued_endpoint import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 
 
 @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 async def dice_roller_roll_times(request_uuid: uuid.UUID, request: RollTimesRequestDto) -> bool:
-    log     = logging.getLogger()
-    numbers = list(range(1, request.sides))
+    log=logging.getLogger()
+    numbers=list(range(1, request.sides))
 
     log.info(f"roll_times[{request_uuid}]: Processing.")
-    total_result   = 0
-    expected_total = (request.sides * request.how_many)*0.6
+    total_result=0
+    expected_total=(request.sides*request.how_many)*0.6
     for times in range(request.how_many):
-        total_result += random.choice(numbers) + 1
+        total_result+=random.choice(numbers)+1
 
     log.info(f"roll_times[{request_uuid}]: expected_total[{expected_total}] total_result[{total_result}]")
-    if total_result < expected_total:
+    if total_result<expected_total:
         log.info(f"roll_times[{request_uuid}]: FAIL!")
         await asyncio.sleep(1)
         return False
@@ -251,7 +254,7 @@ If you've been paying attention, you'll notice that the function we declared the
 
 The response DTO of a `queued_endpoint`, is always `QueuedEndpointResponseDTO`.
 
-It is declared in `ecosystem/data_transfer_objects/queued_endpoint_response.py` and looks like this:
+It is declared in `ekosis/data_transfer_objects/queued_endpoint_response.py` and looks like this:
 
 ```python
 from pydantic import BaseModel as PydanticBaseModel

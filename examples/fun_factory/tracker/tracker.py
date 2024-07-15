@@ -1,5 +1,5 @@
-from ecosystem.application_base import ApplicationBase
-from ecosystem.configuration.config_models import ConfigTCP
+from ekosis.application_base import ApplicationBase
+from ekosis.configuration.config_models import ConfigTCP
 
 from .database import LogDatabase
 from .endpoints import log_request, log_response # noqa

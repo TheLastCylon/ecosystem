@@ -71,7 +71,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "current"}, "uid": "a
 If you don't have `netcat` on your machine, try the Ecosystem command line tool with:
 
 ```shell
-python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat current
+python -m ekosis.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat current
 ```
 
 The output from the Ecosystem command line tool won't be the exact same as the
@@ -151,7 +151,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "gathered"}, "uid": "
 If you'd rather play with the Ecosystem command line tool, use this:
 
 ```shell
-python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat gathered
+python -m ekosis.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat gathered
 ```
 
 The response you get, is all the gathered statistics, for the last gathering
@@ -237,7 +237,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "full"}, "uid": "abcd
 Again, here's the Ecosystem command line tool, equivalent:
 
 ```shell
-python -m ecosystem.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat full
+python -m ekosis.command_line_tool.cli -st tcp -sd 127.0.0.1:8888 -stat full
 ```
 
 Here's what I got:
@@ -463,7 +463,7 @@ The `StatisticsKeeper` class, is implemented as a singleton, that you can import
 into any of your Python modules:
 
 ```python
-from ecosystem.state_keepers.statistics_keeper import StatisticsKeeper
+from ekosis.state_keepers.statistics_keeper import StatisticsKeeper
 ```
 
 From there you can get an instance of it with:

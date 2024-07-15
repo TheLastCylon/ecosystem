@@ -1,5 +1,5 @@
-from ecosystem.application_base import ApplicationBase
-from ecosystem.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+from ekosis.application_base import ApplicationBase
+from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
 
 # Pycharm complains that we aren't using these imports.
 # But the act of importing is what does the work we need to get done.
@@ -9,7 +9,6 @@ from .handlers import ( # noqa
     dice_roller_roll,
     dice_roller_roll_times
 )
-
 
 # --------------------------------------------------------------------------------
 class DiceRollerExampleServer(ApplicationBase):

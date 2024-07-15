@@ -5,7 +5,7 @@ Ecosystem's `AppConfiguration` class is implemented as a singleton.
 You can import it anywhere in your code:
 
 ```python
-from ecosystem.configuration.config_models import AppConfiguration
+from ekosis.configuration.config_models import AppConfiguration
 ```
 
 And get an instance of it with:
@@ -44,14 +44,14 @@ So, once more, that means:
 You can get the value of that environment variable with:
 
 ```python
-from ecosystem.configuration.config_models import AppConfiguration
+from ekosis.configuration.config_models import AppConfiguration
 
-config = AppConfiguration()
+config=AppConfiguration()
 
-if "DATABASE_NAME" not in config.extra.keys(): # Remember to check that the entry is actually there.
+if "DATABASE_NAME" not in config.extra.keys():  # Remember to check that the entry is actually there.
     raise Exception("Database name not configured!")
 
-database_name = config.extra["DATABASE_NAME"] # And here you can get the value.
+database_name=config.extra["DATABASE_NAME"]  # And here you can get the value.
 ```
 
 One last thing:

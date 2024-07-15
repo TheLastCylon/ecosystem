@@ -6,7 +6,7 @@ import logging
 
 from pydantic import BaseModel as PydanticBaseModel
 
-from ecosystem.requests.endpoint import endpoint
+from ekosis.requests.endpoint import endpoint
 
 from .dtos import JokerResponseDto
 

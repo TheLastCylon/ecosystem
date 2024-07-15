@@ -1,4 +1,4 @@
-from ecosystem.clients import TCPClient
+from ekosis.clients import TCPClient
 
 fortunes_client      = TCPClient("127.0.0.1", 8100)
 joker_client         = TCPClient("127.0.0.1", 8200)

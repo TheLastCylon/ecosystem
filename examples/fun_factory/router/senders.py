@@ -1,6 +1,6 @@
-from ecosystem.sending.sender import sender
-from ecosystem.sending.queued_sender import queued_sender
-from ecosystem.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
+from ekosis.sending.sender import sender
+from ekosis.sending.queued_sender import queued_sender
+from ekosis.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
 
 from ..fortunes.dtos import FortuneResponseDto
 from ..joker.dtos import JokerResponseDto

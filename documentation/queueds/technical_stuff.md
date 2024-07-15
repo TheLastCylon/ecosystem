@@ -5,8 +5,10 @@ You might want to take a look at the [Ecosystem Queues, Questions and Answers](.
 If you're ready to move on though, lets take a look at some code:
 
 ## A queued endpoint:
+
 ```python
-from ecosystem.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.queued_endpoint import queued_endpoint
+
 
 @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 ```
@@ -110,24 +112,24 @@ import asyncio
 import random
 import logging
 
-from ecosystem.requests import queued_endpoint
+from ekosis.requests import queued_endpoint
 
 from ..dtos import RollTimesRequestDto
 
 
 @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 async def dice_roller_roll_times(request_uuid: uuid.UUID, request: RollTimesRequestDto) -> bool:
-    log     = logging.getLogger()
-    numbers = list(range(1, request.sides))
+    log=logging.getLogger()
+    numbers=list(range(1, request.sides))
 
     log.info(f"roll_times[{request_uuid}]: Processing.")
-    total_result   = 0
-    expected_total = (request.sides * request.how_many)*0.6
+    total_result=0
+    expected_total=(request.sides*request.how_many)*0.6
     for times in range(request.how_many):
-        total_result += random.choice(numbers) + 1
+        total_result+=random.choice(numbers)+1
 
     log.info(f"roll_times[{request_uuid}]: expected_total[{expected_total}] total_result[{total_result}]")
-    if total_result < expected_total:
+    if total_result<expected_total:
         log.info(f"roll_times[{request_uuid}]: FAIL!")
         await asyncio.sleep(1)
         return False

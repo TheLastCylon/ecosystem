@@ -25,17 +25,19 @@ First, let's take a look at the sender package.
 ### The sender Python package:
 
 #### [senders/tcp_config.py](../../../examples/dice_roller/senders/tcp_config.py)
-```python
-from ecosystem.clients import TCPClient
 
-tcp_client = TCPClient(server_host='127.0.0.1', server_port=8888)
+```python
+from ekosis.clients import TCPClient
+
+tcp_client=TCPClient(server_host='127.0.0.1', server_port=8888)
 ```
 
 This is genuinely nothing more than a set-up of the `TCPClient` instance we'll be using with our senders.
 
 #### [senders/roll.py](../../../examples/dice_roller/senders/roll.py)
+
 ```python
-from ecosystem.sending.sender import sender
+from ekosis.sending.sender import sender
 
 from .tcp_config import tcp_client
 from ..dtos import RollRequestDto, RollResponseDto
@@ -48,7 +50,7 @@ async def sender_dice_roller_roll(sides: int):
 
 async def roll_a_dice(number_of_sides: int):
     print(f"roll_a_dice: number of sides[{number_of_sides}]. ", end="")
-    tcp_response: RollResponseDto = await sender_dice_roller_roll(number_of_sides) # noqa
+    tcp_response: RollResponseDto=await sender_dice_roller_roll(number_of_sides)  # noqa
     print(f"Received: [{tcp_response.result}]")
 ```
 
@@ -62,9 +64,10 @@ Then we declare and define our sender function `sender_dice_roller_roll`.
 The `roll_a_dice` function is where `sender_dice_roller_roll` is called, along with some nice output to show us what's going on during run-time.
 
 #### [senders/guess.py](../../../examples/dice_roller/senders/guess.py)
+
 ```python
-from ecosystem.sending.sender import sender
-from ecosystem.data_transfer_objects import EmptyDto
+from ekosis.sending.sender import sender
+from ekosis.data_transfer_objects import EmptyDto
 
 from .tcp_config import tcp_client
 from ..dtos import GuessResponseDto
@@ -77,7 +80,7 @@ async def sender_dice_roller_guess():
 
 async def do_some_guessing():
     print(f"do_some_guessing: Sending. ", end="")
-    tcp_response: GuessResponseDto = await sender_dice_roller_guess() # noqa
+    tcp_response: GuessResponseDto=await sender_dice_roller_guess()  # noqa
     print(f"Received: [{tcp_response.number}]")
 ```
 
@@ -91,9 +94,10 @@ Note that all `sender_dice_roller_guess` does, is to construct an instance of `E
 Then we create `do_some_guessing`, which does nothing more than call `sender_dice_roller_guess`, along with some nice output.
 
 #### [senders/roll_times.py](../../../examples/dice_roller/senders/roll_times.py)
+
 ```python
-from ecosystem.sending.sender import sender
-from ecosystem.data_transfer_objects import QueuedEndpointResponseDTO
+from ekosis.sending.sender import sender
+from ekosis.data_transfer_objects import QueuedEndpointResponseDTO
 
 from .tcp_config import tcp_client
 from ..dtos import RollTimesRequestDto
@@ -106,7 +110,7 @@ async def sender_dice_roller_roll_times(sides: int, how_many: int):
 
 async def roll_several_dice(sides: int, how_many: int):
     print(f"roll_several_dice: sides[{sides}] how_many[{how_many}]. ", end="")
-    tcp_response = await sender_dice_roller_roll_times(sides, how_many)
+    tcp_response=await sender_dice_roller_roll_times(sides, how_many)
     print(f"Received: [{tcp_response.uid}]")
 ```
 

@@ -1,5 +1,28 @@
 # Ecosystem Documentation
 
+---
+Before you continue, allow me to answer a question I'm sure I'm going to get
+quite often.
+
+Why is the package name `ekosis`?
+
+Well, it was supposed to be `ecosystem`, but apparently this is not allowed by
+PyPi. So, I had to make a choice: Stick with the name I like for this, or
+completely alter everything and break away from the name completely.
+
+Well, I'm stubborn. So I stuck with it.
+
+`ekosis` is an abbreviation of the word `Ekosisteem`, which is the Afrikaans word
+for `Ecosystem`. The meaning of the two words are exactly the same. Afrikaans also
+happens to be one of the two natural languages, I'm completely fluent in. I'm sure
+you can guess what the other one is.
+
+So yes. The project will continue to be known as Ecosystem, the package however,
+will have the name `ekosis`.
+
+And now for ... The documentation:
+
+---
 - [Requirements](./requirements.md)
 - [Ecosystem on Windows](./ecosystem_on_windows.md)
 - [Ecosystem on POSIX](./ecosystem_on_posix.md)

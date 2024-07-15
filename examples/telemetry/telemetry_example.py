@@ -9,10 +9,10 @@ import influxdb_client
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from ecosystem.clients import TCPClient, UDPClient, UDSClient, ClientBase
-from ecosystem.sending.sender import sender
-from ecosystem.data_transfer_objects.statistics import StatsRequestDto, StatsResponseDto
-from ecosystem.util.utility_functions import (
+from ekosis.clients import TCPClient, UDPClient, UDSClient, ClientBase
+from ekosis.sending.sender import sender
+from ekosis.data_transfer_objects.statistics import StatsRequestDto, StatsResponseDto
+from ekosis.util.utility_functions import (
     is_valid_hostname,
     is_valid_port_number,
     flatten_dictionary,

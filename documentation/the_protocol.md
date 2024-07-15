@@ -1,7 +1,7 @@
 # The protocol
 
 Ecosystem's protocol is pure JSON, there are a couple of things that have to be standardised but nothing major.
-The request and response DTOs are declared in [ecosystem/data_transfer_objects/json_protocol.py](../ecosystem/data_transfer_objects/json_protocol.py), and yes, they are exactly as simple as they appear.
+The request and response DTOs are declared in [ekosis/data_transfer_objects/json_protocol.py](../ekosis/data_transfer_objects/json_protocol.py), and yes, they are exactly as simple as they appear.
 
 As a user, it's unlikely that you'll have to deal with this directly, but what follows is good to know when it comes to debugging your applications.
 
@@ -30,7 +30,7 @@ Here too there are only three fields
 1. `uid`
    1. When you have effected a request, this field in the response should be populated with the UUID of your request.
 2. `status`
-   1. This is an integer reflecting the status of your request. A value of 0 will always indicate success. The exact meanings for other values are in a state of flux right now, for the latest take a look at the source in [../ecosystem/requests/status.py](../ecosystem/requests/status.py).
+   1. This is an integer reflecting the status of your request. A value of 0 will always indicate success. The exact meanings for other values are in a state of flux right now, for the latest take a look at the source in [ekosis/requests/status.py](../ekosis/requests/status.py).
 3. `data`
    1. This will contain the response data, it could be any valid JSON.
 
