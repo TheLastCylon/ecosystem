@@ -6,9 +6,6 @@
   - Setting of the error state when that happens.
   - Clearing of the error state when it is resolved.
 
-
-- [ ] Get Ecosystem ready for PyPI. Yes, we are that close.
-
 ## Beyond MVP
 - [ ] Ecosystem Node.js client
 
@@ -115,6 +112,7 @@
   - [X] max uncommited
   - [X] max retries
   - [X] manipulation through standard endpoints and the queued handler keeper
+- [X] Get Ecosystem ready for PyPI. Yes, we are that close.
 
 # Possibly won't do:
 
