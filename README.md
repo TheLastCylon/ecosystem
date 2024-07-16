@@ -19,6 +19,7 @@ As such, the "out-of-the-box" features include:
 - Real-time Telemetry, without the need for log-aggregation.
 - Queueing for both sending and receiving messages, without the need for
   installation or management of external queueing mechanisms.
+- Optional Distributed Tracking (Request Tracking), at protocol level, using UUIDs. 
 - Configuration through both environment variables and config files, at three levels:
   - Machine/Container,
   - Application and

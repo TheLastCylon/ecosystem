@@ -44,6 +44,7 @@ will have the name `ekosis`.
   - [Queued Endpoints, what they are for](queueds/queued_endpoints.md)
   - [Queued Senders, what they are for](queueds/queued_senders.md)
   - [Standard endpoints for queue management](queueds/standard_endpoints_for_management.md)
+- [Distributed Tracking (Request Tracking)](./distributed_tracking.md)
 - [The Ecosystem command line tool](./command_line_tool.md)
 - [Why do this?](./why.md)
 - [TODO (as in: The stuff still pending)](./todo.md)

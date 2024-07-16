@@ -1,4 +1,5 @@
 import sys
+import uuid
 import asyncio
 import random
 
@@ -22,15 +23,16 @@ SLEEP_PERIOD = 0.1
 
 # --------------------------------------------------------------------------------
 @sender(router_client, "app.process_message", RouterResponseDto)
-async def sender_app_process_message(message: str):
+async def sender_app_process_message(message: str, **kwargs):
     return RouterRequestDto(request=message)
 
 
 # --------------------------------------------------------------------------------
 async def send_message(message: str):
+    uuid_to_use = uuid.uuid4()
     print("================================================================================")
-    print(f"Sending : [{message}]")
-    response: RouterResponseDto = await sender_app_process_message(message) # noqa
+    print(f"Sending : UUID[{uuid_to_use}] message[{message}]")
+    response: RouterResponseDto = await sender_app_process_message(message, request_uid=uuid_to_use) # noqa
     print("--------------------------------------------------------------------------------")
     print(f"Received: [{response.response}]")
 
