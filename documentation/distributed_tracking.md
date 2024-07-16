@@ -2,8 +2,8 @@
 
 In distributed systems, one of the biggest time wasters is having to debug a
 system where you can't track the messages from one component to another. Anyone
-who has had to deal with this, will be able to discuss the pain of having to
-deal with this, in excruciating detail.
+who has been in this situation, will be able to discuss the pain of it, in
+excruciating detail.
 
 With Ecosystem however, you can bypass this entire situation, with ease.
 
@@ -91,7 +91,7 @@ You'll notice the `request_uuid` parameter. In the function signature.
 
 Yes, all your endpoint function have to be able to accept that parameter.
 
-Wither you use it in your endpoint function or not, does not matter. They all
+Wither you use it in your function or not, does not matter. They all
 have to be able to receive that parameter when called. And yes, the framework
 forces you to have it there, rather than as a `**kwargs` parameter. Exactly
 because we want the choice **not** to use it, to be an explicit, and very visible
