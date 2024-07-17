@@ -59,20 +59,22 @@ What follows below, is a list of Ecosystem environment variables, that set thing
   - Sets the logging level.
   - Valid options are: `debug`,`info`,`warn`,`error`,`critical`.
   - Default: `info`
-- `ECOENV_LOG_COMPRESS`
-  - When false or not set, log rotation done by Ecosystem applications, will not include compressing of rotated log files.
-  - If set to have a value of `TRUE` the rotated log files will also be compressed.
-    - This is NOT A GOOD THING for production environments.
-    - Making your application deal with having to compress files, causes it to spend time doing that, every time a log file has to be rotated.
-    - This is BAD for production environments!
-    - Rather look at using tools like `logrotate` for this.
-  - Default: `FALSE`
+- `ECOENV_LOG_BUF_SIZE`
+  - The number of log lines to buffer, before writing to the log file.
+  - Note: Buffering your log file writes can have very desirable impact on performance. Keep in mind
+    though, this means you might be missing vital logs if something goes wrong.
+  - Ecosystem makes every possible attempt to flush logs in the event of a shutdown, even if due to some
+    exception or another. But if the application is killed or crashes for some reason, unwritten log
+    entries will be lost.
+  - That means: Use this sparingly in test environments, make sure everything works, then let production
+    have the performance benefit.
+  - Default: 0
 - `ECOENV_LOG_MAX_FILES`
   - The number of rotated log files to keep.
   - Default: 10
 - `ECOENV_LOG_MAX_SIZE`
   - The size, in bytes, log files may reach before being rotated.
-  - Default: 10737418240 from `(1024*1024*1024)*10 = 10,737,418,240` i.e. 10 mega-bytes
+  - Default: 10485760 from `(1024*1024)*10 = 10,485,760` i.e. 10 mega-bytes
 
 A word on log file names:
 

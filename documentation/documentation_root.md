@@ -46,5 +46,6 @@ will have the name `ekosis`.
   - [Standard endpoints for queue management](queueds/standard_endpoints_for_management.md)
 - [Distributed Tracking (Request Tracking)](./distributed_tracking.md)
 - [The Ecosystem command line tool](./command_line_tool.md)
+- [Benchmarking](./benchmarking/benchmarking.md)
 - [Why do this?](./why.md)
 - [TODO (as in: The stuff still pending)](./todo.md)

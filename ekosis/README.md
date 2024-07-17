@@ -17,13 +17,14 @@ As such, the "out-of-the-box" features include:
 
 - Multi-instancy, without the need for containerization.
 - Real-time Telemetry, without the need for log-aggregation.
+- Distributed tracking (Request tracking) at protocol level.
 - Queueing for both sending and receiving messages, without the need for
   installation or management of external queueing mechanisms.
 - Configuration through both environment variables and config files, at three levels:
   - Machine/Container,
   - Application and
   - Instance
-- File Logging and log rotation, by default.
+- File Logging and log rotation, by default. Buffered file logging is optional and configurable.
 
 For more, take a look at the [documentation](https://github.com/TheLastCylon/ecosystem/blob/main/documentation/documentation_root.md) on GitHub.
 

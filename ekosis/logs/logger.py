@@ -1,37 +1,30 @@
 import logging
 import sys
 
-from .compressed_rotating_file_handler import CompressedRotatingFileHandler, RotatingFileHandler
+from .buffered_rotating_file_handler import BufferedRotatingFileHandler
 
 from ..configuration.config_models import AppConfiguration, ConfigLogging
 from ..util import SingletonType
 
-
 # --------------------------------------------------------------------------------
 class EcoLogger(metaclass=SingletonType):
-    __app_config        : AppConfiguration    = AppConfiguration()
-    __log_config        : ConfigLogging       = __app_config.logging
-    __level             : int                 = logging.DEBUG
-    __logger            : logging.Logger      = None
-    __formatter         : logging.Formatter   = None
-    __file_handler      : RotatingFileHandler = None
-    __console_handler                         = None
+    __app_config        : AppConfiguration            = AppConfiguration()
+    __log_config        : ConfigLogging               = __app_config.logging
+    __level             : int                         = logging.DEBUG
+    __logger            : logging.Logger              = None
+    __formatter         : logging.Formatter           = None
+    __file_handler      : BufferedRotatingFileHandler = None
+    __console_handler                                 = None
 
     # --------------------------------------------------------------------------------
     def __setup_file_logging(self):
         log_file_config = self.__log_config.file_logging
-        if log_file_config.do_compression:
-            self.__file_handler = CompressedRotatingFileHandler(
-                log_file_config.base_file_path,
-                max_bytes    = log_file_config.max_size_in_bytes,
-                backup_count = log_file_config.max_files
-            )
-        else:
-            self.__file_handler = RotatingFileHandler(
-                log_file_config.base_file_path,
-                maxBytes    = log_file_config.max_size_in_bytes,
-                backupCount = log_file_config.max_files
-            )
+        self.__file_handler = BufferedRotatingFileHandler(
+            log_file_config.base_file_path,
+            buffer_size  = log_file_config.buffer_size,
+            max_bytes    = log_file_config.max_size_in_bytes,
+            backup_count = log_file_config.max_files
+        )
 
         self.__file_handler.setLevel(self.__level)
         self.__file_handler.setFormatter(self.__formatter)
@@ -91,6 +84,13 @@ class EcoLogger(metaclass=SingletonType):
         # This switches asyncio logging to level WARNING
         # logging.getLogger('asyncio').setLevel(logging.WARNING)
 
+    # --------------------------------------------------------------------------------
+    def flush(self):
+        if not self.__log_config.file_only:
+            self.__console_handler.flush()
+
+        if not self.__log_config.console_only:
+            self.__file_handler.flush()
 
 # --------------------------------------------------------------------------------
 ekosis_logger = EcoLogger()

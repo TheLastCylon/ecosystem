@@ -91,13 +91,13 @@ def get_logfile_base_file_name():
 def get_logfile_base_file_path():
     return f"{get_logfile_directory()}/{get_logfile_base_file_name()}.log"
 
-def get_logfile_do_compression():
-    # False by default
-    return get_eco_env("LOG_COMPRESS", "false").upper() == "TRUE"
+def get_buffer_size():
+    # Default is no buffer. i.e. 0
+    return int(get_eco_env("LOG_BUF_SIZE", 0))
 
 def get_logfile_max_size_in_bytes():
-    # (1024*1024*1024)*10 = 10,737,418,240 i.e. 10 mega-bytes
-    return int(get_eco_env("LOG_MAX_SIZE", 10737418240))
+    # (1024*1024)*10 = 10,485,760 i.e. 10 mega-bytes
+    return int(get_eco_env("LOG_MAX_SIZE", 10485760))
 
 def get_logfile_max_files():
     # 10 Files by default
@@ -107,7 +107,7 @@ class ConfigLoggingFile(PydanticBaseModel):
     directory         : str  = Field(default_factory=get_logfile_directory)
     base_file_name    : str  = Field(default_factory=get_logfile_base_file_name)
     base_file_path    : str  = Field(default_factory=get_logfile_base_file_path)
-    do_compression    : bool = Field(default_factory=get_logfile_do_compression)
+    buffer_size       : int  = Field(default_factory=get_buffer_size)
     max_size_in_bytes : int  = Field(default_factory=get_logfile_max_size_in_bytes)
     max_files         : int  = Field(default_factory=get_logfile_max_files)
 

@@ -149,7 +149,7 @@ Let's take a look at a complete configuration, for a single instance:
                     "directory"         : "/tmp/log_files",
                     "max_size_in_bytes" : 10737418240,
                     "max_files"         : 10,
-                    "do_compression"    : false
+                    "buffer_size"       : 0
                 }
             },
             "extra" : {
@@ -201,7 +201,7 @@ entries set to the corresponding environment variable names discussed in:
                     "directory"         : "ECOENV_LOG_DIR",
                     "max_size_in_bytes" : "ECOENV_LOG_MAX_SIZE",
                     "max_files"         : "ECOENV_LOG_MAX_FILES",
-                    "do_compression"    : "ECOENV_LOG_COMPRESS"
+                    "buffer_size"       : "ECOENV_LOG_BUF_SIZE"
                 }
             },
             "extra" : {

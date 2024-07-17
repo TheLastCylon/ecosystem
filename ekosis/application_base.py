@@ -4,7 +4,7 @@ import signal
 import argparse
 import logging
 
-from .logs import EcoLogger # noqa This sets up the logger for us, we don't need anything from the import
+from .logs import EcoLogger
 from .configuration.config_models import AppConfiguration
 
 from .requests.request_router import RequestRouter
@@ -51,9 +51,7 @@ from .standard_endpoints.queued_sender_manager import ( # noqa
     eco_queued_sender_errors_reprocess_one,
     eco_queued_sender_send_process_pause,
     eco_queued_sender_send_process_unpause,
-
 )
-
 
 # --------------------------------------------------------------------------------
 class InstanceAlreadyRunningException(ExceptionBase):
@@ -65,16 +63,15 @@ class InstanceAlreadyRunningException(ExceptionBase):
     ):
         super().__init__(f"Instance [{instance_id}] of [{application_name}] already running with process id [{process_id}]!")
 
-
 # --------------------------------------------------------------------------------
 class TerminationSignalException(Exception):
     pass
-
 
 # --------------------------------------------------------------------------------
 class ApplicationBase(metaclass=SingletonType):
     command_line_args     : argparse.Namespace      = None
     logger                : logging.Logger          = logging.getLogger()
+    __eco_logger          : EcoLogger               = EcoLogger()
     __request_router      : RequestRouter           = RequestRouter()
     __statistics_keeper   : StatisticsKeeper        = StatisticsKeeper()
     __error_state_list    : ErrorStateList          = ErrorStateList()
@@ -127,6 +124,7 @@ class ApplicationBase(metaclass=SingletonType):
         self.__shut_down_queued_handlers()
         self.__shut_down_queued_senders()
         self.logger.info(f"Instance [{self._configuration.instance}] of application [{self._configuration.name}] shutdown.")
+        self.__eco_logger.flush()
 
     # --------------------------------------------------------------------------------
     @staticmethod
@@ -220,6 +218,7 @@ class ApplicationBase(metaclass=SingletonType):
     def start(self):
         if not self.__running:
             self.logger.info("Application not running in context. Shutting down.")
+            self.__eco_logger.flush()
             return
         asyncio.run(self.__start())
 
@@ -292,8 +291,8 @@ class ApplicationBase(metaclass=SingletonType):
         tasks.append(asyncio.create_task(self.__start_udp_server()))
         tasks.append(asyncio.create_task(self.__start_uds_server()))
 
+        self.__eco_logger.flush()
         await asyncio.gather(*tasks)
-
 
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":
