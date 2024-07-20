@@ -1,4 +1,5 @@
 import uuid
+import logging
 import sqlalchemy
 
 from typing import cast, Any
@@ -8,19 +9,18 @@ from sqlalchemy.orm import sessionmaker
 
 from ekosis.util.singleton import SingletonType
 
+log          = logging.getLogger()
 OrmBaseClass = sqlalchemy.orm.declarative_base()
-
 
 # --------------------------------------------------------------------------------
 class LogRecord(OrmBaseClass):
     __tablename__      = 'tracker_logs'
     record_id          = Column(BigInteger, primary_key=True)
     uid                = Column(BINARY(16), unique=True, index=True, nullable=False, default=uuid.uuid4().bytes)
-    request_message    = Column(String)
-    request_timestamp  = Column(Float)
+    request_message    = Column(String, nullable=True)
+    request_timestamp  = Column(Float , nullable=True)
     response_message   = Column(String, nullable=True)
-    response_timestamp = Column(Float, nullable=True)
-
+    response_timestamp = Column(Float , nullable=True)
 
 # --------------------------------------------------------------------------------
 class LogDatabase(metaclass=SingletonType):
@@ -40,19 +40,28 @@ class LogDatabase(metaclass=SingletonType):
         self.initialised       = True
 
     # --------------------------------------------------------------------------------
+    def get_existing_record(self, uid: uuid.UUID) -> LogRecord:
+        return self.session.query(LogRecord).filter_by(**{"uid": uid.bytes}).first()
+
+    # --------------------------------------------------------------------------------
     def log_request(
         self,
         uid              : uuid.UUID,
         request_message  : str,
         request_timestamp: float,
     ):
-        new_record = LogRecord(
-            record_id         = self.__get_max_record_id() + 1,
-            uid               = uid.bytes,
-            request_message   = request_message,
-            request_timestamp = request_timestamp
-        )
-        self.session.add(new_record)
+        record_to_write = self.get_existing_record(uid)
+        if record_to_write is not None:
+            record_to_write.request_message   = request_message
+            record_to_write.request_timestamp = request_timestamp
+        else:
+            record_to_write = LogRecord(
+                record_id         = self.__get_max_record_id() + 1,
+                uid               = uid.bytes,
+                request_message   = request_message,
+                request_timestamp = request_timestamp
+            )
+        self.session.add(record_to_write)
         self.session.commit()
 
     # --------------------------------------------------------------------------------
@@ -62,13 +71,18 @@ class LogDatabase(metaclass=SingletonType):
         response_message  : str,
         response_timestamp: float
     ):
-        log_record = cast(
-            LogRecord,
-            self.session.query(LogRecord).filter(LogRecord.uid == uid.bytes).one() # noqa PyCharm's report that the equality check has a problem is a false positive.
-        )
-        log_record.response_message   = response_message
-        log_record.response_timestamp = response_timestamp
-        self.session.add(log_record)
+        record_to_write = self.get_existing_record(uid)
+        if record_to_write is not None:
+            record_to_write.response_message   = response_message
+            record_to_write.response_timestamp = response_timestamp
+        else:
+            record_to_write = LogRecord(
+                record_id          = self.__get_max_record_id() + 1,
+                uid                = uid.bytes,
+                response_message   = response_message,
+                response_timestamp = response_timestamp
+            )
+        self.session.add(record_to_write)
         self.session.commit()
 
     # --------------------------------------------------------------------------------

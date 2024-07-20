@@ -26,7 +26,7 @@ And there you go ... Job done!
 If you find that hard to believe, here's an image of a dashboard I put
 together for the [Fun Factory example](./examples/fun_factory/fun_factory.md).
 
-![Alt Text](./images/fun_factory_statistics_2.png)
+![Fun Factory Dashboard](./images/fun_factory_statistics_2.png)
 
 What you are looking at there, is real-time telemetry, retrieved from an entire
 system. It includes the number of times every endpoint in each of the services

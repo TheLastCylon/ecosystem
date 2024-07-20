@@ -1,6 +1,14 @@
 # TODO
 
 ## For MVP
+
+- [ ] Documentation: Explain p99 and p95 statistics.
+
+- [ ] Benchmarking: queues.
+
+- [ ] Example: Project structure
+- [ ] Example: Project with Postgres database
+
 - [ ] Documentation: The error keeper, why it exists and how to use it.
   - Example: a service needing to be communicated to goes down.
   - Setting of the error state when that happens.
@@ -113,6 +121,7 @@
   - [X] max retries
   - [X] manipulation through standard endpoints and the queued handler keeper
 - [X] Get Ecosystem ready for PyPI. Yes, we are that close.
+- [X] p99 and p95 percentiles for endpoints
 
 # Possibly won't do:
 

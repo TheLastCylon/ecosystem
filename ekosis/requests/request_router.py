@@ -11,7 +11,6 @@ from ..data_transfer_objects import RequestDTO
 from ..util import SingletonType
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 
-
 # --------------------------------------------------------------------------------
 class RoutingExceptionBase(Exception):
     def __init__(self, status: int, message: str):
@@ -19,12 +18,10 @@ class RoutingExceptionBase(Exception):
         self.message: str = f"status: [{status}] message: [{message}]"
         super().__init__(self.message)
 
-
 # --------------------------------------------------------------------------------
 class UnknownRouteKeyException(RoutingExceptionBase):
     def __init__(self, route_key: str):
         super().__init__(Status.ROUTE_KEY_UNKNOWN.value, f"Unknown route key '{route_key}'")
-
 
 # --------------------------------------------------------------------------------
 class RequestRouter(metaclass=SingletonType):
@@ -34,7 +31,7 @@ class RequestRouter(metaclass=SingletonType):
     def register_handler(self, handler: HandlerBase):
         if handler.get_route_key() not in self.__routing_table:
             self.__routing_table[handler.get_route_key()] = handler
-            self.__statistics_keeper.set_statistic_value(f"endpoint_call_counts.{handler.get_route_key()}.call_count", 0)
+            self.__statistics_keeper.track_endpoint_data(handler.get_route_key())
         else:
             raise Exception(f"Handler command id [{handler.get_route_key()}] already exists")
 
@@ -49,9 +46,7 @@ class RequestRouter(metaclass=SingletonType):
         if request.route_key not in self.__routing_table.keys():
             raise UnknownRouteKeyException(request.route_key)
 
-        self.__statistics_keeper.increment(f"endpoint_call_counts.{request.route_key}.call_count")
         return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
-
 
 # --------------------------------------------------------------------------------
 if __name__ == "__main__":

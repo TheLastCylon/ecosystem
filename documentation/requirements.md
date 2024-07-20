@@ -1,10 +1,10 @@
 # Requirements
-| Requirement                                    | Version    |
-|------------------------------------------------|------------|
-| [python](https://www.python.org/)              | \>= 3.11.4 |
-| [sqlalchemy](https://sqlalchemy.org)           | \>= 2.0.31 |
-| [pydantic](https://docs.pydantic.dev/latest/)  | \>= 2.8.2  |
-
+| Requirement                                   | Version    |
+|-----------------------------------------------|------------|
+| [python](https://www.python.org/)             | \>= 3.11.4 |
+| [sqlalchemy](https://sqlalchemy.org)          | \>= 2.0.31 |
+| [pydantic](https://docs.pydantic.dev/latest/) | \>= 2.8.2  |
+| [numpy](https://numpy.org/)                   | \>= 2.0.0  |
 
 ## Python
 Yup, you will need Python for this.

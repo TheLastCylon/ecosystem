@@ -14,9 +14,7 @@ from ..data_transfer_objects import QueuedEndpointResponseDTO
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 
-
 _T = TypeVar("_T", bound=PydanticBaseModel)
-
 
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerExceptionBase(Exception):
@@ -24,12 +22,10 @@ class QueuedRequestHandlerExceptionBase(Exception):
         self.status: int = status
         super().__init__(f"status: [{status}] message: [{message}]")
 
-
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerReceivingPausedException(QueuedRequestHandlerExceptionBase):
     def __init__(self, route_key: str):
         super().__init__(Status.APPLICATION_BUSY.value, f"Receiving on '{route_key}' has been paused.")
-
 
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
@@ -212,7 +208,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
         if self._receiving_paused:
             raise QueuedRequestHandlerReceivingPausedException(self._route_key)
-        await self.queue.push_pending(request_uuid, request_data, 0)
+        fire_and_forget_task(self.queue.push_pending(request_uuid, request_data, 0))
         response = QueuedEndpointResponseDTO(uid = str(request_uuid))
         self.__check_process_queue()
         return response

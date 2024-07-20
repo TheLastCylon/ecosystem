@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name                          = "ekosis",
-    version                       = "0.9.9",
+    version                       = "0.9.11",
     url                           = "https://github.com/TheLastCylon/ecosystem",
     author                        = "Dirk Botha",
     author_email                  = "bothadj@gmail.com",
@@ -10,7 +10,7 @@ setup(
     long_description              = open('README.md').read(),
     packages                      = find_packages(include=['ekosis*']),
     long_description_content_type = 'text/markdown',
-    install_requires              = ["sqlalchemy>=2.0.31", "pydantic>=2.8.2"],
+    install_requires              = ["sqlalchemy>=2.0.31", "pydantic>=2.8.2", "numpy>=2.0.0"],
     python_requires               = ">=3.11.4",
     license                       = "BSD-3-Clause",
     classifiers                   = [

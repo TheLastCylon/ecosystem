@@ -3,7 +3,7 @@ import socket
 import datetime
 import asyncio
 
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import influxdb_client
 from influxdb_client import InfluxDBClient, Point
@@ -156,11 +156,11 @@ def make_base_data_point() -> Point:
 # --------------------------------------------------------------------------------
 # This does the writing of data points, to influxdb
 # --------------------------------------------------------------------------------
-async def write_influx_data(data_point: Point):
+async def write_influx_data(data_points: List[Point]):
     INFLUX_API_WRITER.write(
         bucket = INFLUX_BUCKET,
         org    = INFLUX_ORG,
-        record = data_point
+        record = data_points
     )
 
 # --------------------------------------------------------------------------------
@@ -168,19 +168,35 @@ async def write_influx_data(data_point: Point):
 # has been called, to InfluxDb.
 # Note that I filter out the standard Ecosystem endpoints for the application.
 # --------------------------------------------------------------------------------
-async def log_endpoint_call_counts(
-    endpoint_call_counts: Dict[str, int],
-    time_to_log         : str
-):
-    for key, value in endpoint_call_counts.items():
-        if not key.startswith("eco."): # Here I filter out the standard Ecosystem endpoints
-            data_point = make_base_data_point()
+async def log_endpoint_data(
+    endpoint_data: Dict[str, float],
+    time_to_log  : str
+) -> List[Point]:
+    retval: List[Point] = []
+    # Here I filter out the standard Ecosystem endpoints
+    key_list = [x for x in list(endpoint_data.keys()) if not x.startswith("eco.")]
+    key_list.sort()
 
-            data_point.tag  ("endpoint_called", key.replace('.call_count', ''))
-            data_point.field("call_count"     , value)
+    for key in key_list:
+        value      = endpoint_data[key]
+        data_point = make_base_data_point()
 
-            data_point.time(time_to_log)
-            await write_influx_data(data_point)
+        if key.endswith('call_count'):
+            data_point.tag  ("endpoint_data", key.replace('.call_count', ''))
+            data_point.field("call_count"   , value)
+
+        if key.endswith('p95'):
+            data_point.tag  ("endpoint_data", key.replace('.p95', ''))
+            data_point.field("p95"          , value)
+
+        if key.endswith('p99'):
+            data_point.tag  ("endpoint_data", key.replace('.p99', ''))
+            data_point.field("p99"          , value)
+
+        data_point.time(time_to_log)
+        retval.append(data_point)
+        # await write_influx_data(data_point)
+    return retval
 
 # --------------------------------------------------------------------------------
 # With this I write each of the queued ENDPOINT database sizes.
@@ -188,7 +204,8 @@ async def log_endpoint_call_counts(
 async def log_queued_endpoint_sizes(
     queued_endpoint_sizes: Dict[str, int],
     time_to_log         : str
-):
+) -> List[Point]:
+    retval: List[Point] = []
     for key, value in queued_endpoint_sizes.items():
         data_point = make_base_data_point()
 
@@ -200,7 +217,9 @@ async def log_queued_endpoint_sizes(
             data_point.field('error'        , value)
 
         data_point.time(time_to_log)
-        await write_influx_data(data_point)
+        retval.append(data_point)
+        # await write_influx_data(data_point)
+    return retval
 
 # --------------------------------------------------------------------------------
 # With this I write each of the queued SENDER database sizes.
@@ -208,7 +227,8 @@ async def log_queued_endpoint_sizes(
 async def log_queued_sender_sizes(
     queued_endpoint_sizes: Dict[str, int],
     time_to_log         : str
-):
+) -> List[Point]:
+    retval: List[Point] = []
     for key, value in queued_endpoint_sizes.items():
         data_point = make_base_data_point()
 
@@ -220,7 +240,9 @@ async def log_queued_sender_sizes(
             data_point.field('error'      , value)
 
         data_point.time(time_to_log)
-        await write_influx_data(data_point)
+        retval.append(data_point)
+        # await write_influx_data(data_point)
+    return retval
 
 # --------------------------------------------------------------------------------
 # And here's the main function.
@@ -240,19 +262,24 @@ async def main():
         time_to_log           = datetime.datetime.fromtimestamp(timestamp).isoformat()
 
         # flatten the various telemetry dictionaries for use in our writer functions.
-        endpoint_call_counts  = flatten_dictionary(statistics['endpoint_call_counts'])
+        endpoint_data         = flatten_dictionary(statistics['endpoint_data'])
         queued_endpoint_sizes = flatten_dictionary(statistics['queued_endpoint_sizes']) if 'queued_endpoint_sizes' in statistics.keys() else None
         queued_sender_sizes   = flatten_dictionary(statistics['queued_sender_sizes'])   if 'queued_sender_sizes'   in statistics.keys() else None
 
         # And here we call those functions.
-        await log_endpoint_call_counts(endpoint_call_counts , time_to_log)
+        data_points = await log_endpoint_data(endpoint_data , time_to_log)
 
         if queued_endpoint_sizes:
-            await log_queued_endpoint_sizes(queued_endpoint_sizes, time_to_log)
+            data_points.extend(
+                await log_queued_endpoint_sizes(queued_endpoint_sizes, time_to_log)
+            )
 
         if queued_sender_sizes:
-            await log_queued_sender_sizes(queued_sender_sizes  , time_to_log)
+            data_points.extend(
+                await log_queued_sender_sizes(queued_sender_sizes  , time_to_log)
+            )
 
+        await write_influx_data(data_points)
     except Exception as e:
         print(f"ERROR: {str(e)}")
 
