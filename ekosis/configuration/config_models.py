@@ -209,7 +209,7 @@ def get_app_instance_queue_directory():
     return get_eco_env("QUEUE_DIR", None)
 
 def get_app_instance_extra():
-    extra_env_prefix = f"{env_prefix}_EXTRA_{env_app_instance}"
+    extra_env_prefix = f"{env_prefix}_EXTRA_{env_app_instance}_"
     extra_config     = {
         k: v for k, v in os.environ.items()
         if k.startswith(extra_env_prefix)
