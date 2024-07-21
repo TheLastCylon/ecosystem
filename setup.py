@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name                          = "ekosis",
-    version                       = "0.9.11",
+    version                       = "0.9.12",
     url                           = "https://github.com/TheLastCylon/ecosystem",
     author                        = "Dirk Botha",
     author_email                  = "bothadj@gmail.com",
