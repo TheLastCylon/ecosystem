@@ -11,13 +11,11 @@ from ..state_keepers.statistics_keeper import StatisticsKeeper
 
 # --------------------------------------------------------------------------------
 class ServerBase:
-    _running          : bool             = False
-    _logger           : logging.Logger   = logging.getLogger()
-    _request_router   : RequestRouter    = RequestRouter()
-    _statistics_keeper: StatisticsKeeper = StatisticsKeeper()
-
     def __init__(self):
-        pass
+        self._running          : bool             = False
+        self._logger           : logging.Logger   = logging.getLogger()
+        self._request_router   : RequestRouter    = RequestRouter()
+        self._statistics_keeper: StatisticsKeeper = StatisticsKeeper()
 
     # --------------------------------------------------------------------------------
     async def _route_request(self, request_data: str) -> ResponseDTO:

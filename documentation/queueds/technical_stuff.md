@@ -22,53 +22,47 @@ Yes, that is all you need to create a `queued_endpoint`.
 This is however, definitely NOT all you should do.
 
 `queued_endpoint` can accept two more parameters, they are:
-- `max_uncommited` and,
+- `page_size` and,
 - `max_retries`
 
 For anything beyond example code, you really should take the time to **think** about
 what you should set these parameters too.
 
 ---
-### `max_uncommited`
+### `page_size`
 
-This tells each of the sql databases for your queues, how many inserts and
-deletes it should allow, before doing a commit.
+This tells each of the queue database managers, how big the front and back page
+for your queues, should be. The front pages is where messages are popped from,
+the back page is where messages are pushed too. Both pages exist purely in RAM.
 
 That means:
 
-When (inserts + deletes) >= `max_uncommited`, write to the database file.
+When the back page becomes larger than the number of entries you specify, it is
+written to the database file. When the front page has `0` entries in it, the
+first `page_size` records in the database, are LOADED and DELETED from the
+database. If there is nothing in the database, then the front, and back page,
+become the same thing.
 
-This is important, as [Sqlite](https://sqlite.org) does not write to a database
-file, until you do either a commit or a flush. In the case of Ecosystem, only
-commits are used.
-
-The default for `max_uncommited`, is `0`.
+The default for `page_size`, is `100`.
 
 This means:
 
 If you just accept the default settings, the [Sqlite](https://sqlite.org)
-database file is written too, every single time an entry is either pushed or
-popped on it.
+database file is written too, when the back page of the queue, is about to
+have more than 100 entries.
 
-In your real-world applications, this is highly unlikely to be what you want.
+In your real-world applications, this might be far lower than what you need.
 
 **Remember**: In terms of time, I/O operations on a computer, are one of the most
 expensive things you can do.
-
-So, you really want to strike a balance between having your queue databases in
-RAM, and having them written to a storage device.
-
-Also, in the long term, using the defaults won't just be bad for the speed of your
-application, the life-span of your storage devices could be affected as well.
 
 The next thing to consider is of course: **Risk to the business**.
 
 But before I move on with this, I want to bring to your attention that:
 
 Even in the event of a process-terminating exception, an Ecosystem application
-will shut down its queues. Causing all uncommited SQL statements to be commited,
-and thus having the data written to the respective `pending` and `error` database
-files.
+will shut down its queues. Causing both the front and back page to be written
+to the respective database file.
 
 So, when I use the phrase "catastrophic failure" below, it means:
 
@@ -82,15 +76,15 @@ terminate a running instance of an Ecosystem application with the `kill` command
 
 Of course, SIGKILL can't be handled programmatically at all, so if you use either
 `kill -9 <PID>` or `kill -KILL <PID>` on an Ecosystem application, you
-**will lose** any unwritten queue data.
+**will lose** the data in the front and back page of your queue.
 
 Knowing all that though, let's look at: **Risk to the business**:
 
-When you set `max_uncommited` to a value of `100`, what you are saying in terms
+When you set `page_size` to a value of `100`, what you are saying in terms
 of a business is:
 
-In the event of catastrophic failure, I'm okay with loosing `100` of the
-messages in this queue.
+In the event of catastrophic failure, I'm okay with loosing `200` messages in
+this queue.
 
 So, take the time and: **Think** about what you'll need.
 
@@ -201,7 +195,7 @@ did not respond with some kind of error.
 
 Then there are three more thing you can set.
 - `wait_period`,
-- `max_uncommited` and,
+- `page_size` and,
 - `max_retries`
 
 ---
@@ -213,7 +207,7 @@ messages. In the example, we set it to `0`. The default for this is also `0`.
 Yes, this is one way you can manage load to a server, from the client side.
 
 ---
-### `max_uncommited`
+### `page_size`
 Is **exactly** the same as described for `queued_endpoint` above.
 
 ---

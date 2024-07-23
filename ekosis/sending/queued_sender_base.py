@@ -7,7 +7,6 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from .sender_base import SenderBase
 
-from ..util.fire_and_forget_tasks import fire_and_forget_task
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
 from ..queues.pending_queue import PendingQueue
@@ -19,22 +18,7 @@ _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 
 
 # --------------------------------------------------------------------------------
-class QueuedSenderBase(
-    Generic[_RequestDTOType, _ResponseDTOType],
-    SenderBase[_RequestDTOType, _ResponseDTOType]
-):
-    running                  : bool             = False
-    _sending_paused          : bool             = True
-    statistics_keeper        : StatisticsKeeper = StatisticsKeeper()
-    log                      : logging.Logger   = logging.getLogger()
-    __send_process_scheduled : bool             = False
-    wait_period              : float            = 0,
-    max_uncommited           : int              = None
-    max_retries              : int              = None
-    queue                    : PendingQueue     = None
-    on_shutdown_future       : asyncio.Future   = None
-    shutdown                 : bool             = False
-
+class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_RequestDTOType, _ResponseDTOType]):
     def __init__(
         self,
         client           : ClientBase,
@@ -42,7 +26,7 @@ class QueuedSenderBase(
         request_dto_type : Type[_RequestDTOType],
         response_dto_type: Type[_ResponseDTOType] = EmptyDto,
         wait_period      : float                  = 0,
-        max_uncommited   : int                    = 0,
+        page_size        : int                    = 100,
         max_retries      : int                    = 0,
     ):
         super().__init__(
@@ -51,9 +35,19 @@ class QueuedSenderBase(
             request_dto_type,
             response_dto_type
         )
-        self.wait_period      = wait_period
-        self.max_uncommited   = max_uncommited
-        self.max_retries      = max_retries
+
+        self.running                  : bool             = False
+        self._sending_paused          : bool             = True
+        self.statistics_keeper        : StatisticsKeeper = StatisticsKeeper()
+        self.log                      : logging.Logger   = logging.getLogger()
+        self.__send_process_scheduled : bool             = False
+        self.wait_period              : float            = wait_period
+        self.page_size                : int              = page_size
+        self.max_retries              : int              = max_retries
+        self.shutdown                 : bool             = False
+        self.queue                    : PendingQueue     = None
+        self.on_shutdown_future       : asyncio.Future   = None
+        self.__send_process_task      : asyncio.Task     = None
 
     # --------------------------------------------------------------------------------
     async def send(self, *args, **kwargs):
@@ -70,9 +64,10 @@ class QueuedSenderBase(
 
     # --------------------------------------------------------------------------------
     def __check_process_send_queue(self):
-        if not self.running and not self.__send_process_scheduled:
-            self.__send_process_scheduled = True
-            fire_and_forget_task(self.__process_send_queue())
+        if self.__send_process_task is None:
+            self.__send_process_task = asyncio.create_task(self.__process_send_queue())
+        elif self.__send_process_task.done():
+            self.__send_process_task = asyncio.create_task(self.__process_send_queue())
 
     # --------------------------------------------------------------------------------
     def shut_down(self):
@@ -95,9 +90,8 @@ class QueuedSenderBase(
             await asyncio.sleep(1)
 
     # --------------------------------------------------------------------------------
-    async def __process_send_queue(self) -> None:
-        self.running = True
-        while not self._sending_paused and await self.queue.has_pending():
+    async def __do_queue_processing(self):
+        while not self._sending_paused and self.queue.pending_q.size():
             queued_item  = await self.queue.pop()
             request_uid  = uuid.UUID(queued_item.uid)
             request_data = self._request_dto_type(**queued_item.data)
@@ -114,9 +108,16 @@ class QueuedSenderBase(
                     await self.queue.push_pending(request_uid, request_data, retries)
             except Exception as e : # Move it to the error queue
                 await self.queue.push_error(request_uid, request_data, str(e))
-        self.running                  = False
-        self.__send_process_scheduled = False
-        self.__shut_down_check()
+
+    # --------------------------------------------------------------------------------
+    async def __process_send_queue(self) -> None:
+        try:
+            self.running = True
+            await self.__do_queue_processing()
+        finally:
+            self.running                  = False
+            self.__send_process_scheduled = False
+            self.__shut_down_check()
 
     # --------------------------------------------------------------------------------
     def pause_send_process(self):
@@ -185,7 +186,7 @@ class QueuedSenderBase(
         self.queue = PendingQueue(
             directory,
             f"{app_instance_string}-{self._route_key}-sender",
-            self.max_uncommited
+            self.page_size
         )
         self.statistics_keeper.add_persisted_queue(f"queued_sender_sizes.{self._route_key}.pending", self.queue.pending_q)
         self.statistics_keeper.add_persisted_queue(f"queued_sender_sizes.{self._route_key}.error"  , self.queue.error_q)

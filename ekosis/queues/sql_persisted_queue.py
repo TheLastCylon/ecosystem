@@ -33,7 +33,7 @@ class SqlPersistedQueueBase:
 
         OrmBaseClass.metadata.create_all(self.database_engine)
 
-        self.session = sessionmaker(bind=self.database_engine)()
+        self.session = sessionmaker(bind=self.database_engine, autoflush=False)()
 
 
 # --------------------------------------------------------------------------------
@@ -61,76 +61,78 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
     # in a primary key. We genuinely don't have to be concerned about dealing with
     # a minimum record id here. Thankyou SQLite guys. I Love your work!
     async def push_front(self, object_to_queue: _QueuedType, uid: uuid.UUID = None) -> uuid.UUID :
+        queued_record = self.__get_record_by_uuid(uid)
+        if queued_record is not None:
+            return uid
+
         queue_uuid = uid or uuid.uuid4()
         new_record = QueueRecord(
             record_uuid   = queue_uuid.bytes,
             object_string = object_to_queue.model_dump_json()
         )
-        new_record.record_id = await self.__get_min_record_id() - 1
-        await self.__write_record(new_record)
+        new_record.record_id = self.__get_min_record_id() - 1
+        self.session.add(new_record)
+        self.session.commit()
         return queue_uuid
 
     # --------------------------------------------------------------------------------
     async def push_back(self, object_to_queue: _QueuedType, uid: uuid.UUID = None) -> uuid.UUID:
+        queued_record = self.__get_record_by_uuid(uid)
+        if queued_record is not None:
+            return uid
+
         queue_uuid = uid or uuid.uuid4()
         new_record = QueueRecord(
             record_uuid   = queue_uuid.bytes,
             object_string = object_to_queue.model_dump_json()
         )
-        new_record.record_id = await self.__get_max_record_id() + 1
-        await self.__write_record(new_record)
+        new_record.record_id = self.__get_max_record_id() + 1
+        self.session.add(new_record)
+        self.session.commit()
         return queue_uuid
 
     # --------------------------------------------------------------------------------
     async def pop_front(self):
-        queued_record = await self.__get_record_with_lowest_record_id()
-
+        queued_record = self.__get_record_with_lowest_record_id()
         if queued_record is None:
             return None
-
         queueable_type_object = self.__record_to_queueable_object(queued_record)
-        await self.__delete_record(queued_record)
-
+        self.session.delete(queued_record)
+        self.session.commit()
         return queueable_type_object
 
     # --------------------------------------------------------------------------------
     async def pop_back(self):
-        queued_record = await self.__get_record_with_highest_record_id()
-
+        queued_record = self.__get_record_with_highest_record_id()
         if queued_record is None:
             return None
-
         queueable_type_object = self.__record_to_queueable_object(queued_record)
-        await self.__delete_record(queued_record)
-
+        self.session.delete(queued_record)
+        self.session.commit()
         return queueable_type_object
 
     # --------------------------------------------------------------------------------
     async def pop_uuid(self, object_uuid: uuid.UUID):
         queued_record = self.__get_record_by_uuid(object_uuid)
-
         if queued_record is None:
             return None
-
         queueable_type_object = self.__record_to_queueable_object(queued_record)
-        await self.__delete_record(queued_record)
-
+        self.session.delete(queued_record)
+        self.session.commit()
         return queueable_type_object
 
     # --------------------------------------------------------------------------------
     async def inspect_front(self):
-        queued_record = await self.__get_record_with_lowest_record_id()
+        queued_record = self.__get_record_with_lowest_record_id()
         if queued_record is None:
             return None
-
         return self.__record_to_queueable_object(queued_record)
 
     # --------------------------------------------------------------------------------
     async def inspect_back(self):
-        queued_record = await self.__get_record_with_highest_record_id()
+        queued_record = self.__get_record_with_highest_record_id()
         if queued_record is None:
             return None
-
         return self.__record_to_queueable_object(queued_record)
 
     # --------------------------------------------------------------------------------
@@ -141,12 +143,13 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
         return self.__record_to_queueable_object(queued_record)
 
     # --------------------------------------------------------------------------------
-    async def size(self) -> int:
-        return int(self.session.query(func.count(QueueRecord.record_id)).scalar())
+    def size(self) -> int:
+        # return int(self.session.query(func.count(QueueRecord.record_id)).scalar())
+        return self.session.query(QueueRecord).count()
 
     # --------------------------------------------------------------------------------
-    async def is_empty(self) -> int:
-        return await self.size() == 0
+    def is_empty(self) -> int:
+        return self.size() == 0
 
     # --------------------------------------------------------------------------------
     async def get_first_x_uuids(self, how_many: int = 1) -> List[str]:
@@ -167,26 +170,14 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
         self.uncommited_count = 0
 
     # --------------------------------------------------------------------------------
-    async def __write_record(self, record: QueueRecord):
-        self.session.add(record)
-        self.uncommited_count += 1
-        await self.__check_commit_count()
-
-    # --------------------------------------------------------------------------------
-    async def __delete_record(self, record: QueueRecord):
-        self.session.delete(record)
-        self.uncommited_count += 1
-        await self.__check_commit_count()
-
-    # --------------------------------------------------------------------------------
-    async def __get_min_record_id(self) -> int:
-        if await self.size() < 1:
+    def __get_min_record_id(self) -> int:
+        if self.size() < 1:
             return 0
         return int(self.session.query(func.min(QueueRecord.record_id)).scalar())
 
     # --------------------------------------------------------------------------------
-    async def __get_max_record_id(self) -> int:
-        if await self.size() < 1:
+    def __get_max_record_id(self) -> int:
+        if self.size() < 1:
             return 0
         return int(self.session.query(func.max(QueueRecord.record_id)).scalar())
 
@@ -213,16 +204,16 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
             return None
 
     # --------------------------------------------------------------------------------
-    async def __get_record_with_lowest_record_id(self) -> QueueRecord | None:
-        if await self.size() < 1:
+    def __get_record_with_lowest_record_id(self) -> QueueRecord | None:
+        if self.size() < 1:
             return None
-        return self.__get_record_by_record_id(await self.__get_min_record_id())
+        return self.__get_record_by_record_id(self.__get_min_record_id())
 
     # --------------------------------------------------------------------------------
-    async def __get_record_with_highest_record_id(self) -> QueueRecord | None:
-        if await self.size() < 1:
+    def __get_record_with_highest_record_id(self) -> QueueRecord | None:
+        if self.size() < 1:
             return None
-        return self.__get_record_by_record_id(await self.__get_max_record_id())
+        return self.__get_record_by_record_id(self.__get_max_record_id())
 
     # --------------------------------------------------------------------------------
     def __record_to_queueable_object(self, record: QueueRecord) -> _QueuedType:
@@ -230,7 +221,8 @@ class SqlPersistedQueue(Generic[_QueuedType], SqlPersistedQueueBase):
         return self.queued_type(**queued_data)
 
     # --------------------------------------------------------------------------------
-    async def __check_commit_count(self):
-        if self.uncommited_count >= self.max_uncommited:
-            self.session.commit()
-            self.uncommited_count = 0
+    # async def __check_commit_count(self):
+    #     # if self.uncommited_count >= self.max_uncommited:
+    #     #     self.session.commit()
+    #     #     self.uncommited_count = 0
+    #     return

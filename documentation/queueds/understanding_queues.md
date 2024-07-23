@@ -26,10 +26,10 @@ how far you can push their use.
 ---
 ## How far can you push Ecosystem's queueing
 
-This is dependant upon your hardware and quite a bit more upon your file system.
+This is **almost completely** dependant upon your hardware and file system.
 
 Ecosystem uses [Sqlite](https://sqlite.org) in combination with
-[SqlAlchemy](https://sqlalchemy.org), for creation and management of the queue
+[SqlAlchemy](https://sqlalchemy.org), for creation and management of the queues and their
 databases.
 
 Both `queued_endpoint` and `queued_sender` cause the creation of two (2) [Sqlite](https://sqlite.org)
@@ -57,17 +57,36 @@ Yes, you can take control of the UUID used, from within your code.
 This can be rather important for when you want to debug things, and need to look
 at entries in a queue's error database.
 
+See the documentation on
+[distributed tracking](../distributed_tracking.md) for more on that.
+
 Moving on to answering the question at hand though:
 
 The theoretical limit of sqlite databases, is in the order of 140 terabytes. So,
 the limitations of how far you can push Ecosystem's queues is genuinely dependent
 on your hardware, and file system.
 
-A lot can also depend on how much RAM you have available. As it's entirely
+A lot also depend on how much RAM you have available. As it's entirely
 possible to configure things in such a way, that your queue databases aren't
-written to disk, until the application shuts down.
+written to disk, until the application shuts down. The size you set with
+`page_size`, represents the number of entries you want to keep in the front and
+back page of each queue database. So, you'll need enough RAM to deal with at least
+twice the amount of `page_size` entries you specify. For the sake of safety, I
+suggest four times.
 
-Yes, If you aren't afraid of losing messages due to some kind of system
+For example, if you specify a `page_size` of `1000`, and your message are
+typically `1000` bytes in size. You'll want to have at least `1000 x 1000 x 4`
+bytes of memory available for that one queue database. i.e. Work on about `5`
+megabytes of ram for that queue, and you'll be safe. If you want to be truly
+safe, and deal with a completely full `pending` and `error` database, double
+it to get `10` megabytes.
+
+In this example, when you see you have a `pending` queue size of `5000`, it
+means that your front page has `1000` entries, the back page has `1000` entries,
+and the other `3000` entries, are sitting in the database file, ready to be
+loaded when the front page is empty again.
+
+So yes, If you aren't afraid of losing messages due to some kind of system
 catastropy, all your queue databases could live in RAM.
 
 Now that you know all this, let us move on and take a look at

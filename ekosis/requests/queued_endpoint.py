@@ -13,7 +13,7 @@ _T = TypeVar("_T", bound=PydanticBaseModel)
 def queued_endpoint(
     route_key       : str,
     request_dto_type: Type[_T] = EmptyDto,
-    max_uncommited  : int = 0,
+    page_size       : int = 100,
     max_retries     : int = 0,
 ):
     def inner_decorator(function):
@@ -24,7 +24,7 @@ def queued_endpoint(
             route_key,
             function,
             request_dto_type,
-            max_uncommited,
+            page_size,
             max_retries
         )
         router.register_handler(new_handler)

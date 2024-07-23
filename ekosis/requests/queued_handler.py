@@ -13,13 +13,13 @@ class QueuedHandler(Generic[_T], QueuedRequestHandlerBase[_T]):
         route_key       : str,
         function,
         request_dto_type: Type[_T],
-        max_uncommited  : int = 0,
+        page_size       : int = 100,
         max_retries     : int = 0,
     ):
         super().__init__(
             route_key,
             request_dto_type,
-            max_uncommited,
+            page_size,
             max_retries
         )
         self.function = function

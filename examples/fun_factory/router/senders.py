@@ -56,7 +56,7 @@ async def get_time(*args, **kwargs):
     TrackerLogRequestDto,
     QueuedEndpointResponseDTO,
     0,
-    1000,
+    100,
     10
 )
 async def log_request(data: str, timestamp: float, *args, **kwargs):
@@ -73,7 +73,7 @@ async def log_request(data: str, timestamp: float, *args, **kwargs):
     TrackerLogRequestDto,
     QueuedEndpointResponseDTO,
     0,
-    1000,
+    100,
     10
 )
 async def log_response(data: str, timestamp: float, *args, **kwargs):

@@ -7,21 +7,21 @@ import time
 from typing import Any, Dict, List, Tuple
 
 from ..util import SingletonType
-from ..queues import SqlPersistedQueue
+from ..queues import PaginatedQueue
 from ..configuration.config_models import AppConfiguration
 
 # --------------------------------------------------------------------------------
 class StatisticsKeeper(metaclass=SingletonType):
-    __config              : AppConfiguration             = AppConfiguration()
-    __running             : bool                         = False
-    __logger              : logging.Logger               = logging.getLogger()
-    __gather_period       : int                          = 300
-    __history_length      : int                          = 12
-    __start_time          : float                        = time.time()
-    __statistics_current  : Dict[str, Any]               = {}
-    __statistics_history  : List[Dict[str, Any]]         = []
-    __persisted_queues    : Dict[str, SqlPersistedQueue] = {}
-    __endpoint_durations  : Dict[str, List[float]]       = {}
+    __config              : AppConfiguration          = AppConfiguration()
+    __running             : bool                      = False
+    __logger              : logging.Logger            = logging.getLogger()
+    __gather_period       : int                       = 300
+    __history_length      : int                       = 12
+    __start_time          : float                     = time.time()
+    __statistics_current  : Dict[str, Any]            = {}
+    __statistics_history  : List[Dict[str, Any]]      = []
+    __persisted_queues    : Dict[str, PaginatedQueue] = {}
+    __endpoint_durations  : Dict[str, List[float]]    = {}
 
     def __init__(self):
         pass
@@ -62,7 +62,7 @@ class StatisticsKeeper(metaclass=SingletonType):
             self.set_statistic_value(f"endpoint_data.{key}.p99", float(percentiles[1]))
 
         for key in self.__persisted_queues.keys():
-            self.set_statistic_value(key, await self.__persisted_queues[key].size())
+            self.set_statistic_value(key, self.__persisted_queues[key].size())
 
     async def get_current_statistics(self) -> Dict[str, Any]:
         await self.__update_current_statistics()
@@ -113,7 +113,7 @@ class StatisticsKeeper(metaclass=SingletonType):
         current_value = self.__get_statistic_value(self.__statistics_current, keys)
         self.__deep_set(self.__statistics_current, keys, current_value-value)
 
-    def add_persisted_queue(self, key: str, queue: SqlPersistedQueue):
+    def add_persisted_queue(self, key: str, queue: PaginatedQueue):
         self.__persisted_queues[key] = queue
 
     def track_endpoint_data(self, key: str):

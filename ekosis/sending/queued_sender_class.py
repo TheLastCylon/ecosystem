@@ -20,7 +20,7 @@ class QueuedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], QueuedSender
         request_dto_type : Type[_RequestDTOType],
         response_dto_type: Type[_ResponseDTOType] = EmptyDto,
         wait_period      : float                  = 0,
-        max_uncommited   : int                    = 0,
+        page_size        : int                    = 100,
         max_retries      : int                    = 0,
     ):
         super().__init__(
@@ -29,7 +29,7 @@ class QueuedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], QueuedSender
             request_dto_type,
             response_dto_type,
             wait_period,
-            max_uncommited,
+            page_size,
             max_retries
         )
 

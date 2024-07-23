@@ -19,23 +19,17 @@ from ..exceptions import (
     UnknownStatusCodeException,
 )
 
-
 # --------------------------------------------------------------------------------
 class ClientBase(ABC):
-    max_retries: int   = 3
-    retry_delay: float = 0.1
-    retry_count: int   = 0
-    success    : bool  = False
-
     def __init__(
         self,
         max_retries: int   = 3,
         retry_delay: float = 0.1,
     ):
-        self.max_retries = max_retries
-        self.retry_delay = retry_delay
-        self.retry_count = 0
-        self.success     = False
+        self.max_retries: int   = max_retries
+        self.retry_delay: float = retry_delay
+        self.retry_count: int   = 0
+        self.success    : bool  = False
 
     # --------------------------------------------------------------------------------
     @abstractmethod

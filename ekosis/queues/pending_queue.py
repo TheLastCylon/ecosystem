@@ -1,10 +1,8 @@
 import uuid
-import logging
 
 from typing import Any, List
 from pydantic import BaseModel as PydanticBaseModel
-from .sql_persisted_queue import SqlPersistedQueue
-
+from .paginated_queue import PaginatedQueue
 
 # --------------------------------------------------------------------------------
 class PendingEntry(PydanticBaseModel):
@@ -12,27 +10,25 @@ class PendingEntry(PydanticBaseModel):
     retries: int = 0
     data   : Any
 
-
 # --------------------------------------------------------------------------------
 class ErrorEntry(PydanticBaseModel):
     uid   : str
     data  : Any
     reason: str
 
-
 # --------------------------------------------------------------------------------
 class PendingQueue:
-    pending_q: SqlPersistedQueue[PendingEntry] = None
-    error_q  : SqlPersistedQueue[ErrorEntry]   = None
+    pending_q: PaginatedQueue[PendingEntry] = None
+    error_q  : PaginatedQueue[ErrorEntry]   = None
 
     def __init__(
         self,
         directory     : str,
         file_basename : str,
-        max_uncommited: int = 0
+        page_size     : int = 100
     ) -> None:
-        self.__setup_pending_q(f"{directory}/{file_basename}-pending.sqlite", max_uncommited)
-        self.__setup_error_q  (f"{directory}/{file_basename}-error.sqlite"  , max_uncommited)
+        self.__setup_pending_q(f"{directory}/{file_basename}-pending.sqlite", page_size)
+        self.__setup_error_q  (f"{directory}/{file_basename}-error.sqlite"  , page_size)
 
     # --------------------------------------------------------------------------------
     def shut_down(self):
@@ -41,13 +37,13 @@ class PendingQueue:
 
     # --------------------------------------------------------------------------------
     async def has_pending(self):
-        return not await self.pending_q.is_empty()
+        return not self.pending_q.is_empty()
 
     async def get_pending_size(self):
-        return await self.pending_q.size()
+        return self.pending_q.size()
 
     async def get_error_size(self):
-        return await self.error_q.size()
+        return self.error_q.size()
 
     async def get_sizes(self):
         return {
@@ -57,8 +53,8 @@ class PendingQueue:
 
     # --------------------------------------------------------------------------------
     async def move_all_error_to_pending(self):
-        while await self.error_q.size() > 0:
-            popped_error_entry = await self.error_q.pop_front()
+        while self.error_q.size() > 0:
+            popped_error_entry = await self.error_q.pop()
             await self.push_pending(popped_error_entry.uid, popped_error_entry.data, 0)
 
     async def move_one_error_to_pending(self, item_uid: uuid.UUID):
@@ -76,7 +72,7 @@ class PendingQueue:
 
     # --------------------------------------------------------------------------------
     @staticmethod
-    async def _pop_using_uuid(queue: SqlPersistedQueue, item_uid: uuid.UUID):
+    async def _pop_using_uuid(queue: PaginatedQueue, item_uid: uuid.UUID):
         queued_request = await queue.pop_uuid(item_uid)
         if not queued_request:
             return None
@@ -90,7 +86,7 @@ class PendingQueue:
 
     # --------------------------------------------------------------------------------
     @staticmethod
-    async def _inspect_using_uuid(queue: SqlPersistedQueue, item_uid: uuid.UUID):
+    async def _inspect_using_uuid(queue: PaginatedQueue, item_uid: uuid.UUID):
         queued_request = await queue.inspect_uuid(item_uid)
         if not queued_request:
             return None
@@ -109,7 +105,7 @@ class PendingQueue:
             data    = item_data,
             retries = retries,
         )
-        await self.pending_q.push_back(entry_to_queue)
+        await self.pending_q.push(entry_to_queue, item_uuid)
 
     # --------------------------------------------------------------------------------
     async def push_error(self, item_uuid: uuid.UUID, item_data, reason: str):
@@ -118,16 +114,16 @@ class PendingQueue:
             data   = item_data,
             reason = reason,
         )
-        await self.error_q.push_back(entry_to_queue)
+        await self.error_q.push(entry_to_queue, item_uuid)
 
     # --------------------------------------------------------------------------------
     async def pop(self):
-        return await self.pending_q.pop_front()
+        return await self.pending_q.pop()
 
     # --------------------------------------------------------------------------------
-    def __setup_pending_q(self, file_path: str, max_uncommited: int = 0):
-        self.pending_q = SqlPersistedQueue[PendingEntry](file_path, PendingEntry, max_uncommited)
+    def __setup_pending_q(self, file_path: str, page_size: int):
+        self.pending_q = PaginatedQueue[PendingEntry](file_path, PendingEntry, page_size)
 
     # --------------------------------------------------------------------------------
-    def __setup_error_q(self, file_path: str, max_uncommited: int = 0):
-        self.error_q = SqlPersistedQueue[ErrorEntry](file_path, ErrorEntry, max_uncommited)
+    def __setup_error_q(self, file_path: str, page_size: int):
+        self.error_q = PaginatedQueue[ErrorEntry](file_path, ErrorEntry, page_size)

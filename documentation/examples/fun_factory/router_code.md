@@ -221,12 +221,12 @@ The other parameters you can set are:
    - A floating point value, indicating the number of seconds or fractions of a second,
      you want the sender process to wait between sending messages. In the example, we
      set it to `0`. The default for this is also `0`.
-2. `max_uncommited`:
+2. `page_size`:
    - As discussed in the
      [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),
-     this tells each of the sql databases for your queues, how many inserts and deletes
-     it should allow, before doing a commit. For this example, I set it to `1000`. The
-     default for this is `0`
+     this tells each of the sql databases for your queues, how many entries it should
+     keep in the front and back pages of the queue. For this example, I set it to
+     `1000`. The default for this is `100`
 3. `max_retries`:
    - Again, as discussed in
      [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),

@@ -29,28 +29,25 @@ class QueuedRequestHandlerReceivingPausedException(QueuedRequestHandlerException
 
 # --------------------------------------------------------------------------------
 class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
-    running                : bool             = False
-    _receiving_paused      : bool             = True
-    _processing_paused     : bool             = True
-    __processing_scheduled : bool             = False
-    statistics_keeper      : StatisticsKeeper = StatisticsKeeper()
-    log                    : logging.Logger   = logging.getLogger()
-    max_uncommited         : int              = None
-    max_retries            : int              = None
-    queue                  : PendingQueue     = None
-    on_shutdown_future     : asyncio.Future   = None
-    shutdown               : bool             = False
-
     def __init__(
         self,
         route_key       : str,
         request_dto_type: Type[_T],
-        max_uncommited  : int = 0,
+        page_size       : int = 0,
         max_retries     : int = 0,
     ):
         super().__init__(route_key, request_dto_type)
-        self.max_uncommited = max_uncommited
-        self.max_retries    = max_retries
+        self.running                : bool             = False
+        self._receiving_paused      : bool             = True
+        self._processing_paused     : bool             = True
+        self.__processing_scheduled : bool             = False
+        self.statistics_keeper      : StatisticsKeeper = StatisticsKeeper()
+        self.log                    : logging.Logger   = logging.getLogger()
+        self.page_size              : int              = page_size
+        self.max_retries            : int              = max_retries
+        self.shutdown               : bool             = False
+        self.queue                  : PendingQueue     = None
+        self.on_shutdown_future     : asyncio.Future   = None
 
     # --------------------------------------------------------------------------------
     def pause_receiving(self):
@@ -129,7 +126,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self.queue = PendingQueue(
             directory,
             f"{app_instance_string}-{self._route_key}-endpoint",
-            self.max_uncommited
+            self.page_size
         )
         self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.pending", self.queue.pending_q)
         self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.error"  , self.queue.error_q)

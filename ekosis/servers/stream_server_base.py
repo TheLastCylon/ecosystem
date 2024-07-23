@@ -5,13 +5,11 @@ from .server_base import ServerBase
 from ..exceptions import IncompleteMessageException
 from ..exceptions import ClientDisconnectedException
 
-
 # --------------------------------------------------------------------------------
 class StreamServerBase(ServerBase):
-    _server: asyncio.Server = None
-
     def __init__(self):
         super().__init__()
+        self._server: asyncio.Server = None
 
     # --------------------------------------------------------------------------------
     @staticmethod
@@ -39,7 +37,7 @@ class StreamServerBase(ServerBase):
             # self._logger.info(f"_handle_request: Received from {requestor_address}:\n{request_data}")
 
             response_dict     = await self._route_request(request_data)
-            response_str      = response_dict.json()
+            response_str      = response_dict.model_dump_json()
             writer.write(response_str.encode())
             await writer.drain()
             writer.close()

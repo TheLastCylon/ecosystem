@@ -13,11 +13,6 @@ _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 
 # --------------------------------------------------------------------------------
 class SenderBase(Generic[_RequestDTOType, _ResponseDTOType], ABC):
-    _client           : ClientBase             = None
-    _route_key        : str                    = None
-    _request_dto_type : Type[_RequestDTOType]  = None
-    _response_dto_type: Type[_ResponseDTOType] = None
-
     def __init__(
         self,
         client           : ClientBase,
@@ -25,10 +20,10 @@ class SenderBase(Generic[_RequestDTOType, _ResponseDTOType], ABC):
         request_dto_type : Type[_RequestDTOType],
         response_dto_type: Type[_ResponseDTOType] = EmptyDto,
     ):
-        self._client            = client
-        self._route_key         = route_key
-        self._request_dto_type  = request_dto_type
-        self._response_dto_type = response_dto_type
+        self._client           : ClientBase             = client
+        self._route_key        : str                    = route_key
+        self._request_dto_type : Type[_RequestDTOType]  = request_dto_type
+        self._response_dto_type: Type[_ResponseDTOType] = response_dto_type
 
     def get_route_key(self) -> str:
         return self._route_key
