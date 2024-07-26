@@ -26,3 +26,4 @@ So, keep that in mind when you are looking at the examples. They might not work 
   - [Using configuration files](./configuration/through_configuration_files.md)
 - [The Fun Factory example (a.k.a Queued senders, request uuids and what run_soon is for)](./examples/fun_factory/fun_factory.md)
 - [Real-Time Telemetry Example](./examples/telemetry/telemetry.md)
+- [Proper Fun (i.e. The training wheels are off)](examples/proper_fun.md)
