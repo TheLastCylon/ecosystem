@@ -1,8 +1,11 @@
 import uuid
+import logging
 
 from typing import Any, List
 from pydantic import BaseModel as PydanticBaseModel
 from .paginated_queue import PaginatedQueue
+
+log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 class PendingEntry(PydanticBaseModel):
@@ -109,6 +112,7 @@ class PendingQueue:
 
     # --------------------------------------------------------------------------------
     async def push_error(self, item_uuid: uuid.UUID, item_data, reason: str):
+        log.warning(f"Pushing message to error queue [{item_uuid}] {reason}]")
         entry_to_queue = ErrorEntry(
             uid    = str(item_uuid),
             data   = item_data,

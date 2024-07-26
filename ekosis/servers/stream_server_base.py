@@ -2,45 +2,53 @@ import asyncio
 
 from .server_base import ServerBase
 
-from ..exceptions import IncompleteMessageException
-from ..exceptions import ClientDisconnectedException
-
 # --------------------------------------------------------------------------------
 class StreamServerBase(ServerBase):
     def __init__(self):
         super().__init__()
-        self._server: asyncio.Server = None
+        self._server       : asyncio.Server = None
+        self.__ENQ_byte    : int            =  5 # Decimal  5 = Ascii ENQ (enquiry) character
+        self.__ACK_byte    : int            =  6 # Decimal  6 = Ascii ACK (acknowledge) character
+        self.__LF_byte     : int            = 10 # Decimal 10 = Ascii LF (line feed) character = '\n'
+        self.__ACK_response: bytes          = bytes([self.__ACK_byte, self.__LF_byte])
+        self.__read_lock   : asyncio.Lock   = asyncio.Lock()
+        self.__write_lock  : asyncio.Lock   = asyncio.Lock()
 
     # --------------------------------------------------------------------------------
-    @staticmethod
-    async def _read_incoming_request(reader: asyncio.StreamReader) -> str:
-        bytes_read = await reader.readline()
-        if not bytes_read:
-            raise ClientDisconnectedException()
+    async def __read_data(self, reader: asyncio.StreamReader):
+        async with self.__read_lock:
+            return await reader.readline()
 
-        request_data: str = bytes_read.decode()
+    # --------------------------------------------------------------------------------
+    async def __write_data(self, writer: asyncio.StreamWriter, data: bytes):
+        async with self.__write_lock:
+            writer.write(data)
+            await writer.drain()
 
-        if not request_data.endswith('\n'): # TODO: Does this even make sense. We did a readline didn't we?
-            raise IncompleteMessageException(request_data)
-
-        return request_data
-
+    # TODO: Check client against white-list!
     # --------------------------------------------------------------------------------
     async def _handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
-        try:
-            if not self._running:
-                return
-
-            # requestor_address = writer.get_extra_info('peername')
-            # TODO: Check client against white-list!
-            request_data      = await self._read_incoming_request(reader) # ClientDisconnectedException, IncompleteMessageException
-            # self._logger.info(f"_handle_request: Received from {requestor_address}:\n{request_data}")
-
-            response_dict     = await self._route_request(request_data)
-            response_str      = response_dict.model_dump_json()
-            writer.write(response_str.encode())
-            await writer.drain()
-            writer.close()
-        except (ClientDisconnectedException, IncompleteMessageException) as e:
-            self._logger.info(e.message)
+        if not self._running:
             return
+        while True: # We keep the connection open.
+            try:
+                bytes_read = await reader.readline()
+
+                # Check if the client closed the connection.
+                # Take note: An incomplete read due to EOF is treated as a client disconnect,
+                # So we check if the last byte read is '\n' i.e. Decimal 10/Ascii symbol: LF
+                if not bytes_read or bytes_read[-1] != self.__LF_byte:
+                    break
+
+                if bytes_read[0] == self.__ENQ_byte: # The client is asking if we are still connected.
+                    await self.__write_data(writer, self.__ACK_response)
+                else:
+                    response_dict = await self._route_request(bytes_read.decode())
+                    await self.__write_data(
+                        writer,
+                        (response_dict.model_dump_json() + '\n').encode()
+                    )
+            except ConnectionResetError:
+                self._logger.info("Connection reset by peer")
+                break
+        writer.close()

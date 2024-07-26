@@ -4,7 +4,7 @@ import asyncio
 
 from typing import List
 
-from ekosis.clients import TCPClient, UDPClient, UDSClient
+from ekosis.clients import TCPClient, UDPClient, UDSClient, PersistedTCPClient, PersistedUDSClient
 from ekosis.sending.sender import sender
 
 from .dtos import PingRequestDto
@@ -12,6 +12,8 @@ from .dtos import PingRequestDto
 client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
 client_uds = UDSClient("/tmp/pong_0_uds.sock")
+persisted_tcp = PersistedTCPClient(server_host='127.0.0.1', server_port=8888)
+persisted_uds = PersistedUDSClient("/tmp/pong_0_uds.sock")
 
 data_keeper_tcp = []
 data_keeper_udp = []
@@ -33,20 +35,18 @@ async def uds_ping():
     return PingRequestDto(message="ping")
 
 # --------------------------------------------------------------------------------
-def tcp_benchmark():
-    asyncio.run(tcp_ping())
+@sender(persisted_tcp, "app.ping", PingRequestDto)
+async def persisted_tcp_ping():
+    return PingRequestDto(message="ping")
 
 # --------------------------------------------------------------------------------
-def udp_benchmark():
-    asyncio.run(udp_ping())
+@sender(persisted_uds, "app.ping", PingRequestDto)
+async def persisted_uds_ping():
+    return PingRequestDto(message="ping")
 
 # --------------------------------------------------------------------------------
-def uds_benchmark():
-    asyncio.run(uds_ping())
-
-# --------------------------------------------------------------------------------
-def print_timing(test_type: str, how_many: int, duration: float):
-    print(f"{test_type}: Sent [{how_many}] in [{duration:.4f}] seconds. i.e. {(how_many/duration):.4f} per second")
+def persisted_tcp_benchmark():
+    asyncio.run(persisted_tcp_ping())
 
 # --------------------------------------------------------------------------------
 def report_run_data(test_type: str, number_of_messages: int, duration_list: List[float]):
@@ -60,36 +60,63 @@ def report_run_data(test_type: str, number_of_messages: int, duration_list: List
     print(f"Average: {(sum(messages_per_second_list)/number_of_runs):.6f}\n")
 
 # --------------------------------------------------------------------------------
-def do_tcp_timing(how_many: int):
-    return timeit.timeit(tcp_benchmark, number=how_many)
+def do_persisted_tcp_timing(how_many: int):
+    return timeit.timeit(persisted_tcp_benchmark, number=how_many)
 
 # --------------------------------------------------------------------------------
-def do_udp_timing(how_many: int):
-    return timeit.timeit(udp_benchmark, number=how_many)
-
-# --------------------------------------------------------------------------------
-def do_uds_timing(how_many: int):
-    return timeit.timeit(uds_benchmark, number=how_many)
-
-# --------------------------------------------------------------------------------
-def do_timing(number_of_runs: int, number_of_messages: int):
+async def do_timing(number_of_runs: int, number_of_messages: int):
     print("Doing TCP run:")
+    data_keeper = []
     for i in range(number_of_runs):
-        data_keeper_tcp.append(do_tcp_timing(number_of_messages))
-    report_run_data("TCP", number_of_messages, data_keeper_tcp)
+        start_time = timeit.default_timer()
+        for j in range(number_of_messages):
+            response = await tcp_ping()
+        end_time   = timeit.default_timer() - start_time
+        data_keeper.append(end_time)
+    report_run_data("TCP", number_of_messages, data_keeper)
+
+    print("Doing Persisted TCP run:")
+    data_keeper = []
+    for i in range(number_of_runs):
+        start_time = timeit.default_timer()
+        for j in range(number_of_messages):
+            response = await persisted_tcp_ping()
+        end_time   = timeit.default_timer() - start_time
+        data_keeper.append(end_time)
+    report_run_data("P-TCP", number_of_messages, data_keeper)
 
     print("Doing UDP run:")
+    data_keeper = []
     for i in range(number_of_runs):
-        data_keeper_udp.append(do_udp_timing(number_of_messages))
-    report_run_data("UDP", number_of_messages, data_keeper_udp)
+        start_time = timeit.default_timer()
+        for j in range(number_of_messages):
+            response = await udp_ping()
+        end_time   = timeit.default_timer() - start_time
+        data_keeper.append(end_time)
+    report_run_data("UDP", number_of_messages, data_keeper)
 
     print("Doing UDS run:")
+    data_keeper = []
     for i in range(number_of_runs):
-        data_keeper_uds.append(do_uds_timing(number_of_messages))
-    report_run_data("UDS", number_of_messages, data_keeper_uds)
+        start_time = timeit.default_timer()
+        for j in range(number_of_messages):
+            response = await uds_ping()
+        end_time   = timeit.default_timer() - start_time
+        data_keeper.append(end_time)
+    report_run_data("UDS", number_of_messages, data_keeper)
+
+    print("Doing UDS run:")
+    data_keeper = []
+    for i in range(number_of_runs):
+        start_time = timeit.default_timer()
+        for j in range(number_of_messages):
+            response = await persisted_uds_ping()
+        end_time   = timeit.default_timer() - start_time
+        data_keeper.append(end_time)
+    report_run_data("P-UDS", number_of_messages, data_keeper)
 
 # --------------------------------------------------------------------------------
-def main():
+async def main():
     if len(sys.argv) < 2:
         number_of_messages = 10000
     else:
@@ -100,7 +127,7 @@ def main():
     else:
         number_of_runs = 1
 
-    do_timing(number_of_runs, number_of_messages)
+    await do_timing(number_of_runs, number_of_messages)
 
 # --------------------------------------------------------------------------------
-main()
+asyncio.run(main())

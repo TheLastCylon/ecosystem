@@ -1,35 +1,43 @@
-import time
 import asyncio
 import logging
 
 from ..server_base import ServerBase
 
 from ...configuration.config_models import ConfigUDP
-from ...exceptions import IncompleteMessageException
 
 log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
-class DatagramProtocolServer(asyncio.Protocol):
-    transport: asyncio.DatagramTransport = None
-    loop     : asyncio.AbstractEventLoop = None
+class DatagramProtocolServer(asyncio.DatagramProtocol):
+    __ENQ_byte    : int   =  5 # Decimal  5 = Ascii ENQ (enquiry) character
+    __ACK_byte    : int   =  6 # Decimal  6 = Ascii ACK (acknowledge) character
+    __LF_byte     : int   = 10 # Decimal 10 = Ascii LF (line feed) character = '\n'
+    __ACK_response: bytes = bytes([__ACK_byte, __LF_byte])
 
     def __init__(self, build_response_function):
         self.build_response_function = build_response_function
+
+        self.transport     : asyncio.DatagramTransport = None
+        self.loop          : asyncio.AbstractEventLoop = None
+        self.__write_lock  : asyncio.Lock              = asyncio.Lock()
 
     def connection_made(self, transport):
         self.transport = transport
         self.loop      = asyncio.get_running_loop()
 
     async def do_response(self, message, addr):
-        response = await self.build_response_function(message)
-        self.transport.sendto(response.encode(), addr)
+        async with self.__write_lock:
+            response = await self.build_response_function(message)
+            self.transport.sendto(response.encode(), addr)
 
+    # TODO: find a way to deal with partial bytes read
     def datagram_received(self, bytes_read, addr):
-        request_data: str = bytes_read.decode()
-        if not request_data.endswith('\n'):
-            raise IncompleteMessageException(request_data)
-        self.loop.create_task(self.do_response(request_data, addr))
+        if bytes_read and bytes_read[-1] == self.__LF_byte:
+            if bytes_read[0] == self.__ACK_byte: # The client wants to know we are here.
+                self.transport.sendto(self.__ACK_response, addr)
+            else:
+                request_data: str = bytes_read.decode()
+                self.loop.create_task(self.do_response(request_data, addr))
 
 # --------------------------------------------------------------------------------
 class UDPServer(ServerBase):

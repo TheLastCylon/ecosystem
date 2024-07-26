@@ -8,11 +8,17 @@
 
 - [ ] Example: Project structure
 - [ ] Example: Project with Postgres database
+- [ ] Example: Doing database migrations
 
 - [ ] Documentation: The error keeper, why it exists and how to use it.
   - Example: a service needing to be communicated to goes down.
   - Setting of the error state when that happens.
   - Clearing of the error state when it is resolved.
+
+- [ ] Logging adjustment on the fly.
+  - i.e. Log Keeper?
+  - Adjust log level
+  - Adjust log buffer?
 
 ## Beyond MVP
 - [ ] Ecosystem Node.js client
@@ -28,13 +34,11 @@
 
 - [ ] Sequenced Broadcaster
 
-- [ ] Persistent client connections
-  - As in, clients connect once and don't close the connection until shut down or having to re-connect for some reason.
-
 - [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
   - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
     - The host listened on, can be adjusted to do filtering already.
   - UDS connections can only be done on the same machine, so that is filtered by default.
+  - Endpoint channel limitation. i.e. An endpoint may only be used on a list of [`tcp`, `udp`, `uds`] channels.
 
 # Done
 - [X] Make communication channels optional
@@ -122,6 +126,8 @@
   - [X] manipulation through standard endpoints and the queued handler keeper
 - [X] Get Ecosystem ready for PyPI. Yes, we are that close.
 - [X] p99 and p95 percentiles for endpoints
+- [X] Persistent client connections
+  - As in, clients connect once and don't close the connection until shut down or having to re-connect for some reason.
 
 # Possibly won't do:
 
