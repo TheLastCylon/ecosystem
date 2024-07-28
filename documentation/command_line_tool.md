@@ -4,8 +4,8 @@ These tools allow you to interact with your Ecosystem applications, while they
 are running. So doing things like:
 - [getting statistical data](#getting-application-statistics), and
 - Managing queues created with:
-  - [`queued_endpoint`](#managing-queues-created-through-queued_endpoint) or
-  - [`queued_sender`](#managing-queues-created-through-queued_sender)
+  - [`queued_endpoint`](#managing-queues-created-through-queued_endpoint-ie-queued-endpoint-manager-qem-for-short) or
+  - [`queued_sender`](#managing-queues-created-through-queued_sender-ie-queued-sender-manager-qsm-for-short)
 
 Go ahead try the statistics tool, run it with `-h` to see the help output.
 

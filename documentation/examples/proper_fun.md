@@ -9,7 +9,7 @@ Right, time to take off the training wheels, and get going with what Ecosystem
 looks like in the real-world.
 
 If you've been paying attention, I'm rather certain you've noticed that the
-[Fun Factory example system](fun_factory/fun_factory.md). As an
+[Fun Factory example system](fun_factory/fun_factory.md). Is an
 **entire messages based, distributed system**, comprising `7` servers and `1` client.
 Created using less than 1000 lines of code ... For the **entire system**.
 
