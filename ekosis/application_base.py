@@ -26,6 +26,7 @@ from .exceptions.exception_base import ExceptionBase
 # Pycharm complains that we aren't using these imports,
 # but the import is what does the work of getting everything up and
 # running. So we do a noqa comment here.
+from .standard_endpoints.log_manager import eco_log_level, eco_log_buffer # noqa
 from .standard_endpoints.statistics import eco_statistics_get # noqa
 from .standard_endpoints.errors import eco_error_states_get, eco_error_states_clear # noqa
 from .standard_endpoints.queued_handler_manager import ( # noqa

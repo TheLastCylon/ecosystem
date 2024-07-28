@@ -67,6 +67,12 @@ class EcoLogger(metaclass=SingletonType):
             self.__set_level(logging.CRITICAL)
 
     # --------------------------------------------------------------------------------
+    def set_buffer_size(self, buffer_size: int):
+        self.__logger.info(f"Setting log buffer size to {buffer_size}.")
+        if self.__file_handler:
+            self.__file_handler.set_buffer_size(buffer_size)
+
+    # --------------------------------------------------------------------------------
     def setup(self):
         log_file_config                = self.__log_config.file_logging
         log_file_config.base_file_name = f"{self.__app_config.name}-{self.__app_config.instance}"

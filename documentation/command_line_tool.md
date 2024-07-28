@@ -2,6 +2,7 @@
 
 These tools allow you to interact with your Ecosystem applications, while they
 are running. So doing things like:
+- [Setting log level and log file buffer size](#setting-log-level-and-log-file-buffer-size-at-runtime)
 - [getting statistical data](#getting-application-statistics), and
 - Managing queues created with:
   - [`queued_endpoint`](#managing-queues-created-through-queued_endpoint-ie-queued-endpoint-manager-qem-for-short) or
@@ -14,6 +15,27 @@ python -m ekosis.cli.stat -h
 ```
 
 What follows are examples of how to use these tools, and common use cases for them.
+
+---
+## Setting log level and log file buffer size, at runtime.
+With Ecosystem applications, you can alter the log leve and log file buffer size,
+on the fly. This can be quite useful for debugging in environments where the log
+level, or the file buffer size is too high. Just remember to set both back to
+what they are supposed to be.
+
+Here's how:
+
+Get help with: `python -m ekosis.cli.log -h`
+
+### Log level
+```shell
+python -m ekosis.cli.log -st tcp -sd 127.0.0.1:8888 -l debug
+```
+
+### Log file buffer size
+```shell
+python -m ekosis.cli.log -st tcp -sd 127.0.0.1:8888 -b 20
+```
 
 ---
 ## Getting application statistics

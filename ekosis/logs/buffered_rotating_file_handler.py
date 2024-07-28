@@ -24,6 +24,9 @@ class BufferedRotatingFileHandler(BufferingHandler):
         self.buffer      = []
         self.buffer_size = buffer_size
 
+    def set_buffer_size(self, buffer_size):
+        self.capacity = buffer_size
+
     def setFormatter(self, formatter):
         self.rotating_file_handler.setFormatter(formatter)
 
