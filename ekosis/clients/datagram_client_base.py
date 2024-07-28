@@ -12,7 +12,8 @@ log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 class DatagramProtocolClient(asyncio.DatagramProtocol):
-    def __init__(self):
+    def __init__(self, timeout: float):
+        self.timeout  : float                     = timeout
         self.response : asyncio.Future            = None
         self.transport: asyncio.DatagramTransport = None
 
@@ -27,11 +28,11 @@ class DatagramProtocolClient(asyncio.DatagramProtocol):
             self.response = None
 
     # --------------------------------------------------------------------------------
-    def send_message(self, message: str):
+    async def send_message(self, message: str):
         if self.transport is not None:
             self.response = asyncio.Future()
             self.transport.sendto(message.encode())
-            return self.response
+            return await asyncio.wait_for(self.response, timeout=self.timeout)
         else:
             return None
 
@@ -60,7 +61,7 @@ class DatagramClientBase(ClientBase, asyncio.DatagramProtocol):
         if not self.initialised:
             self.loop            = asyncio.get_running_loop()
             self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-                lambda: DatagramProtocolClient(),
+                lambda: DatagramProtocolClient(self.timeout),
                 remote_addr=(self.server_host, self.server_port)
             )
             self.initialised = True
@@ -75,11 +76,11 @@ class DatagramClientBase(ClientBase, asyncio.DatagramProtocol):
             try:
                 response = await self._send_message(request)
                 return response
-            except (TimeoutError, asyncio.TimeoutError) as e:
+            except (TimeoutError, asyncio.TimeoutError):
                 retry_count += 1
                 if retry_count >= self.max_retries:
                     raise CommunicationsMaxRetriesReached()
                 else:
                     await asyncio.sleep(self.retry_delay)
             except Exception as e:
-                raise CommunicationsNonRetryable(str(e))
+                raise CommunicationsNonRetryable(f"{type(e)}: {str(e)}")

@@ -2,7 +2,18 @@
 
 ## For MVP
 
+- [ ] Logging adjustment on the fly.
+  - i.e. Log Keeper?
+  - Adjust log level
+  - Adjust log buffer?
+
+- [ ] Improve Queued senders to use error keeper when a server is unreachable.
+  - This will make Queued senders unusable outside Ecosystem, is this what we want?
+
+- [ ] See if we can use Ecosystem senders from within a FastAPI application.
+
 - [ ] Documentation: Explain p99 and p95 statistics.
+- [ ] Documentation: Persisted TCP and UDS clients
 
 - [ ] Benchmarking: queues.
 
@@ -14,11 +25,6 @@
   - Example: a service needing to be communicated to goes down.
   - Setting of the error state when that happens.
   - Clearing of the error state when it is resolved.
-
-- [ ] Logging adjustment on the fly.
-  - i.e. Log Keeper?
-  - Adjust log level
-  - Adjust log buffer?
 
 ## Beyond MVP
 - [ ] Ecosystem Node.js client
@@ -128,6 +134,10 @@
 - [X] p99 and p95 percentiles for endpoints
 - [X] Persistent client connections
   - As in, clients connect once and don't close the connection until shut down or having to re-connect for some reason.
+- [X] Improve persisted TCP and UDS clients to do connection heartbeat.
+  - [X] Make heartbeat time configurable
+- [X] Improve Queued endpoints to use `task.done` rather than flags to check if processes are running.
+- [X] Command line tool: Rework into separate tools for telemetry, queued endpoint, queued sender and error states.
 
 # Possibly won't do:
 

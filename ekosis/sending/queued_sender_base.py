@@ -40,7 +40,6 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
         self._sending_paused          : bool             = True
         self.statistics_keeper        : StatisticsKeeper = StatisticsKeeper()
         self.log                      : logging.Logger   = logging.getLogger()
-        self.__send_process_scheduled : bool             = False
         self.wait_period              : float            = wait_period
         self.page_size                : int              = page_size
         self.max_retries              : int              = max_retries
@@ -64,9 +63,7 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
 
     # --------------------------------------------------------------------------------
     def __check_process_send_queue(self):
-        if self.__send_process_task is None:
-            self.__send_process_task = asyncio.create_task(self.__process_send_queue())
-        elif self.__send_process_task.done():
+        if self.__send_process_task is None or self.__send_process_task.done():
             self.__send_process_task = asyncio.create_task(self.__process_send_queue())
 
     # --------------------------------------------------------------------------------
@@ -115,8 +112,7 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
             self.running = True
             await self.__do_queue_processing()
         finally:
-            self.running                  = False
-            self.__send_process_scheduled = False
+            self.running = False
             self.__shut_down_check()
 
     # --------------------------------------------------------------------------------

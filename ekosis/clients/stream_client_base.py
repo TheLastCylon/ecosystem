@@ -1,3 +1,4 @@
+import logging
 import asyncio
 
 from abc import ABC, abstractmethod
@@ -11,15 +12,18 @@ from ..exceptions import (
     CommunicationsEmptyResponse,
 )
 
+log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 class StreamClientBase(ClientBase, ABC):
     def __init__(
         self,
+        timeout    : float = 5,
         max_retries: int   = 3,
         retry_delay: float = 0.1,
     ):
         super().__init__(max_retries, retry_delay)
+        self.__timeout = timeout
 
     # --------------------------------------------------------------------------------
     @abstractmethod
@@ -31,7 +35,7 @@ class StreamClientBase(ClientBase, ABC):
         reader, writer = await self.open_connection()
         writer.write(request.encode())
 
-        data = await reader.readline()
+        data = await asyncio.wait_for(reader.readline(), self.__timeout)
         if not data:
             raise CommunicationsEmptyResponse()
 
@@ -42,16 +46,23 @@ class StreamClientBase(ClientBase, ABC):
 
     # --------------------------------------------------------------------------------
     async def _send_message_retry_loop(self, request: str) -> str:
-        while self.retry_count < self.max_retries and not self.success:
+        retry_count = 0
+        while retry_count < self.max_retries and not self.success:
             try:
                 response_str = await self._send_message(request)
                 self.success = True
                 return response_str
-            except (TimeoutError, ConnectionResetError, BrokenPipeError, asyncio.TimeoutError) as e:
-                self.retry_count += 1
-                if self.retry_count >= self.max_retries:
+            except (
+                TimeoutError,           # Timeouts mean the connection is fine
+                asyncio.TimeoutError,   # it's just taking too long. i.e. Retryable.
+                ConnectionResetError,   # Reset, abort and broken-pipe are
+                ConnectionAbortedError, # retryable forms of ConnectionError
+                BrokenPipeError         # ConnectionRefusedError is NOT retryable.
+            ):
+                retry_count += 1
+                if retry_count >= self.max_retries:
                     raise CommunicationsMaxRetriesReached()
                 else:
                     await asyncio.sleep(self.retry_delay)
             except Exception as e:
-                raise CommunicationsNonRetryable(str(e))
+                raise CommunicationsNonRetryable(f"{type(e)}: {str(e)}")

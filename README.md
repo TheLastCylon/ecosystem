@@ -24,6 +24,7 @@ As such, the "out-of-the-box" features include:
   - Machine/Container,
   - Application and
   - Instance
+- Both transient and persisted clients for TCP and UDS. With configurable connection heartbeat.
 - File Logging and log rotation, by default. Buffered file logging is optional and configurable.
 
 For more, take a look at the [documentation](https://github.com/TheLastCylon/ecosystem/blob/main/documentation/documentation_root.md) on GitHub.

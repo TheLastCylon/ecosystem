@@ -80,53 +80,31 @@ A complete Ecosystem server, though not a very useful one, can be written in und
 Here it is:
 
 ```python
- 1:
-from ekosis.application_base import ApplicationBase
-
-2:
-from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
-
-3:
-4:
-5:  # --------------------------------------------------------------------------------
-6:
-
-
-class BaseExampleServer(ApplicationBase):
-
-
-    7:
-
-
-def __init__(self):
-
-
-    8: self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8888)
-9: self._configuration.udp=ConfigUDP(host="127.0.0.1", port=8889)
-10: self._configuration.uds=ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-11: super().__init__()
-12:
-13:
-14:  # --------------------------------------------------------------------------------
-15:
-
-
-def main():
-
-
-    16:
-with BaseExampleServer() as app:
-    17: app.start()
-18:
-19:
-20:  # --------------------------------------------------------------------------------
-21:
-if __name__=='__main__':
-    22:
-try:
-    23: main()
+ 1: from ekosis.application_base import ApplicationBase
+ 2: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+ 3: 
+ 4: 
+ 5: # --------------------------------------------------------------------------------
+ 6: class BaseExampleServer(ApplicationBase):
+ 7:     def __init__(self):
+ 8:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
+ 9:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
+10:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+11:         super().__init__()
+12: 
+13: 
+14: # --------------------------------------------------------------------------------
+15: def main():
+16:     with BaseExampleServer() as app:
+17:         app.start()
+18: 
+19: 
+20: # --------------------------------------------------------------------------------
+21: if __name__ == '__main__':
+22:     try:
+23:         main()
 24:     except Exception as e:
-25: print(str(e))
+25:         print(str(e))
 26:
 ```
 
@@ -135,11 +113,8 @@ try:
 On line 1 and 2 we import the stuff we'll need from Ecosystem.
 
 ```python
- 1:
-from ekosis.application_base import ApplicationBase
-
-2:
-from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+ 1: from ekosis.application_base import ApplicationBase
+ 2: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
 ```
 
 - `ApplicationBase` is the class from which we will derive our application's class,

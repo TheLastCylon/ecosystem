@@ -1,4 +1,4 @@
-from .queued_management_sender_base import QueueManagementSenderBase, QueueManagementItemSenderBase
+from .queue_management_sender_base import QueueManagementSenderBase, QueueManagementItemSenderBase
 
 from ...clients import ClientBase
 

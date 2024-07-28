@@ -37,17 +37,17 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         max_retries     : int = 0,
     ):
         super().__init__(route_key, request_dto_type)
-        self.running                : bool             = False
-        self._receiving_paused      : bool             = True
-        self._processing_paused     : bool             = True
-        self.__processing_scheduled : bool             = False
-        self.statistics_keeper      : StatisticsKeeper = StatisticsKeeper()
-        self.log                    : logging.Logger   = logging.getLogger()
-        self.page_size              : int              = page_size
-        self.max_retries            : int              = max_retries
-        self.shutdown               : bool             = False
-        self.queue                  : PendingQueue     = None
-        self.on_shutdown_future     : asyncio.Future   = None
+        self.running             : bool             = False
+        self.statistics_keeper   : StatisticsKeeper = StatisticsKeeper()
+        self.log                 : logging.Logger   = logging.getLogger()
+        self.page_size           : int              = page_size
+        self.max_retries         : int              = max_retries
+        self.shutdown            : bool             = False
+        self._receiving_paused   : bool             = True
+        self._processing_paused  : bool             = True
+        self.queue               : PendingQueue     = None
+        self.on_shutdown_future  : asyncio.Future   = None
+        self.__process_queue_task: asyncio.Task     = None
 
     # --------------------------------------------------------------------------------
     def pause_receiving(self):
@@ -172,8 +172,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             await asyncio.sleep(1)
 
     # --------------------------------------------------------------------------------
-    async def _process_queue(self):
-        self.running = True
+    async def __do_queue_processing(self):
         while not self._processing_paused and await self.queue.has_pending():
             queued_item  = await self.queue.pop()
             request_uid  = uuid.UUID(queued_item.uid)
@@ -185,21 +184,25 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
                     await self.queue.push_error(request_uid, request_data, "Max retries reached.")
                 else:
                     await self.queue.push_pending(request_uid, request_data, retries)
-        self.running                = False
-        self.__processing_scheduled = False
-        self.__shut_down_check()
+
+    # --------------------------------------------------------------------------------
+    async def _process_queue(self):
+        try:
+            self.running = True
+            await self.__do_queue_processing()
+        finally:
+            self.running = False
+            self.__shut_down_check()
 
     # --------------------------------------------------------------------------------
     @abstractmethod
     async def process_queued_request(self, request_uuid: uuid.UUID, request: _T) -> bool:
         pass
 
-    # TODO: Investigate if we need process scheduled check here, as for queued sender?
     # --------------------------------------------------------------------------------
     def __check_process_queue(self):
-        if not self.running and not self.__processing_scheduled:
-            self.__processing_scheduled = True
-            fire_and_forget_task(self._process_queue())
+        if self.__process_queue_task is None or self.__process_queue_task.done():
+            self.__process_queue_task = asyncio.create_task(self._process_queue())
 
     # --------------------------------------------------------------------------------
     async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
