@@ -12,7 +12,6 @@
 
 - [ ] See if we can use Ecosystem senders from within a FastAPI application.
 
-- [ ] Documentation: Explain p99 and p95 statistics.
 - [ ] Documentation: Persisted TCP and UDS clients
 
 - [ ] Benchmarking: queues.
@@ -138,6 +137,7 @@
   - [X] Make heartbeat time configurable
 - [X] Improve Queued endpoints to use `task.done` rather than flags to check if processes are running.
 - [X] Command line tool: Rework into separate tools for telemetry, queued endpoint, queued sender and error states.
+- [X] Documentation: Explain p99 and p95 statistics.
 
 # Possibly won't do:
 

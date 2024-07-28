@@ -71,7 +71,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "current"}, "uid": "a
 If you don't have `netcat` on your machine, try the Ecosystem command line tool with:
 
 ```shell
-python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -stat current
+python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -type current
 ```
 
 The output from the Ecosystem command line tool won't be the exact same as the
@@ -89,28 +89,75 @@ it through a JSON beautifier of some kind first:
 {
    "data" : {
       "statistics" : {
-         "endpoint_call_counts" : {
+         "application" : {
+            "instance" : "0",
+            "name" : "dice_roller_example"
+         },
+         "endpoint_data" : {
             "dice_roller" : {
-               "guess"     : { "call_count" : 20 },
-               "roll"      : { "call_count" : 20 },
-               "roll_times": { "call_count" : 20 }
+               "guess"      : { "call_count" : 23, "p95" : 5.03455034049693e-05, "p99" : 5.66645455546677e-05 },
+               "roll"       : { "call_count" : 23, "p95" : 3.58768025762401e-05, "p99" : 4.79854423610959e-05 },
+               "roll_times" : { "call_count" : 23, "p95" : 5.27693984622601e-05, "p99" : 5.75694638246205e-05 }
             },
             "eco" : {
+               "error_states" : {
+                  "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+               },
+               "queued_handler" : {
+                  "all" : {
+                     "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "errors" : {
+                     "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "reprocess"       : {
+                        "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "processing" : {
+                     "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "receiving" : {
+                     "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  }
+               },
+               "queued_sender" : {
+                  "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "errors" : {
+                     "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "reprocess"       : {
+                        "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "send_process" : {
+                     "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  }
+               },
                "statistics" : {
-                  "get" : { "call_count" : 2 }
+                  "get" : { "call_count" : 2, "p95" : 0.00138424100441625, "p99" : 0.00138424100441625 }
                }
             }
          },
          "queued_endpoint_sizes" : {
             "dice_roller" : {
-               "roll_times" : {
-                  "error"    : 32,
-                  "incoming" : 0
-               }
+               "roll_times" : { "error" : 17, "pending" : 0 }
             }
          },
-         "timestamp" : 1719929657,
-         "uptime" : 71
+         "timestamp" : 1722188241.29274,
+         "uptime" : 3809.29274368286
       }
    },
    "status" : 0,
@@ -118,13 +165,30 @@ it through a JSON beautifier of some kind first:
 }
 ```
 
-As you can see from this response, I did 20 calls to each of the `dice_roller.guess`,
-`dice_roller.roll`, and `dice_roller.roll_times` endpoints
+If you look at the `call_count` values in this JSON structure, you'll notice I
+did `23` calls to each of the `dice_roller.guess`, `dice_roller.roll`, and
+`dice_roller.roll_times` endpoints.
 
 Even the 2 calls I made to `eco.statistics.get` are there.
 
-The sizes of the `incomming` and `error` queue databases for the `dice_roller.roll_times`
-queued endpoint, are also there.
+You'll also notice values for `p95` and `p99`. These are kind of special, they
+indicate that
+- In the case of `p95`: The longest duration, for 95% of the calls to this
+  endpoint. In seconds.
+  - Pay attention to the values you see there, they are shown in scientific
+    notation.
+  - So `5.03455034049693e-05` is actually: `0.0000503455034049693` seconds.
+  - That is about `50` microseconds.
+- In the case of `p99`: This indicates the longest duration, for 99% of the
+  calls to this endpoint.
+- This can be very useful in finding which endpoints in your application,
+  need some attention in terms of optimisation for speed.
+- If an endpoint has not been called during the period statistics are being
+  requested for, these will have a value of `-1`, in order to clearly
+  indicate that there is no data to work with.
+
+The sizes of the `incomming` and `error` queue databases for the
+`dice_roller.roll_times` queued endpoint, are also there.
 
 `timestamp` is the time at which I made the call to `eco.statistics.get`, and
 `uptime` is how many seconds the
@@ -151,7 +215,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "gathered"}, "uid": "
 If you'd rather play with the Ecosystem command line tool, use this:
 
 ```shell
-python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -stat gathered
+python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -type gathered
 ```
 
 The response you get, is all the gathered statistics, for the last gathering
@@ -169,7 +233,7 @@ to `current`, to get the situation as it is, at the time you execute the command
 on your terminal.
 
 The one where `type` is set to `gathered`, gives you the data as it was, for
-the 5-minute period before the current 5-minute period.
+the 5-minute period before the current gathering period.
 
 Here's what I got:
 
@@ -177,28 +241,78 @@ Here's what I got:
 {
    "data" : {
       "statistics" : {
-         "endpoint_call_counts" : {
+         "application" : {
+            "instance" : "0",
+            "name" : "dice_roller_example"
+         },
+         "endpoint_data" : {
             "dice_roller" : {
-               "guess"      : { "call_count" : 0 },
-               "roll"       : { "call_count" : 0 },
-               "roll_times" : { "call_count" : 0 }
+               "guess" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+               "roll" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+               "roll_times" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
             },
             "eco" : {
+               "error_states" : {
+                  "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "get" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+               },
+               "queued_handler" : {
+                  "all" : {
+                     "pause" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "errors" : {
+                     "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get_first_10" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "pop_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "reprocess" : {
+                        "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "processing" : {
+                     "pause" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "receiving" : {
+                     "pause" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  }
+               },
+               "queued_sender" : {
+                  "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "errors" : {
+                     "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get_first_10" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "pop_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "reprocess" : {
+                        "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "send_process" : {
+                     "pause" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  }
+               },
                "statistics" : {
-                  "get" : { "call_count" : 1 }
+                  "get" : { "call_count" : 1, "p95" : 0.000837851002870593, "p99" : 0.000837851002870593 }
                }
             }
          },
          "queued_endpoint_sizes" : {
             "dice_roller" : {
                "roll_times" : {
-                  "error"    : 32,
-                  "incoming" : 0
+                  "error" : 0,
+                  "pending" : 0
                }
             }
          },
-         "timestamp" : 1719931174,
-         "uptime" : 1588
+         "timestamp" : 1722187136.76713,
+         "uptime" : 2704.76713085175
       }
    },
    "status" : 0,
@@ -207,8 +321,7 @@ Here's what I got:
 ```
 
 You'll notice for that period:
-- the only call I made was too `eco.statistics.get`, and
-- the error queue for the `dice_roller.roll_times` endpoint, still has `32` entries in it.
+- the only call I made was too `eco.statistics.get`.
 
 In this case, `timestamp` is the unix-timestamp at which this set of statistics
 were gathered, and `uptime` is how long the application has been running, at the
@@ -237,7 +350,7 @@ echo '{"route_key": "eco.statistics.get", "data": {"type": "full"}, "uid": "abcd
 Again, here's the Ecosystem command line tool, equivalent:
 
 ```shell
-python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -stat full
+python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -type full
 ```
 
 Here's what I got:
@@ -247,196 +360,153 @@ Here's what I got:
    "data" : {
       "statistics" : [
          {
-            "endpoint_call_counts" : {
+            "application" : {
+               "instance" : "0",
+               "name" : "dice_roller_example"
+            },
+            "endpoint_data" : {
                "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
+                  "guess"      : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "roll"       : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "roll_times" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                },
                "eco" : {
+                  "error_states" : {
+                     "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "queued_handler" : {
+                     "all" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     },
+                     "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "errors" : {
+                        "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "reprocess"       : {
+                           "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                           "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                        }
+                     },
+                     "processing" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     },
+                     "receiving" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "queued_sender" : {
+                     "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "errors" : {
+                        "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "reprocess"       : {
+                           "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                           "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                        }
+                     },
+                     "send_process" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
                   "statistics" : {
-                     "get" : { "call_count" : 0 }
+                     "get" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
-                  "roll_times" : {
-                     "error"    : 32,
-                     "incoming" : 0
-                  }
+                  "roll_times" : { "error" : 17, "pending" : 0 }
                }
             },
-            "timestamp" : 1719931988,
-            "uptime" : 2402
+            "timestamp" : 1722189539.8746,
+            "uptime" : 5107.87459921837
          },
+         .
+         .
+         .
+         .
+         .
+         .
+         .
          {
-            "endpoint_call_counts" : {
+            "application" : {
+               "instance" : "0",
+               "name" : "dice_roller_example"
+            },
+            "endpoint_data" : {
                "dice_roller" : {
-                  "guess"      : { "call_count" : 0 },
-                  "roll"       : { "call_count" : 0 },
-                  "roll_times" : { "call_count" : 0 }
+                  "guess"      : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "roll"       : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                  "roll_times" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                },
                "eco" : {
+                  "error_states" : {
+                     "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                  },
+                  "queued_handler" : {
+                     "all" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     },
+                     "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "errors" : {
+                        "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "reprocess"       : {
+                           "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                           "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                        }
+                     },
+                     "processing" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     },
+                     "receiving" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
+                  "queued_sender" : {
+                     "data"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                     "errors" : {
+                        "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "get_first_10"    : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "inspect_request" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "pop_request"     : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "reprocess"       : {
+                           "all" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                           "one" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                        }
+                     },
+                     "send_process" : {
+                        "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
+                        "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
+                     }
+                  },
                   "statistics" : {
-                     "get" : { "call_count" : 0 }
+                     "get" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   }
                }
             },
             "queued_endpoint_sizes" : {
                "dice_roller" : {
-                  "roll_times" : {
-                     "error"    : 32,
-                     "incoming" : 0
-                  }
+                  "roll_times" : { "error" : 0, "pending" : 0 }
                }
             },
-            "timestamp" : 1719931688,
-            "uptime" : 2102
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 1 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"    : 32,
-                     "incoming" : 0
-                  }
-               }
-            },
-            "timestamp" : 1719931387,
-            "uptime" : 1801
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 1 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"    : 32,
-                     "incoming" : 0
-                  }
-               }
-            },
-            "timestamp" : 1719931087,
-            "uptime" : 1501
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 0 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"    : 32,
-                     "incoming" : 0
-                  }
-               }
-            },
-            "timestamp" : 1719930787,
-            "uptime" : 1201
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 0 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"   : 32,
-                     "incoming": 0
-                  }
-               }
-            },
-            "timestamp" : 1719930487,
-            "uptime" : 901
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 0 },
-                  "roll"      : { "call_count" : 0 },
-                  "roll_times": { "call_count" : 0 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 0 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"   : 32,
-                     "incoming": 0
-                  }
-               }
-            },
-            "timestamp" : 1719930186,
-            "uptime" : 600
-         },
-         {
-            "endpoint_call_counts" : {
-               "dice_roller" : {
-                  "guess"     : { "call_count" : 20 },
-                  "roll"      : { "call_count" : 20 },
-                  "roll_times": { "call_count" : 20 }
-               },
-               "eco" : {
-                  "statistics" : {
-                     "get" : { "call_count" : 2 }
-                  }
-               }
-            },
-            "queued_endpoint_sizes" : {
-               "dice_roller" : {
-                  "roll_times" : {
-                     "error"   : 32,
-                     "incoming": 0
-                  }
-               }
-            },
-            "timestamp" : 1719929886,
-            "uptime" : 300
+            "timestamp" : 1722186235.48122,
+            "uptime" : 1803.48122477531
          }
       ]
    },
@@ -445,8 +515,9 @@ Here's what I got:
 }
 ```
 
-You'll notice 8 entries there, each one with their details and timestamps of when
-they were gathered and all the other data you've seen in the previous sections.
+You'll notice this is a list of entries, each one with their details and
+timestamps of when they were gathered and all the other data you've seen in the
+previous sections.
 
 Again:
 
