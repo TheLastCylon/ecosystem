@@ -2,10 +2,23 @@
 
 ## For MVP
 
-- [ ] Logging adjustment on the fly.
-  - i.e. Log Keeper?
-  - Adjust log level
-  - Adjust log buffer?
+- [ ] Tests.
+  - end-to-end tests
+    - [ ] Does the application start up
+    - [ ] Does starting up an application for an instance that is already running, not start up.
+    - [ ] Can clients talk to servers.
+      - [ ] TCP
+        - [ ] transient
+        - [ ] persisted
+      - [ ] UDS
+        - [ ] transient
+        - [ ] persisted
+      - [ ] UDP
+    - [ ] senders
+    - [ ] queued senders
+    - [ ] endpoints
+    - [ ] queued endpoints
+    - [ ] do expected standard endpoints exist.
 
 - [ ] Improve Queued senders to use error keeper when a server is unreachable.
   - This will make Queued senders unusable outside Ecosystem, is this what we want?
@@ -38,12 +51,6 @@
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
 
 - [ ] Sequenced Broadcaster
-
-- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
-  - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
-    - The host listened on, can be adjusted to do filtering already.
-  - UDS connections can only be done on the same machine, so that is filtered by default.
-  - Endpoint channel limitation. i.e. An endpoint may only be used on a list of [`tcp`, `udp`, `uds`] channels.
 
 # Done
 - [X] Make communication channels optional
@@ -138,6 +145,10 @@
 - [X] Improve Queued endpoints to use `task.done` rather than flags to check if processes are running.
 - [X] Command line tool: Rework into separate tools for telemetry, queued endpoint, queued sender and error states.
 - [X] Documentation: Explain p99 and p95 statistics.
+- [X] Logging adjustment on the fly.
+  - i.e. Log Keeper?
+  - Adjust log level
+  - Adjust log buffer?
 
 # Possibly won't do:
 
@@ -154,6 +165,15 @@
   - WHY:
     - This is done through interrupt handling already.
     - It might get re-visited if remote shut-down of an application becomes a requirement.
+- [ ] Communications white-list. As in, only these people may talk to me! Yes, we are going with deny-by-default!
+  - Already partially dealt with, TCP and UDP connections are configured to listen on a host.
+    - The host listened on, can be adjusted to do filtering already.
+  - UDS connections can only be done on the same machine, so that is filtered by default.
+  - Endpoint channel limitation. i.e. An endpoint may only be used on a list of [`tcp`, `udp`, `uds`] channels.
+  - WHY:
+    - As nice an idea as it is, it's kind of pointless.
+    - If a malicious party can get on to one's network and freely make requests to Ecosystem applications,
+      the failure point isn't Ecosystem, its network, firewall and system administration related.
 
 # Ideas that might not see the light of day.
 

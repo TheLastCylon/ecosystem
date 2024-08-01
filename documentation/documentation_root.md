@@ -30,6 +30,7 @@ will have the name `ekosis`.
 - [Requirements](./requirements.md)
 - [Ecosystem on Windows](./ecosystem_on_windows.md)
 - [Ecosystem on POSIX](./ecosystem_on_posix.md)
+- [How does it compare to something like ZeroMQ?](./comparison_to_zeromq.md)
 - [Examples (as in: Learn by example)](./examples.md)
 - [Application configuration](./configuration/configuration.md)
   - [Through environment variables](./configuration/through_environment_variables.md)
