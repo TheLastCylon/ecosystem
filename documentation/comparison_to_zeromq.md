@@ -38,7 +38,7 @@ distributed systems.
 Take a look at the [Fun Factory](examples/fun_factory/fun_factory.md) and
 [Proper Fun](examples/proper_fun.md) system examples.
 
-With the use of Ecosystem, the [Proper Fun](examples/proper_fun.md) example, is
+With the use of Ecosystem the [Proper Fun](examples/proper_fun.md) example, is
 an entire system, with `7` servers and `1` client, that includes queuing,
 telemetry, distributed message tracking, etc, etc, etc. ... With only `476` lines
 of code required ... For the ENTIRE system.
