@@ -1,5 +1,5 @@
-from .tcp import TCPClient
+from .transient_tcp import TransientTCPClient
 from .udp import UDPClient
-from .uds import UDSClient
+from .transient_uds import TransientUDSClient
 from .persisted_tcp import PersistedTCPClient
 from .persisted_uds import PersistedUDSClient

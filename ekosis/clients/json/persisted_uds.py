@@ -13,13 +13,15 @@ from ...data_transfer_objects import EmptyDto
 class PersistedUDSClient(PersistentStreamClientBase):
     def __init__(
         self,
-        server_path: str,
-        max_retries: int   = 3,
-        retry_delay: float = 0.1,
+        server_path     : str,
+        timeout         : float = 5,
+        heartbeat_period: float = 60,
+        max_retries     : int   = 3,
+        retry_delay     : float = 0.1,
     ):
         self.server_path : str  = server_path
         self.can_transmit: bool = hasattr(socket, "AF_UNIX")
-        super().__init__(max_retries, retry_delay)
+        super().__init__(timeout, heartbeat_period, max_retries, retry_delay)
 
     # --------------------------------------------------------------------------------
     async def open_connection(self) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:

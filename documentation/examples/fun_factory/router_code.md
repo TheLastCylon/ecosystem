@@ -26,14 +26,14 @@ Let's take a look at each of them in turn.
 ### [clients.py](../../../examples/fun_factory/router/clients.py)
 
 ```python
-from ekosis.clients import TCPClient
+from ekosis.clients import TransientTCPClient
 
-fortunes_client=TCPClient("127.0.0.1", 8100)
-joker_client=TCPClient("127.0.0.1", 8200)
-lottery_client=TCPClient("127.0.0.1", 8300)
-magic8ball_client=TCPClient("127.0.0.1", 8400)
-time_reporter_client=TCPClient("127.0.0.1", 8500)
-tracker_client=TCPClient("127.0.0.1", 8700)
+fortunes_client      = TransientTCPClient("127.0.0.1", 8100)
+joker_client         = TransientTCPClient("127.0.0.1", 8200)
+lottery_client       = TransientTCPClient("127.0.0.1", 8300)
+magic8ball_client    = TransientTCPClient("127.0.0.1", 8400)
+time_reporter_client = TransientTCPClient("127.0.0.1", 8500)
+tracker_client       = TransientTCPClient("127.0.0.1", 8700)
 ```
 
 There is nothing special here. Just setup of clients that will be used with the `sender` and `queued_sender` decorator, in [senders.py](../../../examples/fun_factory/router/senders.py)

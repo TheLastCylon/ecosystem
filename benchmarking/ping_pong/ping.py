@@ -4,14 +4,14 @@ import asyncio
 
 from typing import List
 
-from ekosis.clients import TCPClient, UDPClient, UDSClient, PersistedTCPClient, PersistedUDSClient
+from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient, PersistedTCPClient, PersistedUDSClient
 from ekosis.sending.sender import sender
 
 from .dtos import PingRequestDto
 
-client_tcp    = TCPClient(server_host='127.0.0.1', server_port=8888)
+client_tcp    = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp    = UDPClient(server_host='127.0.0.1', server_port=8889)
-client_uds    = UDSClient("/tmp/pong_0_uds.sock")
+client_uds    = TransientUDSClient("/tmp/pong_0_uds.sock")
 persisted_tcp = PersistedTCPClient(server_host='127.0.0.1', server_port=8888)
 persisted_uds = PersistedUDSClient("/tmp/pong_0_uds.sock")
 

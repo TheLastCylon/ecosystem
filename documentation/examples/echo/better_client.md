@@ -19,71 +19,70 @@ You can find this code in [examples/echo/better_client.py](../../../examples/ech
 
 ```python
  1: import asyncio
- 2:
- 3: from ekosis.clients import TCPClient, UDPClient, UDSClient
- 4: from ekosis.sending import sender
- 5:
+ 2: 
+ 3: from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient
+ 4: from ekosis.sending.sender import sender
+ 5: 
  6: from .dtos import EchoRequestDto, EchoResponseDto
- 7:
- 8: client_tcp=TCPClient(server_host='127.0.0.1', server_port=8888)
- 9: client_udp=UDPClient(server_host='127.0.0.1', server_port=8889)
-10: client_uds=UDSClient("/tmp/echo_example_0_uds.sock")
-11:
-12:
+ 7: 
+ 8: client_tcp = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
+ 9: client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
+10: client_uds = TransientUDSClient("/tmp/echo_example_0_uds.sock")
+11: 
+12: 
 13: # --------------------------------------------------------------------------------
 14: def make_echo_request_dto(message: str) -> EchoRequestDto:
 15:     return EchoRequestDto(message=message)
-16:
-17:
+16: 
+17: 
 18: # --------------------------------------------------------------------------------
 19: @sender(client_tcp, "echo", EchoResponseDto)
 20: async def tcp_send(message: str):
 21:     return make_echo_request_dto(message)
-22:
-23:
+22: 
+23: 
 24: # --------------------------------------------------------------------------------
 25: @sender(client_udp, "echo", EchoResponseDto)
 26: async def udp_send(message: str):
 27:     return make_echo_request_dto(message)
-28:
-29:
+28: 
+29: 
 30: # --------------------------------------------------------------------------------
 31: @sender(client_uds, "echo", EchoResponseDto)
 32: async def uds_send(message: str):
 33:     return make_echo_request_dto(message)
-34:
-35:
+34: 
+35: 
 36: # --------------------------------------------------------------------------------
 37: async def send_message(message):
 38:     print("========================================")
 39:     print(f"Sending message on TCP: [{message}]")
-40:     response=await tcp_send(message)
+40:     response = await tcp_send(message)
 41:     print(f"TCP Response          : [{response.message}]")
 42:     print("----------------------------------------")
 43:     print(f"Sending message on UDP: [{message}]")
-44:     response=await udp_send(message)
+44:     response = await udp_send(message)
 45:     print(f"UDP Response          : [{response.message}]")
 46:     print("----------------------------------------")
 47:     print(f"Sending message on UDS: [{message}]")
-48:     response=await uds_send(message)
+48:     response = await uds_send(message)
 49:     print(f"UDS Response          : [{response.message}]")
 50:     print("========================================")
-51:
-52:
+51: 
+52: 
 53: # --------------------------------------------------------------------------------
 54: async def main():
-55: try:
-56:     message: str=input('Enter message: ')
-57:     while message!="quit":
-58:         await send_message(message)
-59:         message=input('Enter message: ')
-60:     print("Bye!")
-61: except Exception as e:
-62: print(str(e))
-63:
-return
-64:
-65:  # --------------------------------------------------------------------------------
+55:     try:
+56:         message: str = input('Enter message: ')
+57:         while message != "quit":
+58:             await send_message(message)
+59:             message = input('Enter message: ')
+60:         print("Bye!")
+61:     except Exception as e:
+62:         print(str(e))
+63:         return
+64: 
+65: # --------------------------------------------------------------------------------
 66: asyncio.run(main())
 67:
 ```
@@ -93,7 +92,7 @@ return
 ```python
  1: import asyncio
  2: 
- 3: from ekosis.clients import TCPClient, UDPClient, UDSClient
+ 3: from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient
  4: from ekosis.sending.sender import sender
  5: 
  6: from .dtos import EchoRequestDto, EchoResponseDto

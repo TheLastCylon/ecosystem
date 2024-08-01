@@ -3,7 +3,7 @@ import argparse
 
 from typing import List, Tuple
 
-from ..clients import TCPClient, UDPClient, UDSClient, ClientBase
+from ..clients import TransientTCPClient, UDPClient, TransientUDSClient, ClientBase
 
 # --------------------------------------------------------------------------------
 def make_tcp_udp_host_port(server_details: str) -> Tuple[str, int]:
@@ -18,12 +18,12 @@ def make_tcp_udp_host_port(server_details: str) -> Tuple[str, int]:
 def get_client(command_line_args: argparse.Namespace) -> ClientBase:
     if command_line_args.server_type == "tcp":
         host, port = make_tcp_udp_host_port(command_line_args.server_details)
-        client     = TCPClient(host, port)
+        client     = TransientTCPClient(host, port)
     elif command_line_args.server_type == "udp":
         host, port = make_tcp_udp_host_port(command_line_args.server_details)
         client     = UDPClient(host, port)
     else:
-        client = UDSClient(command_line_args.server_details)
+        client = TransientUDSClient(command_line_args.server_details)
     return client
 
 # --------------------------------------------------------------------------------

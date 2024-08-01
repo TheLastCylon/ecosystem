@@ -4,11 +4,11 @@ import asyncio
 import random
 
 from ekosis.sending.sender import sender
-from ekosis.clients import TCPClient
+from ekosis.clients import TransientTCPClient
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
-router_client = TCPClient(server_host='127.0.0.1', server_port=8600)
+router_client = TransientTCPClient(server_host='127.0.0.1', server_port=8600)
 
 MESSAGE_OPTIONS = [
     "fortune",

@@ -27,9 +27,9 @@ First, let's take a look at the sender package.
 #### [senders/tcp_config.py](../../../examples/dice_roller/senders/tcp_config.py)
 
 ```python
-from ekosis.clients import TCPClient
+from ekosis.clients import TransientTCPClient
 
-tcp_client=TCPClient(server_host='127.0.0.1', server_port=8888)
+tcp_client = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
 ```
 
 This is genuinely nothing more than a set-up of the `TCPClient` instance we'll be using with our senders.

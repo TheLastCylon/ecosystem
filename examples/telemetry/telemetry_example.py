@@ -9,7 +9,7 @@ import influxdb_client
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from ekosis.clients import TCPClient, UDPClient, UDSClient, ClientBase
+from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient, ClientBase
 from ekosis.sending.sender import sender
 from ekosis.data_transfer_objects.statistics import StatsRequestDto, StatsResponseDto
 from ekosis.util.utility_functions import (
@@ -79,7 +79,7 @@ def make_ecosystem_client():
     if command_line_args.server_type == "tcp":
         host, port            = make_tcp_udp_host_port(command_line_args.server_details)
         MACHINE_HOSTNAME      = get_machine_hostname(host)
-        ECO_SYSTEM_APP_CLIENT = TCPClient(host, port)
+        ECO_SYSTEM_APP_CLIENT = TransientTCPClient(host, port)
     elif command_line_args.server_type == "udp":
         host, port            = make_tcp_udp_host_port(command_line_args.server_details)
         MACHINE_HOSTNAME      = get_machine_hostname(host)
@@ -88,7 +88,7 @@ def make_ecosystem_client():
         if not os.path.exists(command_line_args.server_type):
             print_error(f"Specified UDS socket file [{command_line_args.server_details}] does not exist.")
         MACHINE_HOSTNAME      = socket.gethostname()
-        ECO_SYSTEM_APP_CLIENT = UDSClient(command_line_args.server_details)
+        ECO_SYSTEM_APP_CLIENT = TransientUDSClient(command_line_args.server_details)
 
 # --------------------------------------------------------------------------------
 # Sets up INFLUX_API_WRITER with influxdb writer we'll need to write data points

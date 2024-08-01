@@ -41,13 +41,13 @@ You can find this code in [examples/echo/client.py](../../../examples/echo/clien
  2: 
  3: from typing import cast
  4: 
- 5: from ekosis.clients import TCPClient, UDPClient, UDSClient
+ 5: from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient
  6: 
  7: from .dtos import EchoRequestDto, EchoResponseDto
  8: 
- 9: client_tcp = TCPClient(server_host='127.0.0.1', server_port=8888)
+ 9: client_tcp = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
 10: client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
-11: client_uds = UDSClient("/tmp/echo_example_0_uds.sock")
+11: client_uds = TransientUDSClient("/tmp/echo_example_0_uds.sock")
 12: 
 13: 
 14: # --------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ From line 1 to 7 we are just doing imports.
  2: 
  3: from typing import cast
  4: 
- 5: from ekosis.clients import TCPClient, UDPClient, UDSClient
+ 5: from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient
  6: 
  7: from .dtos import EchoRequestDto, EchoResponseDto
 ```

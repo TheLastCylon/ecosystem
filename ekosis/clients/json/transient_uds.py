@@ -10,14 +10,15 @@ from ..stream_client_base import StreamClientBase
 from ...data_transfer_objects import EmptyDto
 
 # --------------------------------------------------------------------------------
-class UDSClient(StreamClientBase):
+class TransientUDSClient(StreamClientBase):
     def __init__(
         self,
         server_path: str,
+        timeout    : float = 5,
         max_retries: int   = 3,
         retry_delay: float = 0.1,
     ):
-        super().__init__(max_retries, retry_delay)
+        super().__init__(timeout, max_retries, retry_delay)
         self.server_path : str  = server_path
         self.can_transmit: bool = hasattr(socket, "AF_UNIX")
 
