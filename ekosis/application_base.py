@@ -294,7 +294,3 @@ class ApplicationBase(metaclass=SingletonType):
 
         self.__eco_logger.flush()
         await asyncio.gather(*tasks)
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")
