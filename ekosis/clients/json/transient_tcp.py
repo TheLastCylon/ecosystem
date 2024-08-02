@@ -3,8 +3,6 @@ import asyncio
 from typing import Tuple
 from ..stream_client_base import StreamClientBase
 
-# Transient
-
 # --------------------------------------------------------------------------------
 class TransientTCPClient(StreamClientBase):
     def __init__(
@@ -22,7 +20,3 @@ class TransientTCPClient(StreamClientBase):
     # --------------------------------------------------------------------------------
     async def open_connection(self) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
         return await asyncio.open_connection(self.server_host, self.server_port)
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

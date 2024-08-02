@@ -33,9 +33,9 @@ class QueuePage:
         self.__page_data_list: List[PageEntry]            = []
         self.__queued_type   : Type[_QueuedType]          = queued_type
 
-    def __prepend_entry(self, entry: PageEntry):
-        self.__page_data_list.insert(0, entry)
-        self.__page_data_dict[entry.record_uuid] = entry
+    # def __prepend_entry(self, entry: PageEntry):
+    #     self.__page_data_list.insert(0, entry)
+    #     self.__page_data_dict[entry.record_uuid] = entry
 
     def __append_entry(self, entry: PageEntry):
         self.__page_data_list.append(entry)
@@ -72,10 +72,10 @@ class QueuePage:
         self.__append_entry(entry)
         return entry.record_uuid
 
-    def push_front(self, object_to_queue: _QueuedType, uid: uuid.UUID = None):
-        entry = self.__make_entry(object_to_queue, uid)
-        self.__prepend_entry(entry)
-        return entry.record_uuid
+    # def push_front(self, object_to_queue: _QueuedType, uid: uuid.UUID = None):
+    #     entry = self.__make_entry(object_to_queue, uid)
+    #     self.__prepend_entry(entry)
+    #     return entry.record_uuid
 
     def pop_front(self):
         if self.size() < 1:
@@ -84,12 +84,12 @@ class QueuePage:
         self.__page_data_dict.pop(entry.record_uuid)
         return self.__entry_to_queueable_object(entry)
 
-    def pop_back(self):
-        if self.size() < 1:
-            return None
-        entry = self.__page_data_list.pop()
-        self.__page_data_dict.pop(entry.record_uuid)
-        return self.__entry_to_queueable_object(entry)
+    # def pop_back(self):
+    #     if self.size() < 1:
+    #         return None
+    #     entry = self.__page_data_list.pop()
+    #     self.__page_data_dict.pop(entry.record_uuid)
+    #     return self.__entry_to_queueable_object(entry)
 
     def size(self):
         return len(self.__page_data_list)
@@ -117,12 +117,18 @@ class QueuePage:
             if entry.record_uuid == self.__page_data_list[i].record_uuid:
                 index_to_remove = i
         self.__page_data_list.pop(index_to_remove)
-        return entry
+        return self.__entry_to_queueable_object(entry)
 
     def get_first_x_uuids(self, how_many: int):
         retval: List[str] = []
-        for x in range(how_many):
-            retval.append(str(self.__page_data_list[x].record_uuid))
+        this_page_size = self.size()
+        if this_page_size > 0:
+            if this_page_size < how_many:
+                for x in range(this_page_size):
+                    retval.append(str(self.__page_data_list[x].record_uuid))
+            else:
+                for x in range(how_many):
+                    retval.append(str(self.__page_data_list[x].record_uuid))
         return retval
 
 # --------------------------------------------------------------------------------
@@ -151,7 +157,7 @@ class PaginatedQueue(Generic[_QueuedType]):
         if self.__get_database_size() > 0:
             self.__load_front_page()
 
-        if self.__get_database_size() > 0:
+        if self.__get_database_size() > 0: # If there is still data AFTER loading the front page.
             self.back_page = QueuePage(self.queued_type)
             self.__load_back_page()
 
@@ -327,6 +333,10 @@ class PaginatedQueue(Generic[_QueuedType]):
     def is_empty(self) -> int:
         return self.size() == 0
 
+    # TODO: There is a bug with this:
+    #   - When there are fewer then the requested amount of items in the queue.
+    #   - It is currently possible for entries to be spread between front page, database
+    #   - and back page. And this only reports on what is in the front page.
     # --------------------------------------------------------------------------------
     async def get_first_x_uuids(self, how_many: int = 1) -> List[str]:
         return self.front_page.get_first_x_uuids(how_many)

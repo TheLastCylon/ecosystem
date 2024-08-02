@@ -6,7 +6,6 @@ from typing import Type
 
 from ..data_transfer_objects import EmptyDto
 
-
 # --------------------------------------------------------------------------------
 class HandlerBase(ABC):
     def __init__(self, route_key: str, request_dto_type: Type[PydanticBaseModel] = EmptyDto):
@@ -21,10 +20,5 @@ class HandlerBase(ABC):
         return await self.run(request_uuid, request_data)
 
     @abstractmethod
-    async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
+    async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel: # pragma: no cover
         pass
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

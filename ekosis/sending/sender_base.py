@@ -29,7 +29,7 @@ class SenderBase(Generic[_RequestDTOType, _ResponseDTOType], ABC):
         return self._route_key
 
     @abstractmethod
-    async def send(self, *args, **kwargs):
+    async def send(self, *args, **kwargs): # pragma: no cover
         pass
 
     async def send_data(self, data: _RequestDTOType, request_uid: uuid.UUID = None) -> _ResponseDTOType:

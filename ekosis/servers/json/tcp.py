@@ -4,7 +4,6 @@ from ..stream_server_base import StreamServerBase
 
 from ...configuration.config_models import ConfigTCP
 
-
 # --------------------------------------------------------------------------------
 class TCPServer(StreamServerBase):
     def __init__(self, configuration : ConfigTCP):
@@ -48,8 +47,3 @@ class TCPServer(StreamServerBase):
                     await self._server.serve_forever(),
                 except asyncio.exceptions.CancelledError:
                     self._logger.info("TCP server cancelled.")
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

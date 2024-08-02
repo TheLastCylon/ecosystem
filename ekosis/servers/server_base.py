@@ -57,7 +57,3 @@ class ServerBase:
                 status = Status.UNKNOWN.value,
                 data   = str(e)
             )
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

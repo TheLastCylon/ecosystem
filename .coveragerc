@@ -1,0 +1,4 @@
+[run]
+omit =
+    */cli/*
+    */sql_persisted_queue.py

@@ -6,17 +6,14 @@ from pydantic import BaseModel as PydanticBaseModel
 from ..requests.endpoint import endpoint
 from ..state_keepers.error_state_list import ErrorStateList
 
-
 # --------------------------------------------------------------------------------
 class ErrorsResponseDto(PydanticBaseModel):
     errors: List[Dict[str, Any]]
-
 
 # --------------------------------------------------------------------------------
 class ErrorCleanerRequestDto(PydanticBaseModel):
     error_id: str
     count   : int
-
 
 # --------------------------------------------------------------------------------
 def build_errors_response() -> List[Dict[str, Any]]:
@@ -27,12 +24,10 @@ def build_errors_response() -> List[Dict[str, Any]]:
             errors.append(error_state.to_dict())
     return errors
 
-
 # --------------------------------------------------------------------------------
 @endpoint("eco.error_states.get")
 async def eco_error_states_get(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
     return ErrorsResponseDto(errors=build_errors_response())
-
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.error_states.clear")
@@ -44,8 +39,3 @@ async def eco_error_states_clear(request_uuid: uuid.UUID, request) -> PydanticBa
     else:
         error_state_list.clear_some(request.error_id, request.count)
     return ErrorsResponseDto(errors=build_errors_response())
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

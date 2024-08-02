@@ -2,7 +2,6 @@ import json
 
 from ..util import SingletonType
 
-
 # --------------------------------------------------------------------------------
 class ErrorStateKeeper(metaclass=SingletonType):
     def __init__(self, error_id: str, description: str):
@@ -46,8 +45,3 @@ class ErrorStateKeeper(metaclass=SingletonType):
 
     def get_description(self):
         return self._description
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 # --------------------------------------------------------------------------------
 class Status(Enum):
     # All is good
@@ -14,8 +13,3 @@ class Status(Enum):
     APPLICATION_BUSY          = 500 # used by server applications to inform requesters that a request won't be processed due to server overload.
     PROCESSING_FAILURE        = 600 # For use by apps that need to report on an internal processing failure.
     UNKNOWN                   = 999 # Sorry, I don't know what went wrong.
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

@@ -5,19 +5,12 @@ from typing import Dict, List, Any
 from ..requests.queued_handler import QueuedHandler
 from ..util import SingletonType
 
-
 # --------------------------------------------------------------------------------
 class QueuedHandlerKeeper(metaclass=SingletonType):
     __queued_handlers: Dict[str, QueuedHandler] = {}
 
     def __init__(self):
         pass
-
-    # --------------------------------------------------------------------------------
-    def has_route_key(self, route_key: str) -> bool:
-        if route_key not in self.__queued_handlers.keys():
-            return False
-        return True
 
     # --------------------------------------------------------------------------------
     def add_queued_handler(self, queued_handler: QueuedHandler):

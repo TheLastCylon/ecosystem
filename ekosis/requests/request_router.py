@@ -47,7 +47,3 @@ class RequestRouter(metaclass=SingletonType):
             raise UnknownRouteKeyException(request.route_key)
 
         return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

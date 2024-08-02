@@ -5,7 +5,6 @@ from ..stream_server_base import StreamServerBase
 
 from ...configuration.config_models import ConfigUDS
 
-
 # --------------------------------------------------------------------------------
 class UDSServer(StreamServerBase):
     def __init__(self, configuration : ConfigUDS):
@@ -53,8 +52,3 @@ class UDSServer(StreamServerBase):
                     await self._server.serve_forever(),
                 except asyncio.exceptions.CancelledError:
                     self._logger.info("UDS Server cancelled.")
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

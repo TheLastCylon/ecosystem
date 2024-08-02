@@ -33,7 +33,7 @@ class ClientBase(ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def _send_message_retry_loop(self, request: str) -> str:
+    async def _send_message_retry_loop(self, request: str) -> str: # pragma: no cover
         pass
 
     # --------------------------------------------------------------------------------

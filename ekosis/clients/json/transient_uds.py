@@ -38,8 +38,3 @@ class TransientUDSClient(StreamClientBase):
             raise Exception("UDS communications are not supported on this platform. Will not send message.")
 
         return await super().send_message(route_key, data, response_dto_type, request_uid)
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

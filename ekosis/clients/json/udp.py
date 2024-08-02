@@ -11,7 +11,3 @@ class UDPClient(DatagramClientBase):
         retry_delay: float = 0.1,
     ):
         super().__init__(server_host, server_port, timeout, max_retries, retry_delay)
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")

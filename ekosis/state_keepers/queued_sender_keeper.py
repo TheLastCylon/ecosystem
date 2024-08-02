@@ -5,7 +5,6 @@ from typing import Dict, List, Any
 from ..sending.queued_sender_class import QueuedSenderClass
 from ..util import SingletonType
 
-
 # --------------------------------------------------------------------------------
 class QueuedSenderKeeper(metaclass=SingletonType):
     __queued_senders: Dict[str, QueuedSenderClass] = {}
@@ -16,12 +15,6 @@ class QueuedSenderKeeper(metaclass=SingletonType):
     # --------------------------------------------------------------------------------
     def get_queued_senders(self) -> List[QueuedSenderClass]:
         return [x for x in self.__queued_senders.values()]
-
-    # --------------------------------------------------------------------------------
-    def has_route_key(self, route_key: str) -> bool:
-        if route_key not in self.__queued_senders.keys():
-            return False
-        return True
 
     # --------------------------------------------------------------------------------
     def add_queued_sender(self, queued_sender: QueuedSenderClass):
@@ -96,7 +89,7 @@ class QueuedSenderKeeper(metaclass=SingletonType):
     async def clear_error_queue(self, route_key: str):
         if route_key not in self.__queued_senders.keys():
             return None
-        await self.__queued_senders[route_key].clear_queue_database('error')
+        await self.__queued_senders[route_key].error_queue_clear()
         return await self.__get_queue_information(route_key)
 
     # --------------------------------------------------------------------------------

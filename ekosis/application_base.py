@@ -179,7 +179,7 @@ class ApplicationBase(metaclass=SingletonType):
         if self._configuration.uds:
             uds_config = self._configuration.uds
             if uds_config.socket_file_name == "DEFAULT":
-                uds_config.socket_file_name = f"{self._configuration.name}_{self._configuration.instance}_uds.sock"
+                uds_config.socket_file_name = f"{self._configuration.name}_{self._configuration.instance}.uds.sock"
             self.__server_uds = UDSServer(uds_config)
 
     # --------------------------------------------------------------------------------

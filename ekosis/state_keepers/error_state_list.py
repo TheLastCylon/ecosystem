@@ -5,7 +5,6 @@ from .error_state_keeper import ErrorStateKeeper
 
 from ..util.singleton import SingletonType
 
-
 # --------------------------------------------------------------------------------
 class ErrorStateList(metaclass=SingletonType):
     error_state_map: Dict[str, ErrorStateKeeper] = {}
@@ -44,8 +43,3 @@ class ErrorStateList(metaclass=SingletonType):
             if error_state.is_set():
                 result.append(error_state)
         return result
-
-
-# --------------------------------------------------------------------------------
-if __name__ == "__main__":
-    print("Not an executable script, intended for use in other scripts")
