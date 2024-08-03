@@ -24,27 +24,27 @@ def make_request_dto(message: str) -> AppRequestDto:
     return AppRequestDto(message=message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_endpoint", AppResponseDto)
+@sender(transient_tcp_client, "app.a.endpoint", AppResponseDto)
 async def transient_tcp_send(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(persisted_tcp_client, "app.test_endpoint", AppResponseDto)
+@sender(persisted_tcp_client, "app.a.endpoint", AppResponseDto)
 async def persisted_tcp_send(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_uds_client, "app.test_endpoint", AppResponseDto)
+@sender(transient_uds_client, "app.a.endpoint", AppResponseDto)
 async def transient_uds_send(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(persisted_uds_client, "app.test_endpoint", AppResponseDto)
+@sender(persisted_uds_client, "app.a.endpoint", AppResponseDto)
 async def persisted_uds_send(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(udp_client, "app.test_endpoint", AppResponseDto)
+@sender(udp_client, "app.a.endpoint", AppResponseDto)
 async def udp_send(message: str, **kwargs):
     return make_request_dto(message)
 
@@ -54,17 +54,17 @@ async def endpoint_does_not_exist(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_pass_through", AppResponseDto)
+@sender(transient_tcp_client, "app.a.pass_through", AppResponseDto)
 async def app_pass_trough(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_queued_pass_through", AppResponseDto)
+@sender(transient_tcp_client, "app.a.queued_pass_through", AppResponseDto)
 async def app_queued_pass_trough(message: str, **kwargs):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_queued_sender", AppResponseDto)
+@sender(transient_tcp_client, "app.a.queued_sender", AppResponseDto)
 async def app_test_queued_sender(message: str, **kwargs):
     return make_request_dto(message)
 

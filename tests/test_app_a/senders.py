@@ -10,16 +10,16 @@ def make_request_dto(message: str) -> AppRequestDto:
     return AppRequestDto(message=message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_endpoint", AppResponseDto)
-async def test_pass_through_sender(message: str):
+@sender(transient_tcp_client, "app.b.endpoint", AppResponseDto)
+async def app_a_sender_app_b_endpoint(message: str):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@sender(transient_tcp_client, "app.test_queued_endpoint", QueuedEndpointResponseDTO)
-async def test_queued_endpoint_sender(message: str):
+@sender(transient_tcp_client, "app.b.queued_endpoint", QueuedEndpointResponseDTO)
+async def app_a_sender_app_b_queued_endpoint(message: str):
     return make_request_dto(message)
 
 # --------------------------------------------------------------------------------
-@queued_sender(transient_tcp_client, "app.test_queued_endpoint", AppRequestDto, QueuedEndpointResponseDTO)
-async def test_queued_sender_sender(message: str):
+@queued_sender(transient_tcp_client, "app.b.queued_endpoint", AppRequestDto, QueuedEndpointResponseDTO)
+async def app_a_queued_sender_app_b_queued_endpoint(message: str):
     return make_request_dto(message)

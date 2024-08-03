@@ -104,15 +104,18 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     async def reprocess_error_queue(self):
         self._processing_paused = True
         await self.queue.move_all_error_to_pending()
-        self.__check_process_queue()
         self._processing_paused = False
+        self.__check_process_queue()
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _T | None:
         self._processing_paused = True
         queued_request = await self.queue.move_one_error_to_pending(request_uid)
-        self.__check_process_queue()
+        if not queued_request:
+            self._processing_paused = False
+            return None
         self._processing_paused = False
+        self.__check_process_queue()
         return self.request_dto_type(**queued_request)
 
     # --------------------------------------------------------------------------------

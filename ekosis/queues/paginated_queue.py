@@ -111,7 +111,7 @@ class QueuePage:
         if uid not in self.__page_data_dict.keys():
             return None
 
-        entry           = self.__page_data_dict[uid]
+        entry           = self.__page_data_dict.pop(uid)
         index_to_remove = -1
         for i in range(len(self.__page_data_list)):
             if entry.record_uuid == self.__page_data_list[i].record_uuid:
@@ -354,10 +354,13 @@ class PaginatedQueue(Generic[_QueuedType]):
 
     # --------------------------------------------------------------------------------
     def shut_down(self):
-        if self.front_page.size() > 0:
-            self.__write_front_page()
+        if self.front_page is self.back_page:
+            if self.front_page.size() > 0:
+                self.__write_front_page()
+        else:
+            if self.front_page.size() > 0:
+                self.__write_front_page()
 
-        if self.back_page.size() > 0:
-            self.__write_back_page()
-
+            if self.back_page.size() > 0:
+                self.__write_back_page()
         self.session.close()

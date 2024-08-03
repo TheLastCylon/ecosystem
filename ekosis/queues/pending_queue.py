@@ -58,13 +58,13 @@ class PendingQueue:
     async def move_all_error_to_pending(self):
         while self.error_q.size() > 0:
             popped_error_entry = await self.error_q.pop()
-            await self.push_pending(popped_error_entry.uid, popped_error_entry.data, 0)
+            await self.push_pending(uuid.UUID(popped_error_entry.uid), popped_error_entry.data, 0)
 
     async def move_one_error_to_pending(self, item_uid: uuid.UUID):
         popped_error_entry = await self.pop_error_q_uuid(item_uid)
         if popped_error_entry:
-            await self.push_pending(popped_error_entry.uid, popped_error_entry.data, 0)
-            return popped_error_entry.data
+            await self.push_pending(item_uid, popped_error_entry, 0)
+            return popped_error_entry
         return None
 
     async def clear_error_queue(self):

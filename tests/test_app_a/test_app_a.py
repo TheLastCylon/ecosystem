@@ -1,10 +1,6 @@
 from ekosis.application_base import ApplicationBase
 
-from .endpoints import ( # noqa
-    test_endpoint,
-    test_pass_through,
-    test_queued_pass_through
-)
+from .endpoints import (app_a_endpoint, app_a_queued_pass_through, app_a_pass_through, app_a_queued_sender)
 
 # --------------------------------------------------------------------------------
 class TestAppAServer(ApplicationBase):
