@@ -1,4 +1,3 @@
-import sys
 import asyncio
 import uuid
 
@@ -11,7 +10,6 @@ from ekosis.data_transfer_objects.queue_management import (
     QManagementRequestDto,
     QManagementResponseDto,
     QManagementItemRequestDto,
-    QueuedEndpointInformationDto
 )
 from ekosis.data_transfer_objects.queued_endpoint_response import QueuedEndpointResponseDTO
 from .dtos.dtos import AppRequestDto
@@ -88,8 +86,6 @@ async def do_eco_queued_handler_errors_inspect_request(uid: str, route_key: str 
 @sender(app_B_tcp_client, "eco.queued_handler.errors.pop_request", QManagementResponseDto)
 async def do_eco_queued_handler_errors_pop_request(uid: str, route_key: str = "app.b.queued_endpoint_fail"):
     return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
-
-# eco.queued_handler.errors.pop_request
 
 # The following tests verify that:
 # 1. The expected standard endpoint does exist.
@@ -330,22 +326,3 @@ async def test_eco_queued_handler_errors_pop_request():
     assert response_2.queue_data.database_sizes.pending == 0
     check_message = response_2.model_dump()
     assert check_message["request_data"]["message"] == "Test Message"
-
-# --------------------------------------------------------------------------------
-# @sender(app_B_tcp_client, "eco.queued_handler.errors.inspect_request", QManagementResponseDto)
-# async def do_eco_queued_handler_errors_inspect_request(uid: str, route_key: str = "app.b.queued_endpoint_fail"):
-#     return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
-
-# --------------------------------------------------------------------------------
-# @sender(app_B_tcp_client, "app.test_queued_endpoint_fail", AppResponseDto)
-# async def do_app_queued_endpoint_fail(message: str = "Test Message", **kwargs):
-#     return AppResponseDto(message=message)
-
-# --------------------------------------------------------------------------------
-# @sender(app_B_tcp_client, "eco.queued_handler.errors.reprocess.one", QManagementResponseDto)
-# async def do_eco_queued_handler_errors_reprocess_one(uid: str, route_key: str = "app.test_queued_endpoint_fail"):
-#     return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
-
-# eco.queued_handler.errors.reprocess.one
-# eco.queued_handler.errors.pop_request
-# eco.queued_handler.errors.inspect_request
