@@ -48,5 +48,6 @@ will have the name `ekosis`.
 - [Distributed Tracking (Request Tracking)](./distributed_tracking.md)
 - [Command line tools](./command_line_tool.md)
 - [Benchmarking](./benchmarking/benchmarking.md)
+- [Tests](../tests/README.md)
 - [Why do this?](./why.md)
 - [TODO (as in: The stuff still pending)](./todo.md)
