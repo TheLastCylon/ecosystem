@@ -15,6 +15,9 @@ class ErrorStateList(metaclass=SingletonType):
     def __str__(self) -> str:
         return self.to_json()
 
+    def has_error_id(self, error_id: str) -> bool:
+        return error_id in self.error_state_map.keys()
+
     def to_json(self) -> str:
         error_list   : List[ErrorStateKeeper]     = self.get_error_states()
         response_list: List[Dict[str, Any]] = []

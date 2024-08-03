@@ -15,7 +15,6 @@ from ..exceptions import (
 
 log = logging.getLogger()
 
-# TODO: Check if connection is still open
 # --------------------------------------------------------------------------------
 class PersistentStreamClientBase(ClientBase, ABC):
     __ENQ_byte   : int   =  5 # Decimal  5 = Ascii ENQ (enquiry) character
@@ -43,7 +42,7 @@ class PersistentStreamClientBase(ClientBase, ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def open_connection(self) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    async def open_connection(self) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]: # pragma: no cover
         pass
 
     # --------------------------------------------------------------------------------

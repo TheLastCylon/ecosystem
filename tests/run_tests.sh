@@ -35,7 +35,9 @@ pipenv run coverage run -p --source=ekosis -m pytest \
   tests/queued_handler_endpoints.py \
   tests/queued_sender_endpoints.py \
   tests/log_manager_endpoints.py \
-  tests/paginated_queue_unit_tests.py
+  tests/error_state_endpoints.py \
+  tests/paginated_queue_unit_tests.py \
+  tests/utility_functions.py
 
 # pipenv run coverage run -a --source=ekosis -m pytest tests/check_stats_endpoint.py
 
