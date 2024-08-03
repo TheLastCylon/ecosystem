@@ -1,9 +1,7 @@
 import json
 
-from ..util import SingletonType
-
 # --------------------------------------------------------------------------------
-class ErrorStateKeeper(metaclass=SingletonType):
+class ErrorStateKeeper:
     def __init__(self, error_id: str, description: str):
         self._error_id   : str = error_id
         self._description: str = description

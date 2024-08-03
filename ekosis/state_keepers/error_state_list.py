@@ -1,4 +1,5 @@
 import json
+
 from typing import Dict, List, Any
 
 from .error_state_keeper import ErrorStateKeeper
@@ -16,29 +17,32 @@ class ErrorStateList(metaclass=SingletonType):
         return self.to_json()
 
     def has_error_id(self, error_id: str) -> bool:
-        return error_id in self.error_state_map.keys()
+        error_id_upper = error_id.upper()
+        return error_id_upper in self.error_state_map.keys()
 
     def to_json(self) -> str:
-        error_list   : List[ErrorStateKeeper]     = self.get_error_states()
-        response_list: List[Dict[str, Any]] = []
+        error_list   : List[ErrorStateKeeper] = self.get_error_states()
+        response_list: List[Dict[str, Any]]   = []
         for error in error_list:
             response_list.append(error.to_dict())
         return json.dumps(response_list)
 
     def increment(self, error_id: str, description: str):
-        error_id = error_id.upper()
-        if error_id not in self.error_state_map.keys():
-            self.error_state_map[error_id] = ErrorStateKeeper(error_id, description)
+        error_id_upper = error_id.upper()
+        if error_id_upper not in self.error_state_map.keys():
+            self.error_state_map[error_id_upper] = ErrorStateKeeper(error_id_upper, description)
 
-        self.error_state_map[error_id].increment()
+        self.error_state_map[error_id_upper].increment()
 
     def clear_some(self, error_id: str, how_many: int):
-        if error_id in self.error_state_map.keys():
-            self.error_state_map[error_id].clear_some(how_many)
+        error_id_upper = error_id.upper()
+        if error_id_upper in self.error_state_map.keys():
+            self.error_state_map[error_id_upper].clear_some(how_many)
 
     def clear_all(self, error_id: str):
-        if error_id in self.error_state_map.keys():
-            self.error_state_map[error_id].clear_all()
+        error_id_upper = error_id.upper()
+        if error_id_upper in self.error_state_map.keys():
+            self.error_state_map[error_id_upper].clear_all()
 
     def get_error_states(self) -> List[ErrorStateKeeper]:
         result: List[ErrorStateKeeper] = []
