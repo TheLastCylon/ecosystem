@@ -145,7 +145,6 @@ async def test_eco_queued_sender_errors_clear_invalid_route_key():
     response = cast(QManagementResponseDto, await do_eco_queued_sender_errors_clear("asdf"))
     assert response.message.startswith("No queued sender with route key:")
 
-# do_eco_queued_sender_errors_reprocess_one
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_queued_sender_errors_reprocess_one_invalid_uid():
