@@ -2,24 +2,6 @@
 
 ## For MVP
 
-- [ ] Tests.
-  - end-to-end tests
-    - [ ] Does the application start up
-    - [ ] Does starting up an application for an instance that is already running, not start up.
-    - [ ] Can clients talk to servers.
-      - [ ] TCP
-        - [ ] transient
-        - [ ] persisted
-      - [ ] UDS
-        - [ ] transient
-        - [ ] persisted
-      - [ ] UDP
-    - [ ] senders
-    - [ ] queued senders
-    - [ ] endpoints
-    - [ ] queued endpoints
-    - [ ] do expected standard endpoints exist.
-
 - [ ] Improve Queued senders to use error keeper when a server is unreachable.
   - This will make Queued senders unusable outside Ecosystem, is this what we want?
 
@@ -149,6 +131,23 @@
   - i.e. Log Keeper?
   - Adjust log level
   - Adjust log buffer?
+- [X] Tests.
+  - end-to-end tests
+    - [X] Does the application start up
+    - [X] Does starting up an application for an instance that is already running, not start up.
+    - [X] Can clients talk to servers.
+      - [X] TCP
+        - [X] transient
+        - [X] persisted
+      - [X] UDS
+        - [X] transient
+        - [X] persisted
+      - [X] UDP
+    - [X] senders
+    - [X] queued senders
+    - [X] endpoints
+    - [X] queued endpoints
+    - [X] do expected standard endpoints exist.
 
 # Possibly won't do:
 
