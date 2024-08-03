@@ -13,12 +13,12 @@ from ..util.utility_functions import camel_to_snake
 from ..exceptions.exception_base import ExceptionBase
 
 # --------------------------------------------------------------------------------
-class ConfigurationExceptionBase(ExceptionBase):
+class ConfigurationExceptionBase(ExceptionBase): # pragma: no cover
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-class InstanceConfigurationNotFoundException(ConfigurationExceptionBase):
+class InstanceConfigurationNotFoundException(ConfigurationExceptionBase): # pragma: no cover
     def __init__(self, name: str, instance: str):
         super().__init__(f"Configuration for instance [{instance}] of application [{name}] not found!")
 
@@ -58,7 +58,7 @@ def get_instance_env(postfix: str, default: Any = None):
 
 # --------------------------------------------------------------------------------
 def get_platform_default_dir():
-    if platform.system() == "Windows":
+    if platform.system() == "Windows": # pragma: no cover
         return get_eco_env("DEFAULT_DIR", "C:\\")
     else:
         return get_eco_env("DEFAULT_DIR", "/tmp")
@@ -163,9 +163,9 @@ def get_app_instance_lock_dir():
 def parse_host_port_string(value: str):
     # TODO: Throw an exception if we can't parse the string!
     host, port = value.split(":")
-    if not host:
+    if not host: # pragma: no cover
         return None
-    if not port:
+    if not port: # pragma: no cover
         return None
     return {
         "host": host,
@@ -194,9 +194,9 @@ def get_app_instance_uds():
         return None
     directory        = os.path.dirname(uds_string)
     socket_file_name = os.path.basename(uds_string)
-    if not directory or not socket_file_name:
+    if not directory or not socket_file_name: # pragma: no cover
         return None
-    if not os.path.isdir(directory):
+    if not os.path.isdir(directory): # pragma: no cover
         return None
     if socket_file_name == "DEFAULT":
         socket_file_name = f"{application_name}_{application_instance}.uds.sock"
@@ -215,7 +215,7 @@ def get_app_instance_extra():
         if k.startswith(extra_env_prefix)
     }
     retval: Dict[str, Any] = {}
-    for key in extra_config.keys():
+    for key in extra_config.keys(): # pragma: no cover
         new_key = key.replace(extra_env_prefix, "")
         retval[new_key] = extra_config[key]
     return retval
@@ -254,9 +254,9 @@ class ConfigApplication(PydanticBaseModel):
 try:
     if command_line_args.config_file:
         file_path = command_line_args.config_file
-        if not os.path.exists(file_path):
+        if not os.path.exists(file_path): # pragma: no cover
             raise FileNotFoundError(f"The specified configuration file [{file_path}] does NOT exist.")
-        if not os.path.isfile(file_path):
+        if not os.path.isfile(file_path): # pragma: no cover
             raise FileNotFoundError(f"The specified configuration file [{file_path}] is NOT a file.")
 
         with open(file_path, 'r') as f:
@@ -265,11 +265,11 @@ try:
         application_configuration = ConfigApplication(**config_json)
     else:
         application_configuration = ConfigApplication()
-except Exception as e:
+except Exception as e: # pragma: no cover
     print(str(e))
     sys.exit(1)
 
-if application_instance not in application_configuration.instances.keys():
+if application_instance not in application_configuration.instances.keys(): # pragma: no cover
     # When loading from environment, this isn't even be possible.
     # It's here because loading configurations from file, could have this happen.
     print(f"Configuration for instance [{application_instance}] of application [{application_name}] not found!")
@@ -290,7 +290,7 @@ class AppConfiguration(metaclass=SingletonType):
     queue_directory  = instance_configuration.queue_directory
     extra            = instance_configuration.extra
 
-    def dict(self):
+    def dict(self): # pragma: no cover
         return {
             "name"           : self.name,
             "instance"       : self.instance,

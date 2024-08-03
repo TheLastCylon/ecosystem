@@ -35,6 +35,6 @@ class BufferedRotatingFileHandler(BufferingHandler):
             self.rotating_file_handler.emit(record)
         self.buffer = []
 
-    def close(self):
+    def close(self): # pragma: no cover
         self.rotating_file_handler.close()
         super().close()

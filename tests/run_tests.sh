@@ -18,10 +18,7 @@ export ECOENV_STAT_HL=2
 export ECOENV_TCP_TEST_APP_A_0=127.0.0.1:8888
 export ECOENV_UDP_TEST_APP_A_0=127.0.0.1:8889
 export ECOENV_UDS_TEST_APP_A_0=/tmp/DEFAULT
-
-export ECOENV_TCP_TEST_APP_B_0=127.0.0.1:9998
-export ECOENV_UDP_TEST_APP_B_0=127.0.0.1:9999
-export ECOENV_UDS_TEST_APP_B_0=/tmp/DEFAULT
+export ECOENV_EXTRA_TEST_APP_A_TEST_VAR=test_var
 
 rm /tmp/test_app*
 
@@ -30,7 +27,7 @@ cd "$REPOSITORY_DIR"
 
 pipenv run coverage erase
 pipenv run coverage run -p --source=ekosis -m tests.test_app_a.test_app_a -i 0 -lfo &
-pipenv run coverage run -p --source=ekosis -m tests.test_app_b.test_app_b -i 0 -lfo &
+pipenv run coverage run -p --source=ekosis -m tests.test_app_b.test_app_b -i 0 -c ./tests/test_app_b/config.json -lfo &
 sleep 1
 pipenv run coverage run -p --source=ekosis -m pytest \
   tests/basic_tests.py \

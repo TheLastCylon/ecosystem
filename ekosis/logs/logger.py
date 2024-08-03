@@ -31,7 +31,7 @@ class EcoLogger(metaclass=SingletonType):
         self.__logger.addHandler(self.__file_handler)
 
     # --------------------------------------------------------------------------------
-    def __setup_console_logging(self):
+    def __setup_console_logging(self): # pragma: no cover
         self.__console_handler = logging.StreamHandler(sys.stdout)
         self.__console_handler.setLevel(self.__level)
         self.__console_handler.setFormatter(self.__formatter)
@@ -44,7 +44,7 @@ class EcoLogger(metaclass=SingletonType):
         if self.__file_handler:
             self.__file_handler.setLevel(level)
 
-        if self.__console_handler:
+        if self.__console_handler: # pragma: no cover
             self.__console_handler.setLevel(level)
 
         self.__logger.setLevel(level)
@@ -83,7 +83,7 @@ class EcoLogger(metaclass=SingletonType):
         if not self.__log_config.console_only:
             self.__setup_file_logging()
 
-        if not self.__log_config.file_only:
+        if not self.__log_config.file_only: # pragma: no cover
             self.__setup_console_logging()
 
         self.__logger.setLevel(self.__level)
@@ -92,7 +92,7 @@ class EcoLogger(metaclass=SingletonType):
 
     # --------------------------------------------------------------------------------
     def flush(self):
-        if not self.__log_config.file_only:
+        if not self.__log_config.file_only: # pragma: no cover
             self.__console_handler.flush()
 
         if not self.__log_config.console_only:

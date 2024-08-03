@@ -31,6 +31,14 @@ async def do_eco_log_buffer(size: int):
 async def test_do_eco_statistics_get():
     response = cast(LogLevelResponseDto, await do_eco_log_level('debug'))
     assert response.level == 'debug'
+    response = cast(LogLevelResponseDto, await do_eco_log_level('info'))
+    assert response.level == 'info'
+    response = cast(LogLevelResponseDto, await do_eco_log_level('warn'))
+    assert response.level == 'warn'
+    response = cast(LogLevelResponseDto, await do_eco_log_level('error'))
+    assert response.level == 'error'
+    response = cast(LogLevelResponseDto, await do_eco_log_level('critical'))
+    assert response.level == 'critical'
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
