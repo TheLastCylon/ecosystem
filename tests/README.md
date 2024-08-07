@@ -1,6 +1,7 @@
 # Tests
 
-You will need, `pytest` and `pytest-asyncio` installed in order to run these.
+You will need, `pytest`, `pytest-asyncio` as well as `cover` installed in order
+to run the test script.
 
 To run the tests:
 
