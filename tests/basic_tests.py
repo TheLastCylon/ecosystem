@@ -9,7 +9,7 @@ from ekosis.clients import (
     UDPClient,
 )
 from ekosis.sending.sender import sender
-from ekosis.exceptions import RouteKeyUnknownException
+from ekosis.exceptions import RouteKeyUnknownException, ProcessingException, UnhandledException
 from .dtos.dtos import AppRequestDto, AppResponseDto
 
 # --------------------------------------------------------------------------------
@@ -68,6 +68,16 @@ async def app_queued_pass_trough(message: str, **kwargs):
 async def app_test_queued_sender(message: str, **kwargs):
     return make_request_dto(message)
 
+# --------------------------------------------------------------------------------
+@sender(transient_tcp_client, "app.a.exception", AppResponseDto)
+async def app_test_unhandled_exception_response(message: str, **kwargs):
+    return make_request_dto(message)
+
+# --------------------------------------------------------------------------------
+@sender(transient_tcp_client, "app.a.exception1", AppResponseDto)
+async def app_test_application_exception_response(message: str, **kwargs):
+    return make_request_dto(message)
+
 # The following tests verify that:
 # 1. Clients are working.
 # 2. Senders are working.
@@ -124,3 +134,15 @@ async def test_app_queued_pass_trough():
 async def test_app_test_queued_sender():
     response = await app_test_queued_sender(message="test echo", request_uid=uuid.uuid4())
     assert response.message == "test echo"
+
+# --------------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_app_test_unhandled_exception_response():
+    with pytest.raises(UnhandledException):
+        response = await app_test_unhandled_exception_response(message="test echo", request_uid=uuid.uuid4())
+
+# --------------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_app_test_application_exception_response():
+    with pytest.raises(ProcessingException):
+        response = await app_test_application_exception_response(message="test echo", request_uid=uuid.uuid4())

@@ -54,6 +54,6 @@ class ServerBase:
         except Exception as e:
             return ResponseDTO(
                 uid    = request_uuid,
-                status = Status.UNKNOWN.value,
+                status = Status.UNHANDLED.value,
                 data   = str(e)
             )

@@ -6,6 +6,7 @@ from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
 from ekosis.util.fire_and_forget_tasks import run_soon
+from ekosis.exceptions import ApplicationProcessingException
 
 from ..dtos.dtos import AppRequestDto, AppResponseDto
 from .senders import (
@@ -52,3 +53,13 @@ async def enqueue_no_such_server(uid: uuid.UUID, message: str):
 async def app_a_send_no_such_server(request_uuid: uuid.UUID, request: AppRequestDto) -> PydanticBaseModel:
     enqueue_no_such_server(request_uuid, request.message)
     return AppResponseDto(message=request.message)
+
+# --------------------------------------------------------------------------------
+@endpoint("app.a.exception", AppRequestDto)
+async def app_b_endpoint(request_uuid: uuid.UUID, request: AppRequestDto) -> PydanticBaseModel:
+    raise RuntimeError("app.a.exception: RuntimeError")
+
+# --------------------------------------------------------------------------------
+@endpoint("app.a.exception1", AppRequestDto)
+async def app_b_endpoint1(request_uuid: uuid.UUID, request: AppRequestDto) -> PydanticBaseModel:
+    raise ApplicationProcessingException("app.a.exception: ProcessingException")

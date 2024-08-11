@@ -10,6 +10,7 @@ from .status import Status
 from ..data_transfer_objects import RequestDTO
 from ..util import SingletonType
 from ..state_keepers.statistics_keeper import StatisticsKeeper
+from ..exceptions.application_level import ApplicationProcessingException
 
 # --------------------------------------------------------------------------------
 class RoutingExceptionBase(Exception):
@@ -17,6 +18,11 @@ class RoutingExceptionBase(Exception):
         self.status : int = status
         self.message: str = f"status: [{status}] message: [{message}]"
         super().__init__(self.message)
+
+# --------------------------------------------------------------------------------
+class RouterProcessingException(RoutingExceptionBase):
+    def __init__(self, route_key: str, message: str):
+        super().__init__(Status.PROCESSING_FAILURE.value, f"Processing Failure '{route_key}', message: '{message}'")
 
 # --------------------------------------------------------------------------------
 class UnknownRouteKeyException(RoutingExceptionBase):
@@ -46,4 +52,7 @@ class RequestRouter(metaclass=SingletonType):
         if request.route_key not in self.__routing_table.keys():
             raise UnknownRouteKeyException(request.route_key)
 
-        return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
+        try:
+            return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
+        except ApplicationProcessingException as e:
+            raise RouterProcessingException(request.route_key, e.message)

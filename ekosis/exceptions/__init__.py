@@ -14,6 +14,8 @@ from .response import (
     RouteKeyUnknownException,
     ServerBusyException,
     ProcessingException,
-    UnknownException,
+    UnhandledException,
     UnknownStatusCodeException,
 )
+
+from .application_level import ApplicationProcessingException

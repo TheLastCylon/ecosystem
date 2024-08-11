@@ -12,4 +12,4 @@ class Status(Enum):
     # Server is broken
     APPLICATION_BUSY          = 500 # used by server applications to inform requesters that a request won't be processed due to server overload.
     PROCESSING_FAILURE        = 600 # For use by apps that need to report on an internal processing failure.
-    UNKNOWN                   = 999 # Sorry, I don't know what went wrong.
+    UNHANDLED                 = 999 # And unhandled exception occurred.

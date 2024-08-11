@@ -15,7 +15,7 @@ from ..exceptions import (
     RouteKeyUnknownException,
     ServerBusyException,
     ProcessingException,
-    UnknownException,
+    UnhandledException,
     UnknownStatusCodeException,
 )
 
@@ -57,8 +57,8 @@ class ClientBase(ABC):
         if request.status == Status.PROCESSING_FAILURE.value:
             return ProcessingException(str(request.data))
 
-        if request.status == Status.UNKNOWN.value:
-            return UnknownException(str(request.data))
+        if request.status == Status.UNHANDLED.value:
+            return UnhandledException(str(request.data))
 
         return UnknownStatusCodeException(f"Unrecognised status code[{request.status}]: {str(request.data)}")
 
