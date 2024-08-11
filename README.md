@@ -3,17 +3,7 @@
 A Python framework for creating message-based, distributed systems. Allowing for
 TCP, UDP and UDS communications. Using JSON as the communications protocol.
 
-**Please note**:
-
-Ecosystem does not do HTTP communications. It is first and foremost intended to
-**not** be used with HTTP.
-
-Although it can be used as one, it is **not** a web-development back-end framework.
-
-The problem being solved by Ecosystem, is orders of magnitude bigger than the
-creation of a web-site.
-
-As such, the "out-of-the-box" features include:
+## Features
 
 - Multi-instancy, without the need for containerization.
 - Real-time Telemetry, without the need for log-aggregation.
@@ -27,6 +17,8 @@ As such, the "out-of-the-box" features include:
 - Both transient and persisted clients for TCP and UDS. With configurable connection heartbeat.
 - File Logging and log rotation, by default. Buffered file logging is optional and configurable.
   - Both log level and buffer size can be adjusted on the fly, while applications are running.
+- Seamlessly use Ecosystem `senders`, clients and DTOs, from within [FastAPI](https://github.com/fastapi/fastapi)
+  applications.
 
 For more, take a look at the [documentation](https://github.com/TheLastCylon/ecosystem/blob/main/documentation/documentation_root.md) on GitHub.
 
