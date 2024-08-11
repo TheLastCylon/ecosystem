@@ -5,8 +5,6 @@
 - [ ] Improve Queued senders to use error keeper when a server is unreachable.
   - This will make Queued senders unusable outside Ecosystem, is this what we want?
 
-- [ ] Documentation: Persisted TCP and UDS clients
-
 - [ ] Benchmarking: queues.
 
 - [ ] Example: Project structure
@@ -148,6 +146,7 @@
     - [X] do expected standard endpoints exist.
 - [X] See if we can use Ecosystem `senders` from within a FastAPI application.
   - YES WE CAN!!!
+- [X] Documentation: Persisted TCP and UDS clients
 
 # Possibly won't do:
 
