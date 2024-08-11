@@ -17,6 +17,7 @@
   - Clearing of the error state when it is resolved.
 
 ## Beyond MVP
+
 - [ ] Ecosystem Node.js client
 
 - [ ] LRU cache
@@ -147,6 +148,7 @@
 - [X] See if we can use Ecosystem `senders` from within a FastAPI application.
   - YES WE CAN!!!
 - [X] Documentation: Persisted TCP and UDS clients
+- [X] Example: Ecosystem + FastAPI 
 
 # Possibly won't do:
 

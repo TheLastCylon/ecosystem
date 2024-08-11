@@ -27,3 +27,4 @@ So, keep that in mind when you are looking at the examples. They might not work 
 - [The Fun Factory example (a.k.a Queued senders, request uuids and what run_soon is for)](./examples/fun_factory/fun_factory.md)
 - [Real-Time Telemetry Example](./examples/telemetry/telemetry.md)
 - [Proper Fun (i.e. The training wheels are off)](examples/proper_fun.md)
+- [FastAPI HTTP client example](examples/http_client_example/http_client_example.md)
