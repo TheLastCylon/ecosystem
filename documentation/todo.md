@@ -1,6 +1,8 @@
 # TODO
 
 ## For MVP
+- [ ] Documentation: LRU Cache
+- [ ] Example: LRU Cache
 
 - [ ] Improve Queued senders to use error keeper when a server is unreachable.
   - This will make Queued senders unusable outside Ecosystem, is this what we want?
@@ -20,14 +22,15 @@
 
 - [ ] Ecosystem Node.js client
 
-- [ ] LRU cache
 
 - [ ] Sequenced Queued Sender
   - As in: Make sure messages groups are sent in order
 
+
 - [ ] Broadcaster
   - As in: Send this message to a list of clients
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
+
 
 - [ ] Sequenced Broadcaster
 
@@ -149,6 +152,7 @@
   - YES WE CAN!!!
 - [X] Documentation: Persisted TCP and UDS clients
 - [X] Example: Ecosystem + FastAPI 
+- [X] LRU cache
 
 # Possibly won't do:
 
