@@ -1,5 +1,3 @@
-import uuid
-from typing import Any, cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests.endpoint import endpoint
@@ -8,13 +6,12 @@ from ..data_transfer_objects import StatsRequestDto, StatsResponseDto
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.statistics.get", StatsRequestDto)
-async def eco_statistics_get(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data         = cast(StatsRequestDto, request)
+async def eco_statistics_get(dto: StatsRequestDto, **kwargs) -> PydanticBaseModel:
     stats_keeper = StatisticsKeeper()
 
-    if data.type == "current":
+    if dto.type == "current":
         stats = await stats_keeper.get_current_statistics()
-    elif data.type == "full":
+    elif dto.type == "full":
         stats = await stats_keeper.get_full_gathered_statistics()
     else:
         stats = await stats_keeper.get_last_gathered_statistics()

@@ -1,18 +1,18 @@
 from typing import Any, Dict
 
-from .cached_item import CachedItem
+from .cached_item import LRUCachedItem
 
 # --------------------------------------------------------------------------------
 class LRUCache:
     def __init__(self, max_size: int):
         self.max_size     : int                   = max_size
-        self._cached_items: Dict[Any, CachedItem] = {}
-        self.head         : CachedItem            = None
-        self.tail         : CachedItem            = None
+        self._cached_items: Dict[Any, LRUCachedItem] = {}
+        self.head         : LRUCachedItem            = None
+        self.tail         : LRUCachedItem            = None
 
     # --------------------------------------------------------------------------------
     def __insert(self, key: Any, value: Any):
-        new_node       = CachedItem()
+        new_node       = LRUCachedItem()
         new_node.empty = False
         new_node.key   = key
         new_node.value = value
@@ -45,7 +45,7 @@ class LRUCache:
         self.head               = existing_node
 
     # --------------------------------------------------------------------------------
-    def __list_move_to_end(self, cached_item: CachedItem, empty: bool = False):
+    def __list_move_to_end(self, cached_item: LRUCachedItem, empty: bool = False):
         if self.head is cached_item:
             self.head = cached_item.next
         else:
@@ -62,7 +62,7 @@ class LRUCache:
             cached_item.value = None
 
     # --------------------------------------------------------------------------------
-    def __list_move_to_front(self, cached_item: CachedItem):
+    def __list_move_to_front(self, cached_item: LRUCachedItem):
         if cached_item is not self.head:
             self.__list_move_to_end(cached_item, False)
             self.head = cached_item

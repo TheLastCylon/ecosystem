@@ -11,14 +11,14 @@ log_database = LogDatabase()
 
 # --------------------------------------------------------------------------------
 @queued_endpoint("app.log_request", TrackerLogRequestDto, page_size = 1000)
-async def log_request(request_uuid: uuid.UUID, request: TrackerLogRequestDto) -> bool:
-    log.info(f"REQUEST : uid[{request_uuid}], time[{request.timestamp}], data[{request.request}]")
-    log_database.log_request(request_uuid, request.request, request.timestamp)
+async def log_request(uid: uuid.UUID, dto: TrackerLogRequestDto) -> bool:
+    log.info(f"REQUEST : uid[{uid}], time[{dto.timestamp}], data[{dto.request}]")
+    log_database.log_request(uid, dto.request, dto.timestamp)
     return True
 
 # --------------------------------------------------------------------------------
 @queued_endpoint("app.log_response", TrackerLogRequestDto, page_size = 1000)
-async def log_response(request_uuid: uuid.UUID, request: TrackerLogRequestDto) -> bool:
-    log.info(f"RESPONSE: uid[{request_uuid}], time[{request.timestamp}], data[{request.request}]")
-    log_database.log_response(request_uuid, request.request, request.timestamp)
+async def log_response(uid: uuid.UUID, dto: TrackerLogRequestDto) -> bool:
+    log.info(f"RESPONSE: uid[{uid}], time[{dto.timestamp}], data[{dto.request}]")
+    log_database.log_response(uid, dto.request, dto.timestamp)
     return True

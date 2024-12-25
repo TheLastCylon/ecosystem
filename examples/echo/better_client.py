@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from ekosis.clients import TransientTCPClient, UDPClient, TransientUDSClient
 from ekosis.sending.sender import sender
@@ -7,8 +8,9 @@ from .dtos import EchoRequestDto, EchoResponseDto
 
 client_tcp = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp = UDPClient(server_host='127.0.0.1', server_port=8889)
-client_uds = TransientUDSClient("/tmp/echo_example_0_uds.sock")
+client_uds = TransientUDSClient("/tmp/echo_example_0.uds.sock")
 
+log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 def make_echo_request_dto(message: str) -> EchoRequestDto:

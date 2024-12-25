@@ -1,5 +1,3 @@
-import uuid
-
 from typing import Dict, List, Any
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -18,16 +16,16 @@ def build_errors_response() -> List[Dict[str, Any]]:
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.error_states.get")
-async def eco_error_states_get(request_uuid: uuid.UUID, request: EmptyDto) -> PydanticBaseModel:
+async def eco_error_states_get(dto: EmptyDto, **kwargs) -> PydanticBaseModel:
     return ErrorsResponseDto(errors=build_errors_response())
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.error_states.clear", ErrorCleanerRequestDto)
-async def eco_error_states_clear(request_uuid: uuid.UUID, request: ErrorCleanerRequestDto) -> PydanticBaseModel:
+async def eco_error_states_clear(dto: ErrorCleanerRequestDto, **kwargs) -> PydanticBaseModel:
     error_state_list = ErrorStateList()
-    if error_state_list.has_error_id(request.error_id):
-        if request.count == 0:
-            error_state_list.clear_all(request.error_id)
+    if error_state_list.has_error_id(dto.error_id):
+        if dto.count == 0:
+            error_state_list.clear_all(dto.error_id)
         else:
-            error_state_list.clear_some(request.error_id, request.count)
+            error_state_list.clear_some(dto.error_id, dto.count)
     return ErrorsResponseDto(errors=build_errors_response())

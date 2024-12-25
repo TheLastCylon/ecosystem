@@ -2,3 +2,4 @@
 omit =
     */cli/*
     */sql_persisted_queue.py
+    */ttl_cache.py

@@ -22,7 +22,7 @@ week_days = [
 
 
 @endpoint("app.get_time")
-async def get_time(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def get_time(request_uuid: uuid.UUID, **kwargs) -> PydanticBaseModel:
     log.info(f"RCV: request_uuid[{request_uuid}]")
     week_day = week_days[datetime.datetime.today().weekday()]
     return CurrentTimeResponseDto(time=f"{week_day} {datetime.datetime.now()}")

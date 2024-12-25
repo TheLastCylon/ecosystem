@@ -10,8 +10,8 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
 
 # Machine level configurations
-export ECOENV_QUEUE_DIR=/tmp
-export ECOENV_LOG_DIR=/tmp
+export ECOENV_QUEUE_DIR=/tmp/proper_fun/queues
+export ECOENV_LOG_DIR=/tmp/proper_fun/logs
 export ECOENV_LOG_BUF_SIZE=1500
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
@@ -24,6 +24,12 @@ export ECOENV_UDP_MAGIC_EIGHT_BALL_0=127.0.0.1:8400
 export ECOENV_UDP_TIME_REPORTER_0=127.0.0.1:8500
 export ECOENV_UDP_ROUTER_0=127.0.0.1:8600
 export ECOENV_UDP_TRACKER_0=127.0.0.1:8700
+
+echo "Creating queue dir: $ECOENV_QUEUE_DIR"
+mkdir -p "$ECOENV_QUEUE_DIR"
+
+echo "Creating log dir: $ECOENV_QUEUE_DIR"
+mkdir -p "$ECOENV_LOG_DIR"
 
 # Extra configs
 export ECOENV_EXTRA_TRACKER_0_DB_FILE=/tmp/tracker-0-database.sqlite

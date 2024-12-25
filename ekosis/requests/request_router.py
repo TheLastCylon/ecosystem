@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from typing import Dict, List, cast
 from pydantic import BaseModel as PydanticBaseModel
@@ -31,6 +32,7 @@ class UnknownRouteKeyException(RoutingExceptionBase):
 
 # --------------------------------------------------------------------------------
 class RequestRouter(metaclass=SingletonType):
+    _logger            : logging.Logger         = logging.getLogger()
     __statistics_keeper: StatisticsKeeper       = StatisticsKeeper()
     __routing_table    : Dict[str, HandlerBase] = {}
 
@@ -48,11 +50,15 @@ class RequestRouter(metaclass=SingletonType):
                 response.append(cast(QueuedRequestHandlerBase, queue))
         return response
 
-    async def route_request(self, request: RequestDTO) -> PydanticBaseModel:
-        if request.route_key not in self.__routing_table.keys():
-            raise UnknownRouteKeyException(request.route_key)
+    async def route_request(self, protocol_dto: RequestDTO, **kwargs) -> PydanticBaseModel:
+        if protocol_dto.route_key not in self.__routing_table.keys():
+            raise UnknownRouteKeyException(protocol_dto.route_key)
 
         try:
-            return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
+            kwargs["protocol_dto"] = protocol_dto
+            # Middleware starts stuff here
+            response = await self.__routing_table[protocol_dto.route_key].attempt_request(**kwargs)
+            # Middleware ends stuff here
+            return response
         except ApplicationProcessingException as e:
-            raise RouterProcessingException(request.route_key, e.message)
+            raise RouterProcessingException(protocol_dto.route_key, e.message)
