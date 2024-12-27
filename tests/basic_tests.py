@@ -10,7 +10,7 @@ from ekosis.clients import (
 )
 from ekosis.sending.sender import sender
 from ekosis.exceptions import RouteKeyUnknownException, ProcessingException, UnhandledException
-from .dtos.dtos import AppRequestDto, AppResponseDto
+from .dtos.dtos import AppRequestDto, AppResponseDto, AppMiddlewareTestRequestDto, AppMiddlewareTestResponseDto
 
 # --------------------------------------------------------------------------------
 transient_tcp_client = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
@@ -27,6 +27,11 @@ def make_request_dto(message: str) -> AppRequestDto:
 @sender(transient_tcp_client, "app.a.endpoint", AppResponseDto)
 async def transient_tcp_send(message: str, **kwargs):
     return make_request_dto(message)
+
+# --------------------------------------------------------------------------------
+@sender(transient_tcp_client, "app.a.middleware_test", AppMiddlewareTestResponseDto)
+async def middleware_transient_tcp_send(message: str, **kwargs):
+    return AppMiddlewareTestRequestDto(message=message)
 
 # --------------------------------------------------------------------------------
 @sender(persisted_tcp_client, "app.a.endpoint", AppResponseDto)
@@ -146,3 +151,11 @@ async def test_app_test_unhandled_exception_response():
 async def test_app_test_application_exception_response():
     with pytest.raises(ProcessingException):
         response = await app_test_application_exception_response(message="test echo", request_uid=uuid.uuid4())
+
+# --------------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_middleware_transient_tcp_send():
+    response = await middleware_transient_tcp_send(message="test echo", request_uid=uuid.uuid4())
+    assert response.before_routing is True
+    assert response.after_routing  is True
+    assert response.message == "test echo"

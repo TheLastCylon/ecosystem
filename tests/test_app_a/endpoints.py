@@ -8,7 +8,7 @@ from ekosis.requests.endpoint import endpoint
 from ekosis.util.fire_and_forget_tasks import run_soon
 from ekosis.exceptions import ApplicationProcessingException
 
-from ..dtos.dtos import AppRequestDto, AppResponseDto
+from ..dtos.dtos import AppRequestDto, AppResponseDto, AppMiddlewareTestRequestDto, AppMiddlewareTestResponseDto
 from .senders import (
     app_a_sender_app_b_endpoint,
     app_a_sender_app_b_queued_endpoint,
@@ -63,3 +63,8 @@ async def app_b_endpoint(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBaseMode
 @endpoint("app.a.exception1", AppRequestDto)
 async def app_b_endpoint1(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBaseModel:
     raise ApplicationProcessingException("app.a.exception: ProcessingException")
+
+# --------------------------------------------------------------------------------
+@endpoint("app.a.middleware_test", AppMiddlewareTestRequestDto)
+async def app_a_middleware_test(uid: uuid.UUID, dto: AppMiddlewareTestRequestDto) -> PydanticBaseModel:
+    return AppMiddlewareTestResponseDto(message=dto.message)

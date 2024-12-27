@@ -8,6 +8,7 @@ from .handler_base import HandlerBase
 from .queued_handler_base import QueuedRequestHandlerBase
 from .status import Status
 
+from ..middleware.manager import MiddlewareManager
 from ..data_transfer_objects import RequestDTO
 from ..util import SingletonType
 from ..state_keepers.statistics_keeper import StatisticsKeeper
@@ -32,9 +33,10 @@ class UnknownRouteKeyException(RoutingExceptionBase):
 
 # --------------------------------------------------------------------------------
 class RequestRouter(metaclass=SingletonType):
-    _logger            : logging.Logger         = logging.getLogger()
-    __statistics_keeper: StatisticsKeeper       = StatisticsKeeper()
-    __routing_table    : Dict[str, HandlerBase] = {}
+    _logger             : logging.Logger         = logging.getLogger()
+    __statistics_keeper : StatisticsKeeper       = StatisticsKeeper()
+    __routing_table     : Dict[str, HandlerBase] = {}
+    __middleware_manager: MiddlewareManager      = MiddlewareManager()
 
     def register_handler(self, handler: HandlerBase):
         if handler.get_route_key() not in self.__routing_table:
@@ -55,10 +57,12 @@ class RequestRouter(metaclass=SingletonType):
             raise UnknownRouteKeyException(protocol_dto.route_key)
 
         try:
-            kwargs["protocol_dto"] = protocol_dto
-            # Middleware starts stuff here
-            response = await self.__routing_table[protocol_dto.route_key].attempt_request(**kwargs)
-            # Middleware ends stuff here
+            kwargs["protocol_dto"]  = protocol_dto
+            middleware_protocol_dto = await self.__middleware_manager.run_before_routing(**kwargs) # Middleware before routing
+            kwargs["protocol_dto"]  = middleware_protocol_dto
+            kwargs["response_dto"]  = await self.__routing_table[protocol_dto.route_key].attempt_request(**kwargs)
+            kwargs["protocol_dto"]  = middleware_protocol_dto
+            response                = await self.__middleware_manager.run_after_routing(**kwargs)  # Middleware after routing
             return response
         except ApplicationProcessingException as e:
             raise RouterProcessingException(protocol_dto.route_key, e.message)
