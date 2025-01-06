@@ -11,6 +11,7 @@ class UDSServer(StreamServerBase):
         super().__init__()
         self.__server_path  : str  = f"{configuration.directory}/{configuration.socket_file_name}"
         self.__uds_supported: bool = hasattr(socket, "AF_UNIX")
+        self.set_transport_type("UDS")
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):

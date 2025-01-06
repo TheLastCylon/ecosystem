@@ -10,6 +10,7 @@ class TCPServer(StreamServerBase):
         super().__init__()
         self.host: str = configuration.host
         self.port: int = configuration.port
+        self.set_transport_type("TCP")
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):

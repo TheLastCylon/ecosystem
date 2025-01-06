@@ -91,7 +91,7 @@ The code for it can be found in [examples/fun_factory/router/client.py](../../..
 - **IMPORTANT WARNING**:
   - There is a lot of random number generation, UUID generation, and random list selections, happening with this system.
   - This can be very CPU intensive!!!
-  - If you set `SLEEP_PERIOD` to `0`, you will easily push your CPU usage to `80%`. And it will stay at that level until `[router]` has sent all queued notifications too `[tracker]`.
+  - If you set `SLEEP_PERIOD` to `0`, you will easily push your CPU usage to `80%`. And it will stay at that level until `[router]` has sent all queued notifications to `[tracker]`.
   - Yes, stopping the client only stops message generation. You can fill the `[router]` sending-queues with tens of thousands of messages, in under a minute.
   - I have successfully tested this system with `SLEEP_PERIOD` set to `0`, just be aware that your CPU-fan will go nuts.
   - That means: Do **not** run it like this for too long. It is very unlikely, but your CPU could get fried.

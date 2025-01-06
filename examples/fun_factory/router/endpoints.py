@@ -80,7 +80,7 @@ async def _log_response(uid: uuid.UUID, data: str, timestamp: float):
 
 # --------------------------------------------------------------------------------
 @endpoint("app.process_message", RouterRequestDto)
-async def process_message(uid: uuid.UUID, dto: RouterRequestDto, **kwargs) -> PydanticBaseModel:
+async def process_message(uid: uuid.UUID, dto: RouterRequestDto) -> PydanticBaseModel:
     _log_request(uid, dto.request, time.time())
     log.info(f"RCV: request_uuid[{uid}]")
     request_data = dto.request.split(" ")

@@ -28,6 +28,6 @@ with open(filepath, 'r') as f:
 
 # --------------------------------------------------------------------------------
 @endpoint("app.get_fortune")
-async def get_fortune(uid: uuid.UUID, dto) -> PydanticBaseModel:
+async def get_fortune(uid: uuid.UUID, **kwargs) -> PydanticBaseModel:
     log.info(f"RCV: request_uuid[{uid}]")
     return FortuneResponseDto(fortune=random.choice(fortune_lines))

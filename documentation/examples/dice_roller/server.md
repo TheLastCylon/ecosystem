@@ -61,20 +61,23 @@ Let's move on and take a look at the endpoints.
 #### [handlers/roll.py](../../../examples/dice_roller/handlers/roll.py)
 
 ```python
-import uuid
-import random
-
-from pydantic import BaseModel as PydanticBaseModel
-
-from ekosis.requests.endpoint import endpoint
-
-from ..dtos import RollRequestDto, RollResponseDto
-
-
-@endpoint("dice_roller.roll", RollRequestDto)
-async def dice_roller_roll(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    numbers=list(range(1, request.sides))
-    return RollResponseDto(result=random.choice(numbers))
+ 1: import uuid
+ 2: import logging
+ 3: import random
+ 4: 
+ 5: from pydantic import BaseModel as PydanticBaseModel
+ 6: 
+ 7: from ekosis.requests.endpoint import endpoint
+ 8: 
+ 9: from ..dtos import RollRequestDto, RollResponseDto
+10: 
+11: logger = logging.getLogger()
+12: 
+13: @endpoint("dice_roller.roll", RollRequestDto)
+14: async def dice_roller_roll(uid: uuid.UUID, dto: RollRequestDto) -> PydanticBaseModel:
+15:     logger.debug(f"dice_roller_roll 000 [{dto}]")
+16:     numbers = list(range(1, dto.sides))
+17:     return RollResponseDto(result = random.choice(numbers))
 ```
 
 Here you'll note that we import our DTOs in:
@@ -85,9 +88,10 @@ from ..dtos import RollRequestDto, RollResponseDto
 The endpoint itself does nothing more than:
 1. Accept a request of type `RollRequestDto`
 2. On a route key named `dice_roller.roll`
-3. Then generates a random selection from a list. The list itself is just a collection of integers, the amount of them being determined by the value of `request.sides`, and then places the result in a response of type `RollResponseDto`
+3. Then generates a random selection from a list. The list itself is just a collection
+   of integers, the amount of them being determined by the value of `dto.sides`, and then places the result in a response of type `RollResponseDto`
 
-So yea, we roll a die, having sides equal to the number specified by the value of `request.sides`.
+So yea, we roll a die, having sides equal to the number specified by the value of `dto.sides`.
 
 The only thing really worthy of note here, is the route key: `dice_roller.roll`.
 
@@ -100,21 +104,24 @@ Yes, of course that pun was on purpose! :D
 #### [handlers/guess.py](../../../examples/dice_roller/handlers/guess.py)
 
 ```python
-import uuid
-import random
-
-from typing import List
-from pydantic import BaseModel as PydanticBaseModel
-
-from ekosis.requests.endpoint import endpoint
-
-from ..dtos import GuessResponseDto
-
-
-@endpoint("dice_roller.guess")
-async def dice_roller_guess(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    numbers: List[int]=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    return GuessResponseDto(number=random.choice(numbers))
+1: import uuid
+2: import logging
+3: import random
+4:
+5: from typing import List
+6: from pydantic import BaseModel as PydanticBaseModel
+7:
+8: from ekosis.requests.endpoint import endpoint
+9:
+10: from ..dtos import GuessResponseDto
+11:
+12: logger = logging.getLogger()
+13:
+14: @endpoint("dice_roller.guess")
+15: async def dice_roller_guess(**kwargs) -> PydanticBaseModel:
+16:     numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+17:     return GuessResponseDto(number = random.choice(numbers))
+18:
 ```
 
 Here we import our request dto with:
@@ -127,7 +134,7 @@ And declare our endpoint with:
 
 ```python
 @endpoint("dice_roller.guess")
-async def dice_roller_guess(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
+async def dice_roller_guess(**kwargs) -> PydanticBaseModel:
     numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     return GuessResponseDto(number = random.choice(numbers))
 ```
@@ -199,36 +206,37 @@ For more on this, take a look at the documentation for:
 Let us move on with this example though.
 
 ```python
-import uuid
-import asyncio
-import random
-import logging
-
-from ekosis.requests.queued_endpoint import queued_endpoint
-
-from ..dtos import RollTimesRequestDto
-
-
-@queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
-async def dice_roller_roll_times(request_uuid: uuid.UUID, request: RollTimesRequestDto) -> bool:
-    log=logging.getLogger()
-    numbers=list(range(1, request.sides))
-
-    log.info(f"roll_times[{request_uuid}]: Processing.")
-    total_result=0
-    expected_total=(request.sides*request.how_many)*0.6
-    for times in range(request.how_many):
-        total_result+=random.choice(numbers)+1
-
-    log.info(f"roll_times[{request_uuid}]: expected_total[{expected_total}] total_result[{total_result}]")
-    if total_result<expected_total:
-        log.info(f"roll_times[{request_uuid}]: FAIL!")
-        await asyncio.sleep(1)
-        return False
-
-    log.info(f"roll_times[{request_uuid}]: Success.")
-    await asyncio.sleep(1)
-    return True
+ 1: import uuid
+ 2: import asyncio
+ 3: import random
+ 4: import logging
+ 5:
+ 6: from ekosis.requests.queued_endpoint import queued_endpoint
+ 7:
+ 8: from ..dtos import RollTimesRequestDto
+ 9:
+10:
+11: @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+12: async def dice_roller_roll_times(uid: uuid.UUID, dto: RollTimesRequestDto) -> bool:
+13:     log     = logging.getLogger()
+14:     numbers = list(range(1, dto.sides))
+15:
+16:     log.info(f"roll_times[{uid}]: Processing.")
+17:     total_result   = 0
+18:     expected_total = (dto.sides*dto.how_many)*0.6
+19:     for times in range(dto.how_many):
+20:         total_result += random.choice(numbers) + 1
+21:
+22:     log.info(f"roll_times[{uid}]: expected_total[{expected_total}] total_result[{total_result}]")
+23:     if total_result < expected_total:
+24:         log.info(f"roll_times[{uid}]: FAIL!")
+25:         await asyncio.sleep(1)
+26:         return False
+27:
+28:     log.info(f"roll_times[{uid}]: Success.")
+29:     await asyncio.sleep(1)
+30:     return True
+31:
 ```
 
 For now, and for this example, all you really need to know is:

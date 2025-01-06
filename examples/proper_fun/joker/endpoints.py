@@ -28,6 +28,6 @@ with open(filepath, 'r') as f:
 
 # --------------------------------------------------------------------------------
 @endpoint("app.get_joke")
-async def get_joke(uid: uuid.UUID, dto) -> PydanticBaseModel:
+async def get_joke(uid: uuid.UUID, **kwargs) -> PydanticBaseModel:
     log.info(f"RCV: request_uuid[{uid}]")
     return JokerResponseDto(joke=random.choice(joke_lines))

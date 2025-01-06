@@ -17,6 +17,7 @@ class ServerBase:
         self._logger           : logging.Logger   = logging.getLogger()
         self._request_router   : RequestRouter    = RequestRouter()
         self._statistics_keeper: StatisticsKeeper = StatisticsKeeper()
+        self._transport_type   : str              = ""
 
 # request
 #   dict
@@ -25,6 +26,13 @@ class ServerBase:
 #   endpoint
 #   uuid
 #   dto
+    # --------------------------------------------------------------------------------
+    def set_transport_type(self, transport_type: str):
+        self._transport_type = transport_type
+
+    # --------------------------------------------------------------------------------
+    def get_transport_type(self) -> str:
+        return self._transport_type
 
     # --------------------------------------------------------------------------------
     async def _route_request(self, request_text: str) -> ResponseDTO:

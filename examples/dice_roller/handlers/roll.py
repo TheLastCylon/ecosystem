@@ -1,3 +1,4 @@
+import uuid
 import logging
 import random
 
@@ -10,7 +11,7 @@ from ..dtos import RollRequestDto, RollResponseDto
 logger = logging.getLogger()
 
 @endpoint("dice_roller.roll", RollRequestDto)
-async def dice_roller_roll(dto: RollRequestDto, **kwargs) -> PydanticBaseModel:
+async def dice_roller_roll(uid: uuid.UUID, dto: RollRequestDto) -> PydanticBaseModel:
     logger.debug(f"dice_roller_roll 000 [{dto}]")
     numbers = list(range(1, dto.sides))
     return RollResponseDto(result = random.choice(numbers))
