@@ -11,9 +11,9 @@ from .dtos import PingRequestDto
 
 client_tcp    = TransientTCPClient(server_host='127.0.0.1', server_port=8888)
 client_udp    = UDPClient(server_host='127.0.0.1', server_port=8889)
-client_uds    = TransientUDSClient("/tmp/pong_0_uds.sock")
+client_uds    = TransientUDSClient("/tmp/pong_0.uds.sock")
 persisted_tcp = PersistedTCPClient(server_host='127.0.0.1', server_port=8888)
-persisted_uds = PersistedUDSClient("/tmp/pong_0_uds.sock")
+persisted_uds = PersistedUDSClient("/tmp/pong_0.uds.sock")
 
 # --------------------------------------------------------------------------------
 @sender(client_tcp, "app.ping", PingRequestDto)
