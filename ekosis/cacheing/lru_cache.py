@@ -1,36 +1,51 @@
 from typing import Any, Dict
 
-from .cached_item import CachedItem
+from .cached_item import LRUCachedItem
 
 # --------------------------------------------------------------------------------
 class LRUCache:
     def __init__(self, max_size: int):
         self.max_size     : int                   = max_size
-        self._cached_items: Dict[Any, CachedItem] = {}
-        self.head         : CachedItem            = None
-        self.__create_list()
+        self._cached_items: Dict[Any, LRUCachedItem] = {}
+        self.head         : LRUCachedItem            = None
+        self.tail         : LRUCachedItem            = None
 
     # --------------------------------------------------------------------------------
-    def __create_list(self):
-        initial_list = []
-        for i in range(self.max_size):
-            initial_list.append(CachedItem())
-
-        for i in range(self.max_size):
-            initial_list[i].empty = True
-            if i == 0:
-                initial_list[i].previous = initial_list[-1]
+    def __insert(self, key: Any, value: Any):
+        new_node       = LRUCachedItem()
+        new_node.empty = False
+        new_node.key   = key
+        new_node.value = value
+        if self.head is None:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            new_node.previous = self.tail
+            new_node.next     = self.head
+            if self.tail is self.head:
+                self.head.previous = new_node
+                self.head.next     = new_node
             else:
-                initial_list[i].previous = initial_list[i-1]
-
-            if i == self.max_size-1:
-                initial_list[i].next = initial_list[0]
-            else:
-                initial_list[i].next = initial_list[i+1]
-        self.head = initial_list[0]
+                self.tail.next     = new_node
+                self.head.previous = new_node
+        self._cached_items[key] = new_node
+        return new_node
 
     # --------------------------------------------------------------------------------
-    def __list_move_to_end(self, cached_item: CachedItem, empty: bool = False):
+    def __replace_least_recently_used(self, key: Any, value: Any):
+        existing_node = self.head.previous
+
+        if not existing_node.empty:
+            self._cached_items.pop(existing_node.key)
+
+        existing_node.empty     = False
+        existing_node.key       = key
+        existing_node.value     = value
+        self._cached_items[key] = existing_node
+        self.head               = existing_node
+
+    # --------------------------------------------------------------------------------
+    def __list_move_to_end(self, cached_item: LRUCachedItem, empty: bool = False):
         if self.head is cached_item:
             self.head = cached_item.next
         else:
@@ -47,7 +62,7 @@ class LRUCache:
             cached_item.value = None
 
     # --------------------------------------------------------------------------------
-    def __list_move_to_front(self, cached_item: CachedItem):
+    def __list_move_to_front(self, cached_item: LRUCachedItem):
         if cached_item is not self.head:
             self.__list_move_to_end(cached_item, False)
             self.head = cached_item
@@ -144,16 +159,11 @@ class LRUCache:
             self.__list_move_to_front(cached_item)
             return
 
-        cached_item = self.head.previous
-
-        if not cached_item.empty:
-            self._cached_items.pop(cached_item.key)
-
-        cached_item.empty       = False
-        cached_item.key         = key
-        cached_item.value       = value
-        self._cached_items[key] = cached_item
-        self.head               = cached_item
+        if len(self._cached_items) < self.max_size:
+            cached_item = self.__insert(key, value)
+            self.head   = cached_item
+        else:
+            self.__replace_least_recently_used(key, value)
 
     # --------------------------------------------------------------------------------
     def __delitem__(self, key: Any):

@@ -2,7 +2,7 @@ import uuid
 import logging
 import time
 
-from typing import cast, List
+from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
@@ -63,23 +63,22 @@ async def _log_response(uid: uuid.UUID, data: str, timestamp: float):
 
 # --------------------------------------------------------------------------------
 @endpoint("app.process_message", RouterRequestDto)
-async def process_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    request_data_raw = cast(RouterRequestDto, request)
-    _log_request(request_uuid, request_data_raw.request, time.time())
-    log.info(f"RCV: request_uuid[{request_uuid}]")
-    request_data = request_data_raw.request.split(" ")
+async def process_message(uid: uuid.UUID, dto: RouterRequestDto) -> PydanticBaseModel:
+    _log_request(uid, dto.request, time.time())
+    log.info(f"RCV: request_uuid[{uid}]")
+    request_data = dto.request.split(" ")
 
     if "fortune" == request_data[0].strip().lower():
-        response = await _get_fortune(request_uuid)
+        response = await _get_fortune(uid)
     elif "joke" == request_data[0].strip().lower():
-        response = await _get_joke(request_uuid)
+        response = await _get_joke(uid)
     elif "lotto" == request_data[0].strip().lower():
-        response = await _get_lotto(request_uuid, request_data)
+        response = await _get_lotto(uid, request_data)
     elif "time" == request_data[0].strip().lower():
-        response = await _get_time(request_uuid)
+        response = await _get_time(uid)
     else:
-        response = await _get_prediction(request_uuid, request_data_raw.request)
+        response = await _get_prediction(uid, dto.request)
 
-    log.info(f"RSP: request_uuid[{request_uuid}]")
-    _log_response(request_uuid, response, time.time())
+    log.info(f"RSP: request_uuid[{uid}]")
+    _log_response(uid, response, time.time())
     return RouterResponseDto(response=response)

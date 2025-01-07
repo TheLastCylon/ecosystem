@@ -1,7 +1,6 @@
 import uuid
 import logging
 
-from typing import cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests.endpoint import endpoint
@@ -17,17 +16,15 @@ log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.log.level", LogLevelRequestDto)
-async def eco_log_level(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data   = cast(LogLevelRequestDto, request)
+async def eco_log_level(dto: LogLevelRequestDto, **kwargs) -> PydanticBaseModel:
     logger = EcoLogger()
-    logger.set_level(data.level)
-    return LogLevelResponseDto(level=data.level)
+    logger.set_level(dto.level)
+    return LogLevelResponseDto(level=dto.level)
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.log.buffer", LogBufferRequestDto)
-async def eco_log_buffer(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    data   = cast(LogBufferRequestDto, request)
+async def eco_log_buffer(dto: LogBufferRequestDto, **kwargs) -> PydanticBaseModel:
     logger = EcoLogger()
-    logger.set_buffer_size(data.size)
-    log.info(f"eco_log_buffer {data.size}")
-    return LogBufferResponseDto(size=data.size)
+    logger.set_buffer_size(dto.size)
+    log.info(f"eco_log_buffer {dto.size}")
+    return LogBufferResponseDto(size=dto.size)

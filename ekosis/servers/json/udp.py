@@ -47,6 +47,7 @@ class UDPServer(ServerBase):
         self.port       : int                       = configuration.port
         self.__transport: asyncio.DatagramTransport = None
         self.__loop     : asyncio.AbstractEventLoop = None
+        self.set_transport_type("UDP")
 
     # --------------------------------------------------------------------------------
     async def __aenter__(self):

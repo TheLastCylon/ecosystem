@@ -42,22 +42,22 @@ Yes, an Ecosystem ... Echo-server.
 Here's the code:
 
 ```python
- 1: import uuid
- 2: from pydantic import BaseModel as PydanticBaseModel
- 3: 
- 4: from ekosis.application_base import ApplicationBase
- 5: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ekosis.requests.endpoint import endpoint
- 7: 
- 8: from .dtos import EchoRequestDto, EchoResponseDto
- 9: 
-10: 
+1: import uuid
+2: from pydantic import BaseModel as PydanticBaseModel
+3:
+4: from ekosis.application_base import ApplicationBase
+5: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+6: from ekosis.requests.endpoint import endpoint
+7:
+8: from .dtos import EchoRequestDto, EchoResponseDto
+9:
+10:
 11: # --------------------------------------------------------------------------------
 12: @endpoint("echo", EchoRequestDto)
-13: async def echo_this_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-14:     return EchoResponseDto(message = request.message)
-15: 
-16: 
+13: async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
+14:     return EchoResponseDto(message = dto.message)
+15:
+16:
 17: # --------------------------------------------------------------------------------
 18: class EchoExampleServer(ApplicationBase):
 19:     def __init__(self):
@@ -65,14 +65,14 @@ Here's the code:
 21:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
 22:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
 23:         super().__init__()
-24: 
-25: 
+24:
+25:
 26: # --------------------------------------------------------------------------------
 27: def main():
 28:     with EchoExampleServer() as app:
 29:         app.start()
-30: 
-31: 
+30:
+31:
 32: # --------------------------------------------------------------------------------
 33: if __name__ == '__main__':
 34:     try:
@@ -151,8 +151,8 @@ IMPORTANT: A route key absolutely must be unique within your application. An Eco
 
 ### The function
 ```python
-13: async def echo_this_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-14:     return EchoResponseDto(message = request.message)
+13: async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
+14:     return EchoResponseDto(message = dto.message)
 ```
 On line 13, we declare our endpoint function.
 
@@ -160,7 +160,7 @@ Yes, it must follow that signature.
 
 The parameter list and return type must match.
 
-We'll get to what `request_uuid` is used for in later examples.
+We'll get to what `uid` is used for in later examples.
 Right now, just understand that this function creates an instance of `EchoResponseDto` and returns it.
 
 Of course, the function name may be any valid Python function name.

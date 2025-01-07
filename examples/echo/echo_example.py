@@ -10,8 +10,8 @@ from .dtos import EchoRequestDto, EchoResponseDto
 
 # --------------------------------------------------------------------------------
 @endpoint("echo", EchoRequestDto)
-async def echo_this_message(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    return EchoResponseDto(message = request.message)
+async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
+    return EchoResponseDto(message = dto.message)
 
 
 # --------------------------------------------------------------------------------

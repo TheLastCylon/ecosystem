@@ -46,6 +46,6 @@ def pick_numbers(how_many: int) -> List[str]:
 
 # --------------------------------------------------------------------------------
 @endpoint("app.pick_numbers", NumberPickerRequestDto)
-async def pick_numbers_endpoint(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    log.info(f"RCV: request_uuid[{request_uuid}]")
-    return NumberPickerResponseDto(numbers=pick_numbers(request.how_many))
+async def pick_numbers_endpoint(uid: uuid.UUID, dto: NumberPickerRequestDto) -> PydanticBaseModel:
+    log.info(f"RCV: request_uuid[{uid}]")
+    return NumberPickerResponseDto(numbers=pick_numbers(dto.how_many))

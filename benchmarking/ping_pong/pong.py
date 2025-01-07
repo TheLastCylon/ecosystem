@@ -13,8 +13,8 @@ log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 @endpoint("app.ping", PingRequestDto)
-async def app_ping(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    log.info(f"{request_uuid}")
+async def app_ping(uid: uuid.UUID, dto: PingRequestDto) -> PydanticBaseModel:
+    log.info(f"{uid}")
     return PongResponseDto(message="pong")
 
 # --------------------------------------------------------------------------------

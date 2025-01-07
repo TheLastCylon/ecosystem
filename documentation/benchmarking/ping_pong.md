@@ -75,7 +75,7 @@ production servers.
 ---
 ### No logging
 
-For this, I removed the log line `log.info(f"{request_uuid}")` from the
+For this, I removed the log line `log.info(f"{uid}")` from the
 `app_ping` function in the `pong` server, then:
 
 - Make sure no buffering is set, I do that with: `unset ECOENV_LOG_BUF_SIZE`

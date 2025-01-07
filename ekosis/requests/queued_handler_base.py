@@ -180,7 +180,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             request_uid  = uuid.UUID(queued_item.uid)
             request_data = self.request_dto_type(**queued_item.data)
             retries      = queued_item.retries
-            if not await self.process_queued_request(request_uid, request_data):
+            if not await self.process_queued_request(uid = request_uid, dto = request_data):
                 retries += 1
                 if retries >= self.max_retries:
                     await self.queue.push_error(request_uid, request_data, "Max retries reached.")
@@ -198,7 +198,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def process_queued_request(self, request_uuid: uuid.UUID, request: _T) -> bool:
+    async def process_queued_request(self, **kwargs) -> bool:
         pass
 
     # --------------------------------------------------------------------------------
@@ -207,10 +207,13 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             self.__process_queue_task = asyncio.create_task(self._process_queue())
 
     # --------------------------------------------------------------------------------
-    async def run(self, request_uuid: uuid.UUID, request_data) -> PydanticBaseModel:
+    async def run(self, **kwargs) -> PydanticBaseModel:
+        self.log.debug(f"QueuedRequestHandlerBase.run 000 [{kwargs}]")
+        uid = kwargs.get("uid")
+        dto = kwargs.get("dto")
         if self._receiving_paused:
             raise QueuedRequestHandlerReceivingPausedException(self._route_key)
-        fire_and_forget_task(self.queue.push_pending(request_uuid, request_data, 0))
-        response = QueuedEndpointResponseDTO(uid = str(request_uuid))
+        fire_and_forget_task(self.queue.push_pending(uid, dto, 0))
+        response = QueuedEndpointResponseDTO(uid = str(uid))
         self.__check_process_queue()
         return response

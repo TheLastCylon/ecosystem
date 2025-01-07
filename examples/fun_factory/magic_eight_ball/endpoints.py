@@ -37,6 +37,6 @@ possible_responses = [
 
 # --------------------------------------------------------------------------------
 @endpoint("app.get_prediction", Magic8BallRequestDto)
-async def get_prediction(request_uuid: uuid.UUID, request) -> PydanticBaseModel:
-    log.info(f"RCV: request_uuid[{request_uuid}]")
+async def get_prediction(uid: uuid.UUID, **kwargs) -> PydanticBaseModel:
+    log.info(f"RCV: uid[{uid}]")
     return Magic8BallResponseDto(prediction=random.choice(possible_responses))

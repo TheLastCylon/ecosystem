@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from typing import Dict, List, cast
 from pydantic import BaseModel as PydanticBaseModel
@@ -7,6 +8,7 @@ from .handler_base import HandlerBase
 from .queued_handler_base import QueuedRequestHandlerBase
 from .status import Status
 
+from ..middleware.manager import MiddlewareManager
 from ..data_transfer_objects import RequestDTO
 from ..util import SingletonType
 from ..state_keepers.statistics_keeper import StatisticsKeeper
@@ -31,8 +33,10 @@ class UnknownRouteKeyException(RoutingExceptionBase):
 
 # --------------------------------------------------------------------------------
 class RequestRouter(metaclass=SingletonType):
-    __statistics_keeper: StatisticsKeeper       = StatisticsKeeper()
-    __routing_table    : Dict[str, HandlerBase] = {}
+    _logger             : logging.Logger         = logging.getLogger()
+    __statistics_keeper : StatisticsKeeper       = StatisticsKeeper()
+    __routing_table     : Dict[str, HandlerBase] = {}
+    __middleware_manager: MiddlewareManager      = MiddlewareManager()
 
     def register_handler(self, handler: HandlerBase):
         if handler.get_route_key() not in self.__routing_table:
@@ -48,11 +52,17 @@ class RequestRouter(metaclass=SingletonType):
                 response.append(cast(QueuedRequestHandlerBase, queue))
         return response
 
-    async def route_request(self, request: RequestDTO) -> PydanticBaseModel:
-        if request.route_key not in self.__routing_table.keys():
-            raise UnknownRouteKeyException(request.route_key)
+    async def route_request(self, protocol_dto: RequestDTO, **kwargs) -> PydanticBaseModel:
+        if protocol_dto.route_key not in self.__routing_table.keys():
+            raise UnknownRouteKeyException(protocol_dto.route_key)
 
         try:
-            return await self.__routing_table[request.route_key].attempt_request(uuid.UUID(request.uid), request.data)
+            kwargs["protocol_dto"]  = protocol_dto
+            middleware_protocol_dto = await self.__middleware_manager.run_before_routing(**kwargs) # Middleware before routing
+            kwargs["protocol_dto"]  = middleware_protocol_dto
+            kwargs["response_dto"]  = await self.__routing_table[protocol_dto.route_key].attempt_request(**kwargs)
+            kwargs["protocol_dto"]  = middleware_protocol_dto
+            response                = await self.__middleware_manager.run_after_routing(**kwargs)  # Middleware after routing
+            return response
         except ApplicationProcessingException as e:
-            raise RouterProcessingException(request.route_key, e.message)
+            raise RouterProcessingException(protocol_dto.route_key, e.message)
