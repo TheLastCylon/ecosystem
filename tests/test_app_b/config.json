@@ -1,9 +1,9 @@
 {
     "instances": {
         "0": {
-            "lock_directory" : "/tmp",
-            "queue_directory": "/tmp",
-            "stats_keeper"   : {
+            "lock_directory"  : "/tmp",
+            "buffer_directory": "/tmp",
+            "stats_keeper"    : {
                "gather_period" : 2,
                "history_length": 2
             },

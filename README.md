@@ -8,7 +8,7 @@ TCP, UDP and UDS communications. Using JSON as the communications protocol.
 - Multi-instancy, without the need for containerization.
 - Real-time Telemetry, without the need for log-aggregation.
 - Optional Distributed Tracking (Request Tracking), at protocol level, using UUIDs. 
-- Queueing for both sending and receiving messages, without the need for
+- Buffering for both sending and receiving messages, without the need for
   installation or management of external queueing mechanisms.
 - Configuration through both environment variables and config files, at three levels:
   - Machine/Container,

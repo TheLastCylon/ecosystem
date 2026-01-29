@@ -1,3 +1,5 @@
+from ekosis.sending.buffered_sender import buffered_sender
+
 # The Fun Factory: Router component
 
 As stated before, the `[router]` component does quite a bit of work:
@@ -36,7 +38,7 @@ time_reporter_client = TransientTCPClient("127.0.0.1", 8500)
 tracker_client       = TransientTCPClient("127.0.0.1", 8700)
 ```
 
-There is nothing special here. Just setup of clients that will be used with the `sender` and `queued_sender` decorator, in [senders.py](../../../examples/fun_factory/router/senders.py)
+There is nothing special here. Just setup of clients that will be used with the `sender` and `buffered_sender` decorator, in [senders.py](../../../examples/fun_factory/router/senders.py)
 
 ### [dtos.py](../../../examples/fun_factory/router/dtos.py)
 ```python
@@ -66,23 +68,23 @@ from .endpoints import process_message  # noqa
 
 # --------------------------------------------------------------------------------
 class RouterServer(ApplicationBase):
-    def __init__(self):
-        self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8600)
-        self._configuration.queue_directory='/tmp'
-        self._configuration.stats_keeper.gather_period=60
-        self._configuration.stats_keeper.history_length=60
-        super().__init__()
+  def __init__(self):
+    self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8600)
+    self._configuration.buffer_directory='/tmp'
+    self._configuration.stats_keeper.gather_period=60
+    self._configuration.stats_keeper.history_length=60
+    super().__init__()
 
 
 # --------------------------------------------------------------------------------
 def main():
-    with RouterServer() as app:
-        app.start()
+  with RouterServer() as app:
+    app.start()
 
 
 # --------------------------------------------------------------------------------
 if __name__=='__main__':
-    main()
+  main()
 ```
 
 And here's the server, as you've seen in previous examples.
@@ -100,12 +102,12 @@ Now we start getting to the guts of this, lets take a look at [senders.py](../..
 
 ```python
 from ekosis.sending.sender import sender
-from ekosis.sending.queued_sender import queued_sender
-from ekosis.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
+from ekosis.sending.buffered_sender import buffered_sender
+from ekosis.data_transfer_objects import EmptyDto, BufferedEndpointResponseDTO
 ```
-You know about `EmptyDto`, `QueuedEndpointResponseDTO` and the `sender` decorator already.
+You know about `EmptyDto`, `BufferedEndpointResponseDTO` and the `sender` decorator already.
 
-What you've not seen up until now is, `queued_sender`. We'll explore that a bit further down.
+What you've not seen up until now is, `buffered_sender`. We'll explore that a bit further down.
 
 ```python
 from ..fortunes.dtos import FortuneResponseDto
@@ -170,14 +172,14 @@ Have you noticed that each one of them now caters for `*args` and `**kwargs`?
 
 Yea, we'll be doing something special with that further down. Just keep it in mind for now.
 
-#### The Queued senders
+#### The Buffered senders
 ```python
 # --------------------------------------------------------------------------------
-@queued_sender(
+@buffered_sender(
     tracker_client,
     "app.log_request",
     TrackerLogRequestDto,
-    QueuedEndpointResponseDTO,
+    BufferedEndpointResponseDTO,
     0,
     1000,
     10
@@ -190,11 +192,11 @@ async def log_request(data: str, timestamp: float, *args, **kwargs):
 
 
 # --------------------------------------------------------------------------------
-@queued_sender(
+@buffered_sender(
     tracker_client,
     "app.log_response",
     TrackerLogRequestDto,
-    QueuedEndpointResponseDTO,
+    BufferedEndpointResponseDTO,
     0,
     1000,
     10
@@ -207,10 +209,10 @@ async def log_response(data: str, timestamp: float, *args, **kwargs):
 ```
 
 Now this, you have not seen in previous examples. Rest assured though, they are
-basically the same as `queued_endpoint`, just from the sending side, as apposed
+basically the same as `buffered_endpoint`, just from the sending side, as apposed
 to receiving.
 
-`queued_sender` needs at least 4 things from you:
+`buffered_sender` needs at least 4 things from you:
 1. An instantiated client you want to use for sending.
 2. The route key used on the server side, that you want to send your message to.
 3. A request dto type
@@ -223,19 +225,19 @@ The other parameters you can set are:
      set it to `0`. The default for this is also `0`.
 2. `page_size`:
    - As discussed in the
-     [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),
+     [technical stuff for `buffered_endpoint`](../../buffereds/technical_stuff.md),
      this tells each of the sql databases for your queues, how many entries it should
      keep in the front and back pages of the queue. For this example, I set it to
      `1000`. The default for this is `100`
 3. `max_retries`:
    - Again, as discussed in
-     [technical stuff for `queued_endpoint`](../../queueds/technical_stuff.md),
+     [technical stuff for `buffered_endpoint`](../../buffereds/technical_stuff.md),
      this tells Ecosystem how many times it should try sending a message, before giving
      up on it and moving it to the `error` database of the queue.
    - It's important to note, that Ecosystem will only retry sending, if it makes
      sense to retry. In other words, for almost all cases other than the server being
      busy, the message will be moved to the `error` database.
-   - As for `queued_endpoint`, Ecosystem already has all the functionality you need to
+   - As for `buffered_endpoint`, Ecosystem already has all the functionality you need to
      do things like:
      - Inspect the queues
      - Get statistical information on the queues
@@ -246,13 +248,13 @@ The other parameters you can set are:
        Ecosystem will be enhanced to do this for you, automatically.
    - In the example, I set it to `10`, but the default is `0`.
 
-Let us take a look at one of these `queued_senders` though:
+Let us take a look at one of these `buffered_senders` though:
 ```python
-@queued_sender(
+@buffered_sender(
     tracker_client,
     "app.log_request",
     TrackerLogRequestDto,
-    QueuedEndpointResponseDTO,
+    BufferedEndpointResponseDTO,
     0,
     1000,
     10
@@ -267,7 +269,7 @@ async def log_request(data: str, timestamp: float, *args, **kwargs):
 Here we are setting this `queueud_sender` to:
 - Use the client we instantiated called `tracker_client`
 - Send messages to the `app.log_request` endpoint of the `[tracker]` service.
-- Use `TrackerLogRequestDto` and `QueuedEndpointResponseDTO` as our request and
+- Use `TrackerLogRequestDto` and `BufferedEndpointResponseDTO` as our request and
   response DTOs
 - Have a `wait_period` of `0` seconds between sending messages.
 - Have a maximum of `1000` inserts and deletes on the queue databases.
@@ -353,7 +355,7 @@ literally contains the protocol level UUID, of the request your function is
 invoked to process.
 
 This is also the same UUID used, in both the `pending` and `error` databases,
-created when you use `queued_endpoint` and `queued_sender`.
+created when you use `buffered_endpoint` and `buffered_sender`.
 
 If you are paying attention, you might begin to see the **real-world** implications
 of this, and why I designed Ecosystem to facilitate it.
@@ -514,7 +516,7 @@ of the services. Then taking the response from that service, and returning it to
 
 All of this was really just to teach you about:
 1. Using `request_uuid` to make your life easier when it comes to doing investigations.
-2. How to use `queued_sender` and
+2. How to use `buffered_sender` and
 3. What `run_soon` does for you.
 
 By the time you have gotten a grip on this example, and what it does, you'll have all

@@ -5,8 +5,8 @@ are running. So doing things like:
 - [Setting log level and log file buffer size](#setting-log-level-and-log-file-buffer-size-at-runtime)
 - [getting statistical data](#getting-application-statistics), and
 - Managing queues created with:
-  - [`queued_endpoint`](#managing-queues-created-through-queued_endpoint-ie-queued-endpoint-manager-qem-for-short) or
-  - [`queued_sender`](#managing-queues-created-through-queued_sender-ie-queued-sender-manager-qsm-for-short)
+  - [`buffered_endpoint`](#managing-queues-created-through-buffered_endpoint-ie-queued-endpoint-manager-qem-for-short) or
+  - [`buffered_sender`](#managing-queues-created-through-buffered_sender-ie-queued-sender-manager-qsm-for-short)
 
 Go ahead try the statistics tool, run it with `-h` to see the help output.
 
@@ -57,7 +57,7 @@ python -m ekosis.cli.stat -st tcp -sd 127.0.0.1:8888 -type full
 ```
 
 ---
-## Managing queues created through `queued_endpoint` i.e. Queued Endpoint Manager. QEM for short
+## Managing queues created through `buffered_endpoint` i.e. Buffered Endpoint Manager. BEM for short
 ### Getting data about the queue
 ```shell
 python -m ekosis.cli.qem -st tcp -sd 127.0.0.1:8888 -rk dice_roller.roll_times
@@ -125,7 +125,7 @@ python -m ekosis.cli.qem -st tcp -sd 127.0.0.1:8888 -rk dice_roller.roll_times -
 ```
 
 ---
-## Managing queues created through `queued_sender`. i.e. Queued Sender Manager, QSM for short.
+## Managing queues created through `buffered_sender`. i.e. Buffered Sender Manager, BSM for short.
 
 ### Getting data about the queue
 ```shell

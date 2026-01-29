@@ -5,7 +5,7 @@ from typing import Dict, List, cast
 from pydantic import BaseModel as PydanticBaseModel
 
 from .handler_base import HandlerBase
-from .queued_handler_base import QueuedRequestHandlerBase
+from .buffered_handler_base import BufferedRequestHandlerBase
 from .status import Status
 
 from ..middleware.manager import MiddlewareManager
@@ -45,11 +45,11 @@ class RequestRouter(metaclass=SingletonType):
         else:
             raise Exception(f"Handler command id [{handler.get_route_key()}] already exists")
 
-    def get_queued_handlers(self):
-        response: List[QueuedRequestHandlerBase] = []
+    def get_buffered_handlers(self):
+        response: List[BufferedRequestHandlerBase] = []
         for queue in self.__routing_table.values():
-            if isinstance(queue, QueuedRequestHandlerBase):
-                response.append(cast(QueuedRequestHandlerBase, queue))
+            if isinstance(queue, BufferedRequestHandlerBase):
+                response.append(cast(BufferedRequestHandlerBase, queue))
         return response
 
     async def route_request(self, protocol_dto: RequestDTO, **kwargs) -> PydanticBaseModel:

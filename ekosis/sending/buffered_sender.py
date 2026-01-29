@@ -1,18 +1,18 @@
 from typing import Type, TypeVar
 from pydantic import BaseModel as PydanticBaseModel
 
-from .queued_sender_class import QueuedSenderClass
+from .buffered_sender_class import BufferedSenderClass
 
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
-from ..state_keepers.queued_sender_keeper import QueuedSenderKeeper
+from ..state_keepers.buffered_sender_keeper import BufferedSenderKeeper
 
 _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)
 _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 
 
 # --------------------------------------------------------------------------------
-def queued_sender(
+def buffered_sender(
     client           : ClientBase,
     route_key        : str,
     request_dto_type : Type[_RequestDTOType],
@@ -22,8 +22,8 @@ def queued_sender(
     max_retries      : int                    = 0,
 ):
     def inner_decorator(function):
-        queued_sender_keeper   = QueuedSenderKeeper()
-        queued_sender_instance = QueuedSenderClass[_RequestDTOType, _ResponseDTOType](
+        buffered_sender_keeper   = BufferedSenderKeeper()
+        buffered_sender_instance = BufferedSenderClass[_RequestDTOType, _ResponseDTOType](
             client,
             route_key,
             request_dto_type,
@@ -32,13 +32,13 @@ def queued_sender(
             page_size,
             max_retries
         )
-        queued_sender_keeper.add_queued_sender(queued_sender_instance)
+        buffered_sender_keeper.add_buffered_sender(buffered_sender_instance)
 
         async def wrapper(*args, **kwargs):
             request_uid_to_use = None
             if "request_uid" in kwargs.keys():
                 request_uid_to_use = kwargs["request_uid"]
 
-            await queued_sender_instance.push_message(await function(*args, **kwargs), request_uid_to_use)
+            await buffered_sender_instance.push_message(await function(*args, **kwargs), request_uid_to_use)
         return wrapper
     return inner_decorator

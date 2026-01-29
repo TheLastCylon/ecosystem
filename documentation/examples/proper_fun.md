@@ -105,7 +105,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
 
 # Machine level configurations
-export ECOENV_QUEUE_DIR=/tmp
+export ECOENV_BUFFER_DIR=/tmp
 export ECOENV_LOG_DIR=/tmp
 export ECOENV_LOG_BUF_SIZE=1500
 export ECOENV_STAT_GP=60

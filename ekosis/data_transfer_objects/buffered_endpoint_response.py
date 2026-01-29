@@ -2,5 +2,5 @@ from pydantic import BaseModel as PydanticBaseModel
 
 
 # --------------------------------------------------------------------------------
-class QueuedEndpointResponseDTO(PydanticBaseModel):
+class BufferedEndpointResponseDTO(PydanticBaseModel):
     uid: str

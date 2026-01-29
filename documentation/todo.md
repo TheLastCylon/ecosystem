@@ -13,8 +13,8 @@
 - [ ] Documentation: LRU Cache
 - [ ] Example: LRU Cache
 
-- [ ] Improve Queued senders to use error keeper when a server is unreachable.
-  - This will make Queued senders unusable outside Ecosystem, is this what we want?
+- [ ] Improve Buffered senders to use error keeper when a server is unreachable.
+  - This will make Buffered senders unusable outside Ecosystem, is this what we want?
 
 - [ ] Benchmarking: queues.
 
@@ -32,7 +32,7 @@
 - [ ] Ecosystem Node.js client
 
 
-- [ ] Sequenced Queued Sender
+- [ ] Sequenced Buffered Sender
   - As in: Make sure messages groups are sent in order
 
 
@@ -44,6 +44,7 @@
 - [ ] Sequenced Broadcaster
 
 # Done
+- [X] Massive breakaway from queue terminology on endpoints and senders, to clarify their intended purpose of buffered communication.
 - [X] Make communication channels optional
   - [X] TCP
   - [X] UDP
@@ -190,7 +191,7 @@
 
 # Ideas that might not see the light of day.
 
-- For `queued_endpoints`.
+- For `buffered_endpoints`.
   - Make max uncommited an environment variable.
     - Should it be?
     - We have `extra` for use by developers, should that not rather be used?

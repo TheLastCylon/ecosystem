@@ -18,7 +18,7 @@ _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 
 
 # --------------------------------------------------------------------------------
-class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_RequestDTOType, _ResponseDTOType]):
+class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_RequestDTOType, _ResponseDTOType]):
     def __init__(
         self,
         client           : ClientBase,
@@ -76,10 +76,10 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
     def __shut_down_check(self):
         if not self.running and self.shutdown:
             route_key = self.get_route_key()
-            self.log.info(f"Queued sender [{route_key}] stopping.")
+            self.log.info(f"Buffered sender [{route_key}] stopping.")
             self.queue.shut_down()
             self.on_shutdown_future.set_result(True)
-            self.log.info(f"Queued sender [{route_key}] stopped.")
+            self.log.info(f"Buffered sender [{route_key}] stopped.")
 
     # --------------------------------------------------------------------------------
     async def wait_for_shutdown(self):
@@ -89,10 +89,10 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
     # --------------------------------------------------------------------------------
     async def __do_queue_processing(self):
         while not self._sending_paused and self.queue.pending_q.size():
-            queued_item  = await self.queue.pop()
-            request_uid  = uuid.UUID(queued_item.uid)
-            request_data = self._request_dto_type(**queued_item.data)
-            retries      = queued_item.retries
+            buffered_item = await self.queue.pop()
+            request_uid   = uuid.UUID(buffered_item.uid)
+            request_data  = self._request_dto_type(**buffered_item.data)
+            retries       = buffered_item.retries
             try:
                 if self.wait_period > 0:
                     await asyncio.sleep(self.wait_period)
@@ -144,17 +144,17 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
 
     # --------------------------------------------------------------------------------
     async def pop_request_from_error_queue(self, request_uid: uuid.UUID):
-        queued_request = await self.queue.pop_error_q_uuid(request_uid)
-        if not queued_request:
+        buffered_request = await self.queue.pop_error_q_uuid(request_uid)
+        if not buffered_request:
             return None
-        return self._request_dto_type(**queued_request)
+        return self._request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     async def inspect_request_in_error_queue(self, request_uid: uuid.UUID):
-        queued_request = await self.queue.inspect_error_q_uuid(request_uid)
-        if not queued_request:
+        buffered_request = await self.queue.inspect_error_q_uuid(request_uid)
+        if not buffered_request:
             return None
-        return self._request_dto_type(**queued_request)
+        return self._request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue(self):
@@ -166,12 +166,12 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _RequestDTOType | None:
         self._sending_paused = True
-        queued_request       = await self.queue.move_one_error_to_pending(request_uid)
+        buffered_request     = await self.queue.move_one_error_to_pending(request_uid)
         self._sending_paused = False
         self.__check_process_send_queue()
-        if not queued_request:
+        if not buffered_request:
             return None
-        return self._request_dto_type(**queued_request)
+        return self._request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     def __configure_queue(
@@ -186,8 +186,8 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
             f"{app_instance_string}-{self._route_key}-sender",
             self.page_size
         )
-        self.statistics_keeper.add_persisted_queue(f"queued_sender_sizes.{self._route_key}.pending", self.queue.pending_q)
-        self.statistics_keeper.add_persisted_queue(f"queued_sender_sizes.{self._route_key}.error"  , self.queue.error_q)
+        self.statistics_keeper.add_persisted_queue(f"buffered_sender_sizes.{self._route_key}.pending", self.queue.pending_q)
+        self.statistics_keeper.add_persisted_queue(f"buffered_sender_sizes.{self._route_key}.error"  , self.queue.error_q)
 
     # --------------------------------------------------------------------------------
     async def setup(
@@ -197,7 +197,7 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
         instance_id     : str,
     ):
         route_key = self.get_route_key()
-        self.log.info(f"Queued sender [{route_key}] setup.")
+        self.log.info(f"Buffered sender [{route_key}] setup.")
         self.__configure_queue(directory, application_name, instance_id)
         self.unpause_send_process()
 
@@ -205,4 +205,4 @@ class QueuedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[_R
 
         loop = asyncio.get_running_loop()
         self.on_shutdown_future = loop.create_future()
-        self.log.info(f"Queued sender [{route_key}] setup complete.")
+        self.log.info(f"Buffered sender [{route_key}] setup complete.")

@@ -15,7 +15,7 @@ from .servers import (
     UDSServer,
 )
 
-from .state_keepers.queued_sender_keeper import QueuedSenderKeeper
+from .state_keepers.buffered_sender_keeper import BufferedSenderKeeper
 from .state_keepers.error_state_list import ErrorStateList
 from .state_keepers.statistics_keeper import StatisticsKeeper
 
@@ -29,29 +29,29 @@ from .exceptions.exception_base import ExceptionBase
 from .standard_endpoints.log_manager import eco_log_level, eco_log_buffer # noqa
 from .standard_endpoints.statistics import eco_statistics_get # noqa
 from .standard_endpoints.errors import eco_error_states_get, eco_error_states_clear # noqa
-from .standard_endpoints.queued_handler_manager import ( # noqa
-    eco_queued_handler_data,
-    eco_queued_handler_errors_clear,
-    eco_queued_handler_errors_get_first_10,
-    eco_queued_handler_errors_inspect_request,
-    eco_queued_handler_errors_pop_request,
-    eco_queued_handler_errors_reprocess_all,
-    eco_queued_handler_errors_reprocess_one,
-    eco_queued_handler_processing_pause,
-    eco_queued_handler_processing_unpause,
-    eco_queued_handler_receiving_pause,
-    eco_queued_handler_receiving_unpause,
+from .standard_endpoints.buffered_handler_manager import ( # noqa
+    eco_buffered_handler_data,
+    eco_buffered_handler_errors_clear,
+    eco_buffered_handler_errors_get_first_10,
+    eco_buffered_handler_errors_inspect_request,
+    eco_buffered_handler_errors_pop_request,
+    eco_buffered_handler_errors_reprocess_all,
+    eco_buffered_handler_errors_reprocess_one,
+    eco_buffered_handler_processing_pause,
+    eco_buffered_handler_processing_unpause,
+    eco_buffered_handler_receiving_pause,
+    eco_buffered_handler_receiving_unpause,
 )
-from .standard_endpoints.queued_sender_manager import ( # noqa
-    eco_queued_sender_data,
-    eco_queued_sender_errors_clear,
-    eco_queued_sender_errors_get_first_10,
-    eco_queued_sender_errors_inspect_request,
-    eco_queued_sender_errors_pop_request,
-    eco_queued_sender_errors_reprocess_all,
-    eco_queued_sender_errors_reprocess_one,
-    eco_queued_sender_send_process_pause,
-    eco_queued_sender_send_process_unpause,
+from .standard_endpoints.buffered_sender_manager import ( # noqa
+    eco_buffered_sender_data,
+    eco_buffered_sender_errors_clear,
+    eco_buffered_sender_errors_get_first_10,
+    eco_buffered_sender_errors_inspect_request,
+    eco_buffered_sender_errors_pop_request,
+    eco_buffered_sender_errors_reprocess_all,
+    eco_buffered_sender_errors_reprocess_one,
+    eco_buffered_sender_send_process_pause,
+    eco_buffered_sender_send_process_unpause,
 )
 
 # --------------------------------------------------------------------------------
@@ -122,8 +122,8 @@ class ApplicationBase(metaclass=SingletonType):
     def __do_shutdown(self):
         self.logger.info("Doing Shutdown.")
         self.__stop_servers()
-        self.__shut_down_queued_handlers()
-        self.__shut_down_queued_senders()
+        self.__shut_down_buffered_handlers()
+        self.__shut_down_buffered_senders()
         self.logger.info(f"Instance [{self._configuration.instance}] of application [{self._configuration.name}] shutdown.")
         self.__eco_logger.flush()
 
@@ -183,37 +183,37 @@ class ApplicationBase(metaclass=SingletonType):
             self.__server_uds = UDSServer(uds_config)
 
     # --------------------------------------------------------------------------------
-    async def __setup_queued_handlers(self):
-        queue_directory = self._configuration.queue_directory
-        for queued_handler in self.__request_router.get_queued_handlers():
-            await queued_handler.setup(
-                queue_directory,
+    async def __setup_buffered_handlers(self):
+        buffer_directory = self._configuration.buffer_directory
+        for buffered_handler in self.__request_router.get_buffered_handlers():
+            await buffered_handler.setup(
+                buffer_directory,
                 self._configuration.name,
                 self._configuration.instance
             )
 
     # --------------------------------------------------------------------------------
-    async def __setup_queued_senders(self):
-        queued_sender_keeper = QueuedSenderKeeper()
-        queue_directory = self._configuration.queue_directory
-        for queued_senders in queued_sender_keeper.get_queued_senders():
-            await queued_senders.setup(
-                queue_directory,
+    async def __setup_buffered_senders(self):
+        buffered_sender_keeper = BufferedSenderKeeper()
+        buffer_directory = self._configuration.buffer_directory
+        for buffered_senders in buffered_sender_keeper.get_buffered_senders():
+            await buffered_senders.setup(
+                buffer_directory,
                 self._configuration.name,
                 self._configuration.instance
             )
 
     # --------------------------------------------------------------------------------
-    def __shut_down_queued_handlers(self):
-        for queued_handler in self.__request_router.get_queued_handlers():
-            queued_handler.shut_down()
+    def __shut_down_buffered_handlers(self):
+        for buffered_handler in self.__request_router.get_buffered_handlers():
+            buffered_handler.shut_down()
 
     # --------------------------------------------------------------------------------
     @staticmethod
-    def __shut_down_queued_senders():
-        queued_sender_keeper = QueuedSenderKeeper()
-        for queued_sender in queued_sender_keeper.get_queued_senders():
-            queued_sender.shut_down()
+    def __shut_down_buffered_senders():
+        buffered_sender_keeper = BufferedSenderKeeper()
+        for buffered_sender in buffered_sender_keeper.get_buffered_senders():
+            buffered_sender.shut_down()
 
     # --------------------------------------------------------------------------------
     def start(self):
@@ -275,16 +275,16 @@ class ApplicationBase(metaclass=SingletonType):
     async def __start(self):
         tasks = []
 
-        await self.__setup_queued_handlers()
-        await self.__setup_queued_senders()
+        await self.__setup_buffered_handlers()
+        await self.__setup_buffered_senders()
 
-        for queued_handler in self.__request_router.get_queued_handlers():
-            task = asyncio.create_task(queued_handler.wait_for_shutdown())
+        for buffered_handler in self.__request_router.get_buffered_handlers():
+            task = asyncio.create_task(buffered_handler.wait_for_shutdown())
             tasks.append(task)
 
-        queued_sender_keeper = QueuedSenderKeeper()
-        for queued_sender in queued_sender_keeper.get_queued_senders():
-            task = asyncio.create_task(queued_sender.wait_for_shutdown())
+        buffered_sender_keeper = BufferedSenderKeeper()
+        for buffered_sender in buffered_sender_keeper.get_buffered_senders():
+            task = asyncio.create_task(buffered_sender.wait_for_shutdown())
             tasks.append(task)
 
         tasks.append(asyncio.create_task(self.__start_stats_keeper()))

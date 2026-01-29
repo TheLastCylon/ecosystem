@@ -34,12 +34,12 @@ What follows below, is a list of Ecosystem environment variables, that set thing
 - `ECOENV_LOG_DIR`
   - Sets the location for LOG files.
   - Default: The value of `ECOENV_DEFAULT_DIR`
-- `ECOENV_QUEUE_DIR`
-  - Sets the location for the sqlite queue database files to reside.
+- `ECOENV_BUFFER_DIR`
+  - Sets the location for the sqlite database files (used by buffered communications).
   - TAKE NOTE:
-    - Ecosystem will NEVER try to use some kind of default for the location of queueing databases.
-    - If your application uses things like `queued_endpoint`, you will have to explicitly set this location, for at least machine level.
-    - Queue databases are simply too important to have their location left up to some kind of computed default.
+    - Ecosystem will NEVER try to use some kind of default for the location of buffer databases.
+    - If your application uses things like `buffered_endpoint`, you will have to explicitly set this location, for at least machine level.
+    - These databases are simply too important to have their location left up to some kind of computed default.
     - Ecosystem forces you to be explicit about this, because losing these sqlite files, or having them in a location that you do not consciously know and keep track of, can cause disasters.
 
 ---

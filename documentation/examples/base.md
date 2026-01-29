@@ -38,7 +38,7 @@ echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statisti
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0_uds.sock
+echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0.uds.sock
 ```
 
 In all three cases, you'll get a response similar to:

@@ -202,11 +202,11 @@ def get_app_instance_uds():
         socket_file_name = f"{application_name}_{application_instance}.uds.sock"
     return ConfigUDS(directory=directory, socket_file_name=socket_file_name)
 
-def get_app_instance_queue_directory():
-    # Do not default queue_directory to anything. Make the user explicitly set it.
-    # Rather let them get an error, than lose their queues due to them having been
+def get_app_instance_buffer_directory():
+    # Do not default buffer_directory to anything. Make the user explicitly set it.
+    # Rather let them get an error, than lose their buffer databases due to them having been
     # written to a place that gets cleaned on reboot.
-    return get_eco_env("QUEUE_DIR", None)
+    return get_eco_env("BUFFER_DIR", None)
 
 def get_app_instance_extra():
     extra_env_prefix = f"{env_prefix}_EXTRA_{env_app_instance}_"
@@ -221,25 +221,25 @@ def get_app_instance_extra():
     return retval
 
 class ConfigApplicationInstance(PydanticBaseModel):
-    application_name: str                    = application_name
-    instance_id     : str                    = application_instance
-    stats_keeper    : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
-    logging         : ConfigLogging          = ConfigLogging()
-    lock_directory  : str                    = Field(default_factory=get_app_instance_lock_dir)
-    tcp             : ConfigTCP              = Field(default_factory=get_app_instance_tcp)
-    udp             : ConfigUDP              = Field(default_factory=get_app_instance_udp)
-    uds             : ConfigUDS              = Field(default_factory=get_app_instance_uds)
-    queue_directory : str                    = Field(default_factory=get_app_instance_queue_directory)
-    extra           : Any                    = Field(default_factory=get_app_instance_extra)
+    application_name : str                    = application_name
+    instance_id      : str                    = application_instance
+    stats_keeper     : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
+    logging          : ConfigLogging          = ConfigLogging()
+    lock_directory   : str                    = Field(default_factory=get_app_instance_lock_dir)
+    tcp              : ConfigTCP              = Field(default_factory=get_app_instance_tcp)
+    udp              : ConfigUDP              = Field(default_factory=get_app_instance_udp)
+    uds              : ConfigUDS              = Field(default_factory=get_app_instance_uds)
+    buffer_directory : str                    = Field(default_factory=get_app_instance_buffer_directory)
+    extra            : Any                    = Field(default_factory=get_app_instance_extra)
 
 # ConfigApplicationInstanceDefaults
 # --------------------------------------------------------------------------------
 class ConfigApplicationInstanceDefaults(PydanticBaseModel):
-    lock_directory  : str                    = Field(default_factory=get_app_instance_lock_dir)
-    logging         : ConfigLogging          = ConfigLogging()
-    stats_keeper    : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
-    queue_directory : str                    = Field(default_factory=get_app_instance_queue_directory)
-    extra           : Any                    = None
+    lock_directory   : str                    = Field(default_factory=get_app_instance_lock_dir)
+    logging          : ConfigLogging          = ConfigLogging()
+    stats_keeper     : ConfigStatisticsKeeper = ConfigStatisticsKeeper()
+    buffer_directory : str                    = Field(default_factory=get_app_instance_buffer_directory)
+    extra            : Any                    = None
 
 # ConfigApplication
 # --------------------------------------------------------------------------------
@@ -287,19 +287,19 @@ class AppConfiguration(metaclass=SingletonType):
     stats_keeper     = instance_configuration.stats_keeper
     logging          = instance_configuration.logging
     lock_directory   = instance_configuration.lock_directory
-    queue_directory  = instance_configuration.queue_directory
+    buffer_directory = instance_configuration.buffer_directory
     extra            = instance_configuration.extra
 
     def dict(self): # pragma: no cover
         return {
-            "name"           : self.name,
-            "instance"       : self.instance,
-            "tcp"            : None if self.tcp is None else self.tcp.model_dump(),
-            "udp"            : None if self.udp is None else self.udp.model_dump(),
-            "uds"            : None if self.uds is None else self.uds.model_dump(),
-            "stats_keeper"   : self.stats_keeper.model_dump(),
-            "logging"        : self.logging.model_dump(),
-            "lock_directory" : self.lock_directory,
-            "queue_directory": self.queue_directory,
-            "extra"          : self.extra,
+            "name"            : self.name,
+            "instance"        : self.instance,
+            "tcp"             : None if self.tcp is None else self.tcp.model_dump(),
+            "udp"             : None if self.udp is None else self.udp.model_dump(),
+            "uds"             : None if self.uds is None else self.uds.model_dump(),
+            "stats_keeper"    : self.stats_keeper.model_dump(),
+            "logging"         : self.logging.model_dump(),
+            "lock_directory"  : self.lock_directory,
+            "buffer_directory": self.buffer_directory,
+            "extra"           : self.extra,
         }

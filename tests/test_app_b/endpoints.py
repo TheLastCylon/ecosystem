@@ -4,7 +4,7 @@ import logging
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
-from ekosis.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.buffered_endpoint import buffered_endpoint
 
 from ..dtos.dtos import AppRequestDto, AppResponseDto
 
@@ -16,11 +16,11 @@ async def app_b_endpoint(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBaseMode
     return AppResponseDto(message=dto.message)
 
 # --------------------------------------------------------------------------------
-@queued_endpoint("app.b.queued_endpoint", AppRequestDto)
-async def app_b_queued_endpoint(uid: uuid.UUID, dto: AppRequestDto) -> bool:
+@buffered_endpoint("app.b.buffered_endpoint", AppRequestDto)
+async def app_b_buffered_endpoint(uid: uuid.UUID, dto: AppRequestDto) -> bool:
     return True
 
 # --------------------------------------------------------------------------------
-@queued_endpoint("app.b.queued_endpoint_fail", AppRequestDto)
-async def app_b_queued_endpoint_fail(uid: uuid.UUID, dto: AppRequestDto) -> bool:
+@buffered_endpoint("app.b.buffered_endpoint_fail", AppRequestDto)
+async def app_b_buffered_endpoint_fail(uid: uuid.UUID, dto: AppRequestDto) -> bool:
     return False

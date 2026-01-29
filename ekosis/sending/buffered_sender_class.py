@@ -3,7 +3,7 @@ import uuid
 from typing import Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
-from .queued_sender_base import QueuedSenderBase
+from .buffered_sender_base import BufferedSenderBase
 
 from ..clients import ClientBase
 from ..data_transfer_objects import EmptyDto
@@ -12,7 +12,7 @@ _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)
 _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
 
 
-class QueuedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], QueuedSenderBase[_RequestDTOType, _ResponseDTOType]):
+class BufferedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], BufferedSenderBase[_RequestDTOType, _ResponseDTOType]):
     def __init__(
         self,
         client           : ClientBase,

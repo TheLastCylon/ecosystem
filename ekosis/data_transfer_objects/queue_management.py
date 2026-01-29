@@ -19,7 +19,7 @@ class QDatabaseSizesDto(PydanticBaseModel):
 
 
 # --------------------------------------------------------------------------------
-class QueuedEndpointInformationDto(PydanticBaseModel):
+class BufferedEndpointInformationDto(PydanticBaseModel):
     route_key        : str
     receiving_paused : bool
     processing_paused: bool
@@ -27,7 +27,7 @@ class QueuedEndpointInformationDto(PydanticBaseModel):
 
 
 # --------------------------------------------------------------------------------
-class QueuedSenderInformationDto(PydanticBaseModel):
+class BufferedSenderInformationDto(PydanticBaseModel):
     route_key           : str
     send_process_paused : bool
     database_sizes      : QDatabaseSizesDto
@@ -35,6 +35,6 @@ class QueuedSenderInformationDto(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class QManagementResponseDto(PydanticBaseModel):
-    queue_data  : QueuedEndpointInformationDto | QueuedSenderInformationDto | List[str] | None = None
+    queue_data  : BufferedEndpointInformationDto | BufferedSenderInformationDto | List[str] | None = None
     request_data: Any | None = None
     message     : str

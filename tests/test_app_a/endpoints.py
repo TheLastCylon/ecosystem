@@ -11,9 +11,9 @@ from ekosis.exceptions import ApplicationProcessingException
 from ..dtos.dtos import AppRequestDto, AppResponseDto, AppMiddlewareTestRequestDto, AppMiddlewareTestResponseDto
 from .senders import (
     app_a_sender_app_b_endpoint,
-    app_a_sender_app_b_queued_endpoint,
-    app_a_queued_sender_app_b_queued_endpoint,
-    app_a_queued_sender_no_server
+    app_a_sender_app_b_buffered_endpoint,
+    app_a_buffered_sender_app_b_buffered_endpoint,
+    app_a_buffered_sender_no_server
 )
 
 log = logging.getLogger()
@@ -34,19 +34,19 @@ async def app_a_pass_through(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBase
 # --------------------------------------------------------------------------------
 @endpoint("app.a.queued_pass_through", AppRequestDto)
 async def app_a_queued_pass_through(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBaseModel:
-    await app_a_sender_app_b_queued_endpoint(dto.message)
+    await app_a_sender_app_b_buffered_endpoint(dto.message)
     return AppResponseDto(message=dto.message)
 
 # --------------------------------------------------------------------------------
 @endpoint("app.a.queued_sender", AppRequestDto)
 async def app_a_queued_sender(uid: uuid.UUID, dto: AppRequestDto) -> PydanticBaseModel:
-    await app_a_queued_sender_app_b_queued_endpoint(dto.message)
+    await app_a_buffered_sender_app_b_buffered_endpoint(dto.message)
     return AppResponseDto(message=dto.message)
 
 # --------------------------------------------------------------------------------
 @run_soon
 async def enqueue_no_such_server(uid: uuid.UUID, message: str):
-    await app_a_queued_sender_no_server(message, request_uid=uid)
+    await app_a_buffered_sender_no_server(message, request_uid=uid)
 
 # --------------------------------------------------------------------------------
 @endpoint("app.a.send_no_such_server", AppRequestDto)

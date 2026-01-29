@@ -71,7 +71,7 @@ As for `[tracker]`, other than having a database, it does nothing you've not see
 
 The real demonstrations for this example, are in `[router]`.
 
-So, let's do a brief overview of each of the components, then we'll look at `[router]` in detail.
+So, let's do a brief overview the other components, then we'll look at `[router]` in detail.
 
 ---
 #### `[client]`

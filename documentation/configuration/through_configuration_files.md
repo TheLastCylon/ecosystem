@@ -124,7 +124,7 @@ Let's take a look at a complete configuration, for a single instance:
     "instances": {
         "feeds_cats": {
             "lock_directory"  : "/tmp/lock_files",
-            "queue_directory" : "/tmp/queue_files",
+            "buffer_directory" : "/tmp/buffer_files",
             "stats_keeper"    : {
                "gather_period"  : 300,
                "history_length" : 12
@@ -176,7 +176,7 @@ entries set to the corresponding environment variable names discussed in:
     "instances": {
         "feeds_cats": {
             "lock_directory"  : "ECOENV_LOCK_DIR",
-            "queue_directory" : "ECOENV_QUEUE_DIR",
+            "buffer_directory" : "ECOENV_BUFFER_DIR",
             "stats_keeper"    : {
                "gather_period"  : "ECOENV_STAT_GP",
                "history_length" : "ECOENV_STAT_HL"

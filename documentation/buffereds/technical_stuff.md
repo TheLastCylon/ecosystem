@@ -1,27 +1,27 @@
-# Queues, the technical stuff.
+# Buffereds, the technical stuff.
 
-You might want to take a look at the [Ecosystem Queues, Questions and Answers](./questions_and_answers.md) first.
+You might want to take a look at the [Ecosystem Buffereds, Questions and Answers](./questions_and_answers.md) first.
 
 If you're ready to move on though, lets take a look at some code:
 
-## A queued endpoint:
+## A buffered endpoint:
 
 ```python
-from ekosis.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.buffered_endpoint import buffered_endpoint
 
 
-@queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+@buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 ```
 
-Here you see me create a `queued_endpoint`
+Here you see me create a `buffered_endpoint`
 - with `route_key` set to `dice_roller.roll_times`
 - and `request_dto_type` set to `RollTimesRequestDto`
 
-Yes, that is all you need to create a `queued_endpoint`.
+Yes, that is all you need to create a `buffered_endpoint`.
 
 This is however, definitely NOT all you should do.
 
-`queued_endpoint` can accept two more parameters, they are:
+`buffered_endpoint` can accept two more parameters, they are:
 - `page_size` and,
 - `max_retries`
 
@@ -98,7 +98,7 @@ In short:
 ---
 ### `max_retries`
 
-For this, let's take a look at the dice roller example's [`roll_times`](../../examples/dice_roller/handlers/roll_times.py) `queued_endpoint` again.
+For this, let's take a look at the dice roller example's [`roll_times`](../../examples/dice_roller/handlers/roll_times.py) `buffered_endpoint` again.
 
 ```python
 import uuid
@@ -106,12 +106,12 @@ import asyncio
 import random
 import logging
 
-from ekosis.requests.queued_endpoint import queued_endpoint
+from ekosis.requests.buffered_endpoint import buffered_endpoint
 
 from ..dtos import RollTimesRequestDto
 
 
-@queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+@buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 async def dice_roller_roll_times(uid: uuid.UUID, dto: RollTimesRequestDto) -> bool:
     log     = logging.getLogger()
     numbers = list(range(1, dto.sides))
@@ -138,7 +138,7 @@ only a boolean.
 
 Yours has to do this too!
 
-Ecosystem uses this return, to tell it that things have gone as you want them to 
+Ecosystem uses this return, to tell it that things have gone as you want them to
 go (`return True`), or that the request should be re-tried later (`return False`).
 
 `max_retries` tells Ecosystem how many times these requests may be retried,
@@ -154,18 +154,18 @@ your application.
 You can learn more about that if you look at: [Standard endpoints for queue management](./standard_endpoints_for_management.md)
 
 ---
-## A queued sender
+## A buffered sender
 
-Here you are looking at one of the `queued_sender` functions used in the
+Here you are looking at one of the `buffered_sender` functions used in the
 [Fun Factory example system](../examples/fun_factory/fun_factory.md).
 
 ```python
 # --------------------------------------------------------------------------------
-@queued_sender(
+@buffered_sender(
     tracker_client,
     "app.log_request",
     TrackerLogRequestDto,
-    QueuedEndpointResponseDTO,
+    BufferedEndpointResponseDTO,
     0,
     1000,
     10
@@ -178,7 +178,7 @@ async def log_request(data: str, timestamp: float, *args, **kwargs):
 ```
 
 You'll note there are a few more parameters begin set here. All you absolutely
-have to give the `queued_sender` decorator is:
+have to give the `buffered_sender` decorator is:
 
 1. An instantiated client you want to use for sending.
 2. The route key used on the server side, that you want to send your message to.
@@ -208,7 +208,7 @@ Yes, this is one way you can manage load to a server, from the client side.
 
 ---
 ### `page_size`
-Is **exactly** the same as described for `queued_endpoint` above.
+Is **exactly** the same as described for `buffered_endpoint` above.
 
 ---
 ### `max_retries`

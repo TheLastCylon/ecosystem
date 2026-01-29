@@ -8,7 +8,7 @@ As a framework, Ecosystem is created in Python, so it can only really be used
 with Python.
 
 ZeroMQ can be used with a whole host of languages. But it lacks features that
-Ecosystem has out-of-the-box. Real time telemetry, and Distributed message
+Ecosystem has out-of-the-box. Real time telemetry, and distributed message
 tracking are just two examples of this.
 
 Ecosystem is intended to make the activity of creating components for a
@@ -20,9 +20,11 @@ ZeroMQ. It provides message queuing in much the way ZeroMQ would. But with
 Ecosystem, the amount of code you have to write to achieve this, is virtually
 nothing.
 
-For instance, in order to have a queued sender, you need about `5` lines of code.
-Nothing more. No installing extra stuff, no running an external service. Just
-code.
+For instance:
+
+In order to have a buffered sender, you need about `5` lines of code.
+Nothing more. No installing extra stuff, no running an external service.
+Just code.
 
 It currently lacks ready-made solution for pub/sub message brokering. It is
 intended to have those solutions though. And it is already remarkably easy to
@@ -39,7 +41,7 @@ Take a look at the [Fun Factory](examples/fun_factory/fun_factory.md) and
 [Proper Fun](examples/proper_fun.md) system examples.
 
 With the use of Ecosystem the [Proper Fun](examples/proper_fun.md) example, is
-an entire system, with `7` servers and `1` client, that includes queuing,
+an entire system, with `7` servers and `1` client, that includes queuing/buffering,
 telemetry, distributed message tracking, etc, etc, etc. ... With only `476` lines
 of code required ... For the ENTIRE system.
 
@@ -74,7 +76,6 @@ happened on the 19th of July 2024.
 
 Yes, it is remarkably usable, fast and easy to learn. For a project this
 young, I'm kind of mind-blown at what it is capable of already.
-But, it does not even have proper tests yet.
 
 Yes, I'm personally happy to use it in a production environment. But that's
 because I created it and can make changes and apply fixes on the fly. Another

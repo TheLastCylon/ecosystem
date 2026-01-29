@@ -12,31 +12,28 @@ from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
 # But the act of importing is what does the work we need to get done.
 # So I add a noqa comment to let it know, that I know what I'm doing here.
 from .handlers import (  # noqa
-    dice_roller_guess,
-    dice_roller_roll,
-    dice_roller_roll_times
-)
+   dice_roller_guess, dice_roller_roll, dice_roller_roll_times)
 
 
 # --------------------------------------------------------------------------------
 class DiceRollerExampleServer(ApplicationBase):
-    def __init__(self):
-        self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8888)
-        self._configuration.udp=ConfigUDP(host="127.0.0.1", port=8889)
-        self._configuration.uds=ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-        self._configuration.queue_directory="/tmp"
-        super().__init__()
+   def __init__(self):
+      self._configuration.tcp=ConfigTCP(host="127.0.0.1", port=8888)
+      self._configuration.udp=ConfigUDP(host="127.0.0.1", port=8889)
+      self._configuration.uds=ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+      self._configuration.buffer_directory="/tmp"
+      super().__init__()
 
 
 # --------------------------------------------------------------------------------
 def main():
-    with DiceRollerExampleServer() as app:
-        app.start()
+   with DiceRollerExampleServer() as app:
+      app.start()
 
 
 # --------------------------------------------------------------------------------
 if __name__=='__main__':
-    main()
+   main()
 ```
 
 The code here has nothing we have not covered in our previous examples. All that's truly worthy of any amount of attention, is the fact that our endpoints are now in a Python package called `handlers`.
@@ -171,7 +168,7 @@ For now though, let's move on to the last endpoint.
 
 #### [handlers/roll_times.py](../../../examples/dice_roller/handlers/roll_times.py)
 
-Before you look at the code below, I'd like to welcome you to the world of: QUEUED endpoints.
+Before you look at the code below, I'd like to welcome you to the world of: BUFFERED endpoints.
 
 "What the heck is that?!", you ask.
 
@@ -190,7 +187,7 @@ This means you have to pay for hosting, possibly have some expert hired to confi
 
 Thing is, in my experience at least, peak times seldom last more than a few minutes, half an hour at a stretch, an hour tops. On top of all this, the fact that as long as the work gets done, no one really cares. Means a stack of money ends up being spent on what could be solved in 5 minutes, with nothing more than a few lines of code.
 
-Enter ... the Ecosystem QUEUED endpoint!
+Enter ... the Ecosystem BUFFERED endpoint!
 
 
 IMPORTANT!
@@ -200,8 +197,8 @@ This is NOT a silver bullet, or in any way a means of totally avoiding having to
 It is however, a solution that fills the gap between not needing carrier-grade solutions, and factually having to hand over cash for them.
 
 For more on this, take a look at the documentation for:
-- [Queued endpoints](../../queueds/queued_endpoints.md) and
-- [Queued endpoints, the technical stuff](../../queueds/technical_stuff.md)
+- [Buffered endpoints](../../buffereds/buffered_endpoints.md) and
+- [Buffered endpoints, the technical stuff](../../buffereds/technical_stuff.md)
 
 Let us move on with this example though.
 
@@ -211,12 +208,12 @@ Let us move on with this example though.
  3: import random
  4: import logging
  5:
- 6: from ekosis.requests.queued_endpoint import queued_endpoint
+ 6: from ekosis.requests.buffered_endpoint import buffered_endpoint
  7:
  8: from ..dtos import RollTimesRequestDto
  9:
 10:
-11: @queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+11: @buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 12: async def dice_roller_roll_times(uid: uuid.UUID, dto: RollTimesRequestDto) -> bool:
 13:     log     = logging.getLogger()
 14:     numbers = list(range(1, dto.sides))
@@ -249,10 +246,10 @@ from ..dtos import RollTimesRequestDto
 - We decorate a function that processes queued requests with:
 
 ```python
-@queued_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+@buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 ```
 
-Just like the normal `endpoint`, a `queued_endpoint` needs:
+Just like the normal `endpoint`, a `buffered_endpoint` needs:
 1. A route key
 2. A request DTO Type
 
@@ -260,16 +257,16 @@ Just like the normal `endpoint`, a `queued_endpoint` needs:
 
 If you've been paying attention, you'll notice that the function we declared there, returns a bool. NOT a response DTO.
 
-The response DTO of a `queued_endpoint`, is always `QueuedEndpointResponseDTO`.
+The response DTO of a `buffered_endpoint`, is always `BufferedEndpointResponseDTO`.
 
-It is declared in `ekosis/data_transfer_objects/queued_endpoint_response.py` and looks like this:
+It is declared in `ekosis/data_transfer_objects/buffered_endpoint_response.py` and looks like this:
 
 ```python
 from pydantic import BaseModel as PydanticBaseModel
 
 
 # --------------------------------------------------------------------------------
-class QueuedEndpointResponseDTO(PydanticBaseModel):
+class BufferedEndpointResponseDTO(PydanticBaseModel):
     uid: str
 ```
 
@@ -283,13 +280,13 @@ The answer of course is:
 
 Because the response DTO for a queued endpoint, is already defined!
 
-It is: `QueuedEndpointResponseDTO`
+It is: `BufferedEndpointResponseDTO`
 
 ## Conclusion
 
 All of the above boils down to three things you need to understand at this stage:
 1. Most of the time, you'll need two DTOs: A request and response DTO.
 2. Some of the time you'll use `EmptyDTO` as your request DTO.
-3. Yet fewer times you'll have only a request DTO, and use `QueuedEndpointResponseDTO` for the response.
+3. Yet fewer times you'll have only a request DTO, and use `BufferedEndpointResponseDTO` for the response.
 
 Now, let's move on and look at the [client](./client.md).

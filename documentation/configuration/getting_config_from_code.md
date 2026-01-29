@@ -18,14 +18,14 @@ From there, you can get to the various configurations.
 
 ```python
     config.name
-    config.instance
-    config.tcp
-    config.udp
-    config.uds
-    config.stats_keeper
-    config.logging
-    config.lock_directory
-    config.queue_directory
+config.instance
+config.tcp
+config.udp
+config.uds
+config.stats_keeper
+config.logging
+config.lock_directory
+config.buffer_directory
 ```
 
 The only thing of note here is: The extra settings.

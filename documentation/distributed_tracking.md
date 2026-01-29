@@ -11,14 +11,14 @@ If you examine [the protocol](./the_protocol.md), you'll notice both the
 request and response DTOs, have a `uid` field. This is what you want to get
 your hands on, from within your code.
 
-When you decorate a function with `sender` or `queued_sender`, the request
+When you decorate a function with `sender` or `buffered_sender`, the request
 gets a UUID generated for it, by default.
 
 You can also, take complete control over the UUID being used for sending,
 and propagate it throughout your entire system. Thus enabling you to log and
 track entire communication chains.
 
-The functions you decorate with `endpoint` or `queued_endpoint` will receive this
+The functions you decorate with `endpoint` or `buffered_endpoint` will receive this
 UUID in the `request_uuid` parameter it gets invoked with, from within the
 framework.
 
@@ -51,7 +51,7 @@ response: RouterResponseDto = await sender_app_process_message(message, request_
 As you can see, `request_uid` is being set to a predetermined UUID, rather than having
 Ecosystem create one.
 
-The exact same can be done for your functions, decorated with `queued_sender`.
+The exact same can be done for your functions, decorated with `buffered_sender`.
 
 All you have to do is:
 1. Make sure your function definition has `**kwargs` in the parameter list.

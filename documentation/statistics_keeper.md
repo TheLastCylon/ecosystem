@@ -44,11 +44,11 @@ all of that could be part of your system already?
 Yes! Ecosystem provides a lot of statistics gathering, out of the box.
 
 Just having an `endpoint` in your application causes Ecosystem to start tracking
-data about that endpoint. The same thing happens for `queued_endpoint` and
-`queued_sender`.
+data about that endpoint. The same thing happens for `buffered_endpoint` and
+`buffered_sender`.
 
 And no, you don't have to write a single line of code for it! Just the act
-of decorating a function with `endpoint`, `queued_endpoint` or `queued_sender`,
+of decorating a function with `endpoint`, `buffered_endpoint` or `buffered_sender`,
 does this for you already.
 
 Even the endpoint that allows you to retrieve the telemetry data, already exists!
@@ -104,7 +104,7 @@ it through a JSON beautifier of some kind first:
                   "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                   "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                },
-               "queued_handler" : {
+               "buffered_handler" : {
                   "all" : {
                      "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
@@ -129,7 +129,7 @@ it through a JSON beautifier of some kind first:
                      "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   }
                },
-               "queued_sender" : {
+               "buffered_sender" : {
                   "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                   "errors" : {
                      "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
@@ -151,7 +151,7 @@ it through a JSON beautifier of some kind first:
                }
             }
          },
-         "queued_endpoint_sizes" : {
+         "buffered_endpoint_sizes" : {
             "dice_roller" : {
                "roll_times" : { "error" : 17, "pending" : 0 }
             }
@@ -256,7 +256,7 @@ Here's what I got:
                   "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                   "get" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                },
-               "queued_handler" : {
+               "buffered_handler" : {
                   "all" : {
                      "pause" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
@@ -281,7 +281,7 @@ Here's what I got:
                      "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   }
                },
-               "queued_sender" : {
+               "buffered_sender" : {
                   "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                   "errors" : {
                      "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
@@ -303,7 +303,7 @@ Here's what I got:
                }
             }
          },
-         "queued_endpoint_sizes" : {
+         "buffered_endpoint_sizes" : {
             "dice_roller" : {
                "roll_times" : {
                   "error" : 0,
@@ -375,7 +375,7 @@ Here's what I got:
                      "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   },
-                  "queued_handler" : {
+                  "buffered_handler" : {
                      "all" : {
                         "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                         "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
@@ -400,7 +400,7 @@ Here's what I got:
                         "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                      }
                   },
-                  "queued_sender" : {
+                  "buffered_sender" : {
                      "data" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "errors" : {
                         "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
@@ -422,7 +422,7 @@ Here's what I got:
                   }
                }
             },
-            "queued_endpoint_sizes" : {
+            "buffered_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : { "error" : 17, "pending" : 0 }
                }
@@ -453,7 +453,7 @@ Here's what I got:
                      "clear" : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "get"   : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                   },
-                  "queued_handler" : {
+                  "buffered_handler" : {
                      "all" : {
                         "pause"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                         "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
@@ -478,7 +478,7 @@ Here's what I got:
                         "unpause" : { "call_count" : 0, "p95" : -1, "p99" : -1 }
                      }
                   },
-                  "queued_sender" : {
+                  "buffered_sender" : {
                      "data"   : { "call_count" : 0, "p95" : -1, "p99" : -1 },
                      "errors" : {
                         "clear"           : { "call_count" : 0, "p95" : -1, "p99" : -1 },
@@ -500,7 +500,7 @@ Here's what I got:
                   }
                }
             },
-            "queued_endpoint_sizes" : {
+            "buffered_endpoint_sizes" : {
                "dice_roller" : {
                   "roll_times" : { "error" : 0, "pending" : 0 }
                }

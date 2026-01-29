@@ -201,19 +201,19 @@ async def log_endpoint_data(
 # --------------------------------------------------------------------------------
 # With this I write each of the queued ENDPOINT database sizes.
 # --------------------------------------------------------------------------------
-async def log_queued_endpoint_sizes(
-    queued_endpoint_sizes: Dict[str, int],
+async def log_buffered_endpoint_sizes(
+    buffered_endpoint_sizes: Dict[str, int],
     time_to_log         : str
 ) -> List[Point]:
     retval: List[Point] = []
-    for key, value in queued_endpoint_sizes.items():
+    for key, value in buffered_endpoint_sizes.items():
         data_point = make_base_data_point()
 
         if key.endswith("pending"):
-            data_point.tag("queued_endpoint", key.replace('.pending', ''))
+            data_point.tag("buffered_endpoint", key.replace('.pending', ''))
             data_point.field('pending'      , value)
         else:
-            data_point.tag("queued_endpoint", key.replace('.error', ''))
+            data_point.tag("buffered_endpoint", key.replace('.error', ''))
             data_point.field('error'        , value)
 
         data_point.time(time_to_log)
@@ -224,19 +224,19 @@ async def log_queued_endpoint_sizes(
 # --------------------------------------------------------------------------------
 # With this I write each of the queued SENDER database sizes.
 # --------------------------------------------------------------------------------
-async def log_queued_sender_sizes(
-    queued_endpoint_sizes: Dict[str, int],
+async def log_buffered_sender_sizes(
+    buffered_endpoint_sizes: Dict[str, int],
     time_to_log         : str
 ) -> List[Point]:
     retval: List[Point] = []
-    for key, value in queued_endpoint_sizes.items():
+    for key, value in buffered_endpoint_sizes.items():
         data_point = make_base_data_point()
 
         if key.endswith("pending"):
-            data_point.tag("queued_sender", key.replace('.pending', ''))
+            data_point.tag("buffered_sender", key.replace('.pending', ''))
             data_point.field('pending'    , value)
         else:
-            data_point.tag("queued_sender", key.replace('.error', ''))
+            data_point.tag("buffered_sender", key.replace('.error', ''))
             data_point.field('error'      , value)
 
         data_point.time(time_to_log)
@@ -263,20 +263,20 @@ async def main():
 
         # flatten the various telemetry dictionaries for use in our writer functions.
         endpoint_data         = flatten_dictionary(statistics['endpoint_data'])
-        queued_endpoint_sizes = flatten_dictionary(statistics['queued_endpoint_sizes']) if 'queued_endpoint_sizes' in statistics.keys() else None
-        queued_sender_sizes   = flatten_dictionary(statistics['queued_sender_sizes'])   if 'queued_sender_sizes'   in statistics.keys() else None
+        buffered_endpoint_sizes = flatten_dictionary(statistics['buffered_endpoint_sizes']) if 'buffered_endpoint_sizes' in statistics.keys() else None
+        buffered_sender_sizes   = flatten_dictionary(statistics['buffered_sender_sizes'])   if 'buffered_sender_sizes'   in statistics.keys() else None
 
         # And here we call those functions.
         data_points = await log_endpoint_data(endpoint_data , time_to_log)
 
-        if queued_endpoint_sizes:
+        if buffered_endpoint_sizes:
             data_points.extend(
-                await log_queued_endpoint_sizes(queued_endpoint_sizes, time_to_log)
+                await log_buffered_endpoint_sizes(buffered_endpoint_sizes, time_to_log)
             )
 
-        if queued_sender_sizes:
+        if buffered_sender_sizes:
             data_points.extend(
-                await log_queued_sender_sizes(queued_sender_sizes  , time_to_log)
+                await log_buffered_sender_sizes(buffered_sender_sizes  , time_to_log)
             )
 
         await write_influx_data(data_points)

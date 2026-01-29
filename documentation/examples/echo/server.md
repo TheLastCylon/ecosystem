@@ -23,7 +23,7 @@ echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data": {"message": "This is a test"}}' | nc -U /tmp/echo_example_0_uds.sock
+echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data": {"message": "This is a test"}}' | nc -U /tmp/echo_example_0.uds.sock
 ```
 
 The response you get should be similar to:

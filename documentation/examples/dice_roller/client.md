@@ -97,13 +97,13 @@ Then we create `do_some_guessing`, which does nothing more than call `sender_dic
 
 ```python
 from ekosis.sending.sender import sender
-from ekosis.data_transfer_objects import QueuedEndpointResponseDTO
+from ekosis.data_transfer_objects import BufferedEndpointResponseDTO
 
 from .tcp_config import tcp_client
 from ..dtos import RollTimesRequestDto
 
 
-@sender(tcp_client, "dice_roller.roll_times", QueuedEndpointResponseDTO)
+@sender(tcp_client, "dice_roller.roll_times", BufferedEndpointResponseDTO)
 async def sender_dice_roller_roll_times(sides: int, how_many: int):
     return RollTimesRequestDto(sides=sides, how_many=how_many)
 
@@ -114,7 +114,7 @@ async def roll_several_dice(sides: int, how_many: int):
     print(f"Received: [{tcp_response.uid}]")
 ```
 
-In our imports, the important thing here, is the import of `QueuedEndpointResponseDTO`
+In our imports, the important thing here, is the import of `BufferedEndpointResponseDTO`
 
 This is so that our use of the `sender` decorator, can have a response DTO type to work with.
 

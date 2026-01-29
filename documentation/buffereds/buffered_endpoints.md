@@ -1,11 +1,11 @@
-# Queued endpoints, what they are for.
+# Buffered endpoints, what they are for.
 
 ---
 ## What they are for.
 
 It doesn't happen often in the context of web-development. But with distributed
 systems, there are often cases where you want your application to be able to
-receive messages as fast as possible, and process them when there is time to do
+receive messages as fast as possible and process them when there is time to do
 so.
 
 Of course, in terms of computing, one second is a rather long time. So it might
@@ -31,17 +31,17 @@ know is:
 
 What the worker does not know is:
 - There's a whole production line involved in manufacturing the paper they stamp.
-- This is a mass production effort, that often gets blocked due to supply issues.
-- The transportation of produced paper is costly, and is therefore done in bulk.
+- This is a mass production effort that often gets blocked due to supply issues.
+- The transportation of produced paper is costly and is therefore done in bulk.
 - The paper they place in the box labeled "True", gets sent to a customer.
 - The paper they place in the box labeled "False", gets recycled. Eventually
   ending up in front of the worker again, as a clean sheet of paper.
 
-The metal box labeled "pending", is just a buffer. Giving the worker the
+The metal-box labeled "pending", is just a buffer. Giving the worker the
 freedom to focus on one sheet of paper at a time, and do the job of stamping,
 to the highest standard possible.
 
-The analogy isn't perfect, but: A function you decorate with `queued_endpoint`,
+The analogy isn't perfect, but: A function you decorate with `buffered_endpoint`,
 is in effect: The worker that stamps the sheets of paper.
 
 ### So how do they fit into a business then?
@@ -52,17 +52,17 @@ The factory owner, i.e. the business that owns the system, isn't going to employ
 thousands of people for 2 seconds each, all at the same time, to have each one
 stamp a single sheet of paper. It would be a logistical nightmare and nearly
 impossible to sustain. And that's not even considering the human resources
-complaints. Or politics of having to hire and fire thousands of workers every
+complaints. Or the politics of having to hire and fire thousands of workers every
 day.
 
-This, is the computing equivalent of:
+This is the computing equivalent of:
 
 NOT bothering with load-balancing, because the messages being received, do NOT
 need immediate, processed-responses.
 
 That translates to:
 
-When an immediate, processed-response isn't required, queueing incoming requests
+When an immediate, processed-response isn't required, buffering incoming requests
 in the service that has to deal with them, is a cost-effective alternative to
 load-balancing.
 
@@ -74,14 +74,14 @@ that something has to be reported back to the thing that made the request.
 
 So, if a client process can get on with doing things while it waits for a
 call-back from a service. Or, if the result of a procedure gets sent to another
-service, there is an opportunity to use a queueing mechanism, that could save
+service, there is an opportunity to use a buffering mechanism, that could save
 you money in the long run.
 
-This is where a `queued_endpoint` fits into the overall architecture, of a system.
+This is where a `buffered_endpoint` fits into the overall architecture, of a system.
 
-Ecosystem's queued endpoints, are also a middle ground solution, for when you
+Ecosystem's buffered endpoints, are also a middle ground solution, for when you
 don't have enough load, for long enough, to justify paying for another kind of
-queueing solution.
+buffering solution.
 
 They can also serve as a stop-gap measure, for when you have to have a queueing
 solution right now, but have to wait for it to be put in place.

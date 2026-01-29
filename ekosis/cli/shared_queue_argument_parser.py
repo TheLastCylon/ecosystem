@@ -32,7 +32,7 @@ def setup_shared_options():
     )
 
 # --------------------------------------------------------------------------------
-def setup_queued_endpoint_options():
+def setup_buffered_endpoint_options():
     queue_one_action_group.add_argument("-pr" , "--pause_receiving"   , required=False, action="store_true", help="Pause receiving on a queue.")
     queue_one_action_group.add_argument("-pp" , "--pause_processing"  , required=False, action="store_true", help="Pause processing on a queue.")
     queue_one_action_group.add_argument("-ur" , "--unpause_receiving" , required=False, action="store_true", help="UN-Pause receiving on a queue.")
@@ -42,7 +42,7 @@ def setup_queued_endpoint_options():
     setup_shared_options()
 
 # --------------------------------------------------------------------------------
-def setup_queued_sender_options():
+def setup_buffered_sender_options():
     queue_one_action_group.add_argument("-ps" , "--pause_sending"  , required=False, action="store_true", help="Pause sending.")
     queue_one_action_group.add_argument("-us" , "--unpause_sending", required=False, action="store_true", help="UN-Pause sending.")
     setup_shared_options()

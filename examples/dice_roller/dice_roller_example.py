@@ -16,7 +16,7 @@ class DiceRollerExampleServer(ApplicationBase):
         self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8888)
         self._configuration.udp             = ConfigUDP(host="127.0.0.1", port=8889)
         self._configuration.uds             = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-        self._configuration.queue_directory = "/tmp"
+        self._configuration.buffer_directory ="/tmp"
         super().__init__()
 
 

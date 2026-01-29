@@ -10,25 +10,25 @@ from .handler_base import HandlerBase
 from .status import Status
 
 from ..util.fire_and_forget_tasks import fire_and_forget_task
-from ..data_transfer_objects import QueuedEndpointResponseDTO
+from ..data_transfer_objects import BufferedEndpointResponseDTO
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
 
 # --------------------------------------------------------------------------------
-class QueuedRequestHandlerExceptionBase(Exception):
+class BufferedRequestHandlerExceptionBase(Exception):
     def __init__(self, status: int, message: str):
         self.status: int = status
         super().__init__(f"status: [{status}] message: [{message}]")
 
 # --------------------------------------------------------------------------------
-class QueuedRequestHandlerReceivingPausedException(QueuedRequestHandlerExceptionBase):
+class BufferedRequestHandlerReceivingPausedException(BufferedRequestHandlerExceptionBase):
     def __init__(self, route_key: str):
         super().__init__(Status.APPLICATION_BUSY.value, f"Receiving on '{route_key}' has been paused.")
 
 # --------------------------------------------------------------------------------
-class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
+class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def __init__(
         self,
         route_key       : str,
@@ -88,17 +88,17 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     async def pop_request_from_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        queued_request = await self.queue.pop_error_q_uuid(request_uid)
-        if not queued_request:
+        buffered_request = await self.queue.pop_error_q_uuid(request_uid)
+        if not buffered_request:
             return None
-        return self.request_dto_type(**queued_request)
+        return self.request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     async def inspect_request_in_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        queued_request = await self.queue.inspect_error_q_uuid(request_uid)
-        if not queued_request:
+        buffered_request = await self.queue.inspect_error_q_uuid(request_uid)
+        if not buffered_request:
             return None
-        return self.request_dto_type(**queued_request)
+        return self.request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue(self):
@@ -110,12 +110,12 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _T | None:
         self._processing_paused = True
-        queued_request          = await self.queue.move_one_error_to_pending(request_uid)
+        buffered_request        = await self.queue.move_one_error_to_pending(request_uid)
         self._processing_paused = False
         self.__check_process_queue()
-        if not queued_request:
+        if not buffered_request:
             return None
-        return self.request_dto_type(**queued_request)
+        return self.request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
     def __configure_queue(
@@ -130,8 +130,8 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             f"{app_instance_string}-{self._route_key}-endpoint",
             self.page_size
         )
-        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.pending", self.queue.pending_q)
-        self.statistics_keeper.add_persisted_queue(f"queued_endpoint_sizes.{self._route_key}.error"  , self.queue.error_q)
+        self.statistics_keeper.add_persisted_queue(f"buffered_endpoint_sizes.{self._route_key}.pending", self.queue.pending_q)
+        self.statistics_keeper.add_persisted_queue(f"buffered_endpoint_sizes.{self._route_key}.error"  , self.queue.error_q)
 
     # --------------------------------------------------------------------------------
     async def setup(
@@ -141,7 +141,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         instance_id     : str,
     ):
         route_key = self.get_route_key()
-        self.log.info(f"Queued handler [{route_key}] setup.")
+        self.log.info(f"Buffered handler [{route_key}] setup.")
         self.__configure_queue(directory, application_name, instance_id)
         self.unpause_receiving()
         self.unpause_processing()
@@ -150,7 +150,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
         loop = asyncio.get_running_loop()
         self.on_shutdown_future = loop.create_future()
-        self.log.info(f"Queued handler [{route_key}] setup complete.")
+        self.log.info(f"Buffered handler [{route_key}] setup complete.")
 
     # --------------------------------------------------------------------------------
     def shut_down(self):
@@ -163,10 +163,10 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def __shut_down_check(self):
         if not self.running and self.shutdown:
             route_key = self.get_route_key()
-            self.log.info(f"Queued handler [{route_key}] stopping.")
+            self.log.info(f"Buffered handler [{route_key}] stopping.")
             self.queue.shut_down()
             self.on_shutdown_future.set_result(True)
-            self.log.info(f"Queued handler [{route_key}] stopped.")
+            self.log.info(f"Buffered handler [{route_key}] stopped.")
 
     # --------------------------------------------------------------------------------
     async def wait_for_shutdown(self):
@@ -176,11 +176,11 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def __do_queue_processing(self):
         while not self._processing_paused and await self.queue.has_pending():
-            queued_item  = await self.queue.pop()
-            request_uid  = uuid.UUID(queued_item.uid)
-            request_data = self.request_dto_type(**queued_item.data)
-            retries      = queued_item.retries
-            if not await self.process_queued_request(uid = request_uid, dto = request_data):
+            buffered_item = await self.queue.pop()
+            request_uid   = uuid.UUID(buffered_item.uid)
+            request_data  = self.request_dto_type(**buffered_item.data)
+            retries       = buffered_item.retries
+            if not await self.process_buffered_request(uid = request_uid, dto = request_data):
                 retries += 1
                 if retries >= self.max_retries:
                     await self.queue.push_error(request_uid, request_data, "Max retries reached.")
@@ -198,7 +198,7 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def process_queued_request(self, **kwargs) -> bool:
+    async def process_buffered_request(self, **kwargs) -> bool:
         pass
 
     # --------------------------------------------------------------------------------
@@ -208,12 +208,12 @@ class QueuedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
 
     # --------------------------------------------------------------------------------
     async def run(self, **kwargs) -> PydanticBaseModel:
-        self.log.debug(f"QueuedRequestHandlerBase.run 000 [{kwargs}]")
+        self.log.debug(f"BufferedRequestHandlerBase.run 000 [{kwargs}]")
         uid = kwargs.get("uid")
         dto = kwargs.get("dto")
         if self._receiving_paused:
-            raise QueuedRequestHandlerReceivingPausedException(self._route_key)
+            raise BufferedRequestHandlerReceivingPausedException(self._route_key)
         fire_and_forget_task(self.queue.push_pending(uid, dto, 0))
-        response = QueuedEndpointResponseDTO(uid = str(uid))
+        response = BufferedEndpointResponseDTO(uid = str(uid))
         self.__check_process_queue()
         return response

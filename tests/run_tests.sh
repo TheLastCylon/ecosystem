@@ -8,7 +8,7 @@ echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
 
-export ECOENV_QUEUE_DIR=/tmp
+export ECOENV_BUFFER_DIR=/tmp
 export ECOENV_LOG_DIR=/tmp
 export ECOENV_LOG_BUF_SIZE=0
 export ECOENV_STAT_GP=2
@@ -32,8 +32,8 @@ sleep 1
 pipenv run coverage run -p --source=ekosis -m pytest \
   tests/basic_tests.py \
   tests/check_stats_endpoint.py \
-  tests/queued_handler_endpoints.py \
-  tests/queued_sender_endpoints.py \
+  tests/buffered_handler_endpoints.py \
+  tests/buffered_sender_endpoints.py \
   tests/log_manager_endpoints.py \
   tests/error_state_endpoints.py \
   tests/paginated_queue_unit_tests.py \

@@ -1,6 +1,6 @@
 from ekosis.sending.sender import sender
-from ekosis.sending.queued_sender import queued_sender
-from ekosis.data_transfer_objects import EmptyDto, QueuedEndpointResponseDTO
+from ekosis.sending.buffered_sender import buffered_sender
+from ekosis.data_transfer_objects import EmptyDto, BufferedEndpointResponseDTO
 
 from ..fortunes.dtos import FortuneResponseDto
 from ..joker.dtos import JokerResponseDto
@@ -37,11 +37,11 @@ async def get_time(*args, **kwargs):
     return EmptyDto()
 
 # --------------------------------------------------------------------------------
-@queued_sender(tracker_client, "app.log_request", TrackerLogRequestDto, QueuedEndpointResponseDTO, 0, 1000, 10)
+@buffered_sender(tracker_client, "app.log_request", TrackerLogRequestDto, BufferedEndpointResponseDTO, 0, 1000, 10)
 async def log_request(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(request = data, timestamp = timestamp)
 
 # --------------------------------------------------------------------------------
-@queued_sender(tracker_client, "app.log_response", TrackerLogRequestDto, QueuedEndpointResponseDTO, 0, 1000, 10)
+@buffered_sender(tracker_client, "app.log_response", TrackerLogRequestDto, BufferedEndpointResponseDTO, 0, 1000, 10)
 async def log_response(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(request = data, timestamp = timestamp)
