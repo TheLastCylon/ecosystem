@@ -272,6 +272,10 @@ class ApplicationBase(metaclass=SingletonType):
         self.__stop_uds_server()
 
     # --------------------------------------------------------------------------------
+    async def setup_tasks(self, tasks: list):
+        pass
+
+    # --------------------------------------------------------------------------------
     async def __start(self):
         tasks = []
 
@@ -291,6 +295,8 @@ class ApplicationBase(metaclass=SingletonType):
         tasks.append(asyncio.create_task(self.__start_tcp_server()))
         tasks.append(asyncio.create_task(self.__start_udp_server()))
         tasks.append(asyncio.create_task(self.__start_uds_server()))
+
+        await self.setup_tasks(tasks)
 
         self.__eco_logger.flush()
         await asyncio.gather(*tasks)

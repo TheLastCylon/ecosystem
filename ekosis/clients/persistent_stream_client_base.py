@@ -138,7 +138,7 @@ class PersistentStreamClientBase(ClientBase, ABC):
                 self.success = True
                 return response_str
             except (TimeoutError, asyncio.TimeoutError):
-                retry_count = self.__do_retry_logic(retry_count)
+                retry_count = await self.__do_retry_logic(retry_count)
             except (
                 ConnectionResetError,   # These are retryable exceptions.
                 ConnectionAbortedError, # But they mean the connection is broken.
@@ -147,6 +147,6 @@ class PersistentStreamClientBase(ClientBase, ABC):
             ):
                 self.__connected = False
                 await self.__check_connected()
-                retry_count = self.__do_retry_logic(retry_count)
+                retry_count = await self.__do_retry_logic(retry_count)
             except Exception as e:
                 raise CommunicationsNonRetryable(f"{type(e)}: {str(e)}")
