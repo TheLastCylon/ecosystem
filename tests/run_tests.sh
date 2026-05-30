@@ -2,11 +2,9 @@ CURRENT_DIR="$(pwd)"
 SCRIPT_PATH="$(readlink -f "${0}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 REPOSITORY_DIR="$(dirname "$SCRIPT_DIR")"
+VENV="$REPOSITORY_DIR/.venv/bin"
 
 echo "REPOSITORY_DIR: $REPOSITORY_DIR"
-
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
 
 export ECOENV_BUFFER_DIR=/tmp
 export ECOENV_LOG_DIR=/tmp
@@ -24,12 +22,12 @@ rm /tmp/test_app*
 
 cd "$REPOSITORY_DIR"
 
-
-pipenv run coverage erase
-pipenv run coverage run -p --source=ekosis -m tests.test_app_a.test_app_a -i 0 -lfo &
-pipenv run coverage run -p --source=ekosis -m tests.test_app_b.test_app_b -i 0 -c ./tests/test_app_b/config.json -lfo &
+$VENV/coverage erase
+$VENV/coverage run -p --source=ekosis -m tests.test_app_a.test_app_a -i 0 -lfo &
+$VENV/coverage run -p --source=ekosis -m tests.test_app_b.test_app_b -i 0 -c ./tests/test_app_b/config.json -lfo &
+$VENV/coverage run -p --source=ekosis -m tests.test_app_c.test_app_c -i 0 -c ./tests/test_app_c/config.json -lfo &
 sleep 1
-pipenv run coverage run -p --source=ekosis -m pytest \
+$VENV/coverage run -p --source=ekosis -m pytest \
   tests/basic_tests.py \
   tests/check_stats_endpoint.py \
   tests/buffered_handler_endpoints.py \
@@ -39,14 +37,16 @@ pipenv run coverage run -p --source=ekosis -m pytest \
   tests/paginated_queue_unit_tests.py \
   tests/utility_functions.py \
   tests/error_state_keeper.py \
-  tests/lru_cache.py
+  tests/lru_cache.py \
+  tests/setup_tasks_tests.py
 
-# pipenv run coverage run -a --source=ekosis -m pytest tests/check_stats_endpoint.py
+# $VENV/coverage run -a --source=ekosis -m pytest tests/check_stats_endpoint.py
 
 TEST_APP_A_0_PID="$(cat /tmp/test_app_a-0.lock)"
 TEST_APP_B_0_PID="$(cat /tmp/test_app_b-0.lock)"
-kill $TEST_APP_A_0_PID $TEST_APP_B_0_PID
-pipenv run coverage combine
-pipenv run coverage report -m
+TEST_APP_C_0_PID="$(cat /tmp/test_app_c-0.lock)"
+kill $TEST_APP_A_0_PID $TEST_APP_B_0_PID $TEST_APP_C_0_PID
+$VENV/coverage combine
+$VENV/coverage report -m
 
 cd "$CURRENT_DIR"

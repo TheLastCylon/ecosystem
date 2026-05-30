@@ -46,6 +46,7 @@ will have the name `ekosis`.
   - [Buffered Senders, what they are for](buffereds/buffered_senders.md)
   - [Standard endpoints for queue management](buffereds/standard_endpoints_for_management.md)
 - [Distributed Tracking (Request Tracking)](./distributed_tracking.md)
+- [Running background tasks with setup_tasks](./setup_tasks.md)
 - [Transient vs. Persisted clients](./transient_vs_persistant_connections.md)
 - [Command line tools](./command_line_tool.md)
 - [Benchmarking](./benchmarking/benchmarking.md)
