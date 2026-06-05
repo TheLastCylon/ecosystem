@@ -1,7 +1,7 @@
 import asyncio
 import copy
 import logging
-import numpy as np
+import statistics
 import time
 
 from typing import Any, Dict, List, Tuple
@@ -35,10 +35,14 @@ class StatisticsKeeper(metaclass=SingletonType):
     async def get_endpoint_percentiles(self) -> Dict[str, Tuple[float, float]]:
         retval: Dict[str, Tuple[float, float]] = {}
         for key, duration_list in self.__endpoint_durations.items():
-            if len(duration_list) > 0:
-                p95 = float(np.percentile(duration_list, 95))
-                p99 = float(np.percentile(duration_list, 99))
-                retval[key] = (p95, p99)
+            if len(duration_list) >= 2:
+                sorted_durations = sorted(duration_list)
+                quantiles        = statistics.quantiles(sorted_durations, n=100)
+                p95              = quantiles[94]
+                p99              = quantiles[98]
+                retval[key]      = (p95, p99)
+            elif len(duration_list) == 1:
+                retval[key] = (duration_list[0], duration_list[0])
             else:
                 retval[key] = (-1.0, -1.0)
         return retval

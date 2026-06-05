@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name             = "ekosis"
-version          = "0.15.0"
+version          = "0.16.0"
 description      = "A Python framework for creating message-based, distributed systems. Allowing for TCP, UDP and UDS communications. Using JSON as the communications protocol."
 readme           = "README.md"
 license          = "BSD-3-Clause"
@@ -13,7 +13,6 @@ requires-python  = ">=3.11.3"
 dependencies     = [
     "sqlalchemy>=2.0.31",
     "pydantic>=2.8.2",
-    "numpy>=2.0.0",
 ]
 classifiers      = [
     "Development Status :: 4 - Beta",
