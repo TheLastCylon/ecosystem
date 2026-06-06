@@ -117,7 +117,7 @@ def get_logging_date_format():
     return get_eco_env("LOG_DATE_FORMAT", '%Y%m%d%H%M%S') # Default to '%Y%m%d%H%M%S'
 
 def get_logging_format():
-    return get_eco_env("LOG_FORMAT", '%(asctime)s.%(msecs)03d|%(levelname)s|%(filename)s|%(lineno)d|%(message)s')
+    return get_eco_env("LOG_FORMAT", f'%(asctime)s.%(msecs)03d|%(levelname)s|{application_name}|{application_instance}|%(filename)s|%(lineno)d|%(message)s')
 
 def get_logging_level():
     # List of options here: 'debug', 'info', 'warn', 'error', 'critical'
@@ -209,15 +209,24 @@ def get_app_instance_buffer_directory():
     return get_eco_env("BUFFER_DIR", None)
 
 def get_app_instance_extra():
-    extra_env_prefix = f"{env_prefix}_EXTRA_{env_app_instance}_"
-    extra_config     = {
-        k: v for k, v in os.environ.items()
-        if k.startswith(extra_env_prefix)
-    }
+    machine_prefix  = f"{env_prefix}_EXTRA_"
+    app_prefix      = f"{machine_prefix}{env_app_name}_"
+    instance_prefix = f"{app_prefix}{env_instance}_"
+
     retval: Dict[str, Any] = {}
-    for key in extra_config.keys(): # pragma: no cover
-        new_key = key.replace(extra_env_prefix, "")
-        retval[new_key] = extra_config[key]
+
+    for k, v in os.environ.items():
+        if k.startswith(machine_prefix) and not k.startswith(app_prefix):
+            retval[k.replace(machine_prefix, "", 1)] = v
+
+    for k, v in os.environ.items():
+        if k.startswith(app_prefix) and not k.startswith(instance_prefix):
+            retval[k.replace(app_prefix, "", 1)] = v
+
+    for k, v in os.environ.items():
+        if k.startswith(instance_prefix):
+            retval[k.replace(instance_prefix, "", 1)] = v
+
     return retval
 
 class ConfigApplicationInstance(PydanticBaseModel):
