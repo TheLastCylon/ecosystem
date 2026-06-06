@@ -13,6 +13,7 @@ from ..util.fire_and_forget_tasks import fire_and_forget_task
 from ..data_transfer_objects import BufferedEndpointResponseDTO
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
+from ..middleware.buffered_middleware_manager import BufferedMiddlewareManager
 
 _T = TypeVar("_T", bound=PydanticBaseModel)
 
@@ -180,12 +181,16 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             request_uid   = uuid.UUID(buffered_item.uid)
             request_data  = self.request_dto_type(**buffered_item.data)
             retries       = buffered_item.retries
-            if not await self.process_buffered_request(uid = request_uid, dto = request_data):
+            metadata      = buffered_item.metadata
+            await BufferedMiddlewareManager().run_before_process(request_uid, request_data, metadata, retries)
+            success = await self.process_buffered_request(uid = request_uid, dto = request_data)
+            await BufferedMiddlewareManager().run_after_process(request_uid, request_data, metadata, success)
+            if not success:
                 retries += 1
                 if retries >= self.max_retries:
-                    await self.queue.push_error(request_uid, request_data, "Max retries reached.")
+                    await self.queue.push_error(request_uid, request_data, "Max retries reached.", metadata)
                 else:
-                    await self.queue.push_pending(request_uid, request_data, retries)
+                    await self.queue.push_pending(request_uid, request_data, retries, metadata)
 
     # --------------------------------------------------------------------------------
     async def _process_queue(self):
@@ -213,7 +218,8 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         dto = kwargs.get("dto")
         if self._receiving_paused:
             raise BufferedRequestHandlerReceivingPausedException(self._route_key)
-        fire_and_forget_task(self.queue.push_pending(uid, dto, 0))
+        metadata = await BufferedMiddlewareManager().collect_push_metadata(uid, dto)
+        fire_and_forget_task(self.queue.push_pending(uid, dto, 0, metadata))
         response = BufferedEndpointResponseDTO(uid = str(uid))
         self.__check_process_queue()
         return response

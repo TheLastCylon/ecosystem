@@ -3,15 +3,13 @@ SCRIPT_PATH="$(readlink -f "${0}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 EXAMPLES_DIR="$(dirname "$SCRIPT_DIR")"
 REPOSITORY_DIR="$(dirname "$EXAMPLES_DIR")"
+VENV="$REPOSITORY_DIR/.venv/bin/python"
 
 echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
-
 # Machine level configurations
 export ECOENV_BUFFER_DIR=/tmp/proper_fun/queues
-export ECOENV_LOG_DIR=/tmp/proper_fun/logs
+export ECOENV_LOG_DIR=/var/log/ekosis
 export ECOENV_LOG_BUF_SIZE=1500
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
@@ -37,12 +35,12 @@ export ECOENV_EXTRA_TRACKER_0_DB_FILE=/tmp/tracker-0-database.sqlite
 cd "$REPOSITORY_DIR"
 
 # Start the system
-pipenv run python3 -m examples.proper_fun.fortunes.fortune                  -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.joker.joker                       -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.lottery.lottery                   -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.magic_eight_ball.magic_eight_ball -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.time_reporter.time_reporter       -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.router.router                     -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.tracker.tracker                   -i 0 -lfo &
+$VENV -m examples.proper_fun.fortunes.fortune                  -i 0 -lfo &
+$VENV -m examples.proper_fun.joker.joker                       -i 0 -lfo &
+$VENV -m examples.proper_fun.lottery.lottery                   -i 0 -lfo &
+$VENV -m examples.proper_fun.magic_eight_ball.magic_eight_ball -i 0 -lfo &
+$VENV -m examples.proper_fun.time_reporter.time_reporter       -i 0 -lfo &
+$VENV -m examples.proper_fun.router.router                     -i 0 -lfo &
+$VENV -m examples.proper_fun.tracker.tracker                   -i 0 -lfo &
 
 cd "$CURRENT_DIR"
