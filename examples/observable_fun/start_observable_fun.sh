@@ -4,6 +4,7 @@ SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 EXAMPLES_DIR="$(dirname "$SCRIPT_DIR")"
 REPOSITORY_DIR="$(dirname "$EXAMPLES_DIR")"
 VENV="$REPOSITORY_DIR/.venv/bin/python"
+VENV_BIN="$REPOSITORY_DIR/.venv/bin"
 
 echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 
@@ -22,9 +23,13 @@ export ECOENV_UDP_MAGIC_EIGHT_BALL_0=127.0.0.1:8400
 export ECOENV_UDP_TIME_REPORTER_0=127.0.0.1:8500
 export ECOENV_UDP_ROUTER_0=127.0.0.1:8600
 export ECOENV_UDP_TRACKER_0=127.0.0.1:8700
+export ECOENV_UDP_EKOSIS_PROMETHEUS_0=127.0.0.1:8800
 
 # Observability -- Jaeger OTLP HTTP endpoint
-export ECOENV_EXTRA_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
+export ECOENV_EXTRA_JAEGER_ENDPOINT=http://optiplexer.local:4318/v1/traces
+
+# Observability -- Prometheus Pushgateway (on optiplexer)
+export ECOENV_EXTRA_EKOSIS_PROMETHEUS_0_PUSHGATEWAY=http://optiplexer.local:9091
 # export ECOENV_EXTRA_ROUTER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
 # export ECOENV_EXTRA_FORTUNE_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
 # export ECOENV_EXTRA_JOKER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
@@ -53,5 +58,6 @@ $VENV -m examples.observable_fun.magic_eight_ball.magic_eight_ball -i 0 -lfo &
 $VENV -m examples.observable_fun.time_reporter.time_reporter       -i 0 -lfo &
 $VENV -m examples.observable_fun.router.router                     -i 0 -lfo &
 $VENV -m examples.observable_fun.tracker.tracker                   -i 0 -lfo &
+$VENV_BIN/ekosis_prometheus                                        -i 0 &
 
 cd "$CURRENT_DIR"
