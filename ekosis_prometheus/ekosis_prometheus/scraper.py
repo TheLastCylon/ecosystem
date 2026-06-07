@@ -14,6 +14,18 @@ from .stats_translator                  import translate_gathered_stats
 
 log = logging.getLogger()
 
+_METRIC_DESCRIPTIONS = {
+    "ekosis_service_health":                  "1 if service responded to last stats poll, 0 otherwise",
+    "ekosis_uptime_seconds":                  "Seconds the service has been running since startup",
+    "ekosis_endpoint_call_count":             "Total endpoint calls in the last gather period",
+    "ekosis_endpoint_p95_seconds":            "95th percentile response time in seconds",
+    "ekosis_endpoint_p99_seconds":            "99th percentile response time in seconds",
+    "ekosis_buffered_endpoint_queue_pending": "Items pending in the buffered endpoint incoming queue",
+    "ekosis_buffered_endpoint_queue_error":   "Items in the buffered endpoint error queue",
+    "ekosis_buffered_sender_queue_pending":   "Items pending in the buffered sender outgoing queue",
+    "ekosis_buffered_sender_queue_error":     "Items in the buffered sender error queue",
+}
+
 
 # --------------------------------------------------------------------------------
 class _StatsSender(SenderBase[StatsRequestDto, StatsResponseDto]):
@@ -68,12 +80,15 @@ class EkosisPrometheusScraper:
     # --------------------------------------------------------------------------------
     async def _scrape_and_push(self):
         registry     = CollectorRegistry()
+        gauges: Dict[str, Gauge] = {}
+
         health_gauge = Gauge(
             "ekosis_service_health",
-            "1 if service responded to last stats poll, 0 otherwise",
+            _METRIC_DESCRIPTIONS["ekosis_service_health"],
             ["service", "instance"],
             registry = registry,
         )
+        gauges["ekosis_service_health"] = health_gauge
 
         for target in self._targets:
             if target.sender is None:
@@ -81,16 +96,22 @@ class EkosisPrometheusScraper:
                 continue
 
             try:
-                response = await target.sender.get_gathered()
-                stats    = response.statistics
+                response     = await target.sender.get_gathered()
+                stats        = response.statistics
                 target.healthy = True
-                health_gauge.labels(service=target.service.name, instance=target.service.instance).set(1)
 
-                for metric_name, value, labels in translate_gathered_stats(stats, target.service.name, target.service.instance):
-                    gauge = registry._names_to_collectors.get(metric_name)
-                    if gauge is None:
-                        gauge = Gauge(metric_name, metric_name, list(labels.keys()), registry=registry)
-                    gauge.labels(**labels).set(value)
+                # Use identity from the stats response -- more authoritative than service discovery.
+                # Falls back to discovery values if the application block is absent.
+                app      = stats.get("application", {})
+                svc_name = app.get("name",     target.service.name)
+                svc_inst = app.get("instance", target.service.instance)
+                health_gauge.labels(service=svc_name, instance=svc_inst).set(1)
+
+                for metric_name, value, labels in translate_gathered_stats(stats, svc_name, svc_inst):
+                    if metric_name not in gauges:
+                        desc              = _METRIC_DESCRIPTIONS.get(metric_name, metric_name)
+                        gauges[metric_name] = Gauge(metric_name, desc, list(labels.keys()), registry=registry)
+                    gauges[metric_name].labels(**labels).set(value)
 
             except Exception as e:
                 target.healthy = False

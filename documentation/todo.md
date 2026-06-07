@@ -2,13 +2,14 @@
 
 ## For MVP
 
-- [ ] Middleware!
+- [X] Middleware!
 
-- [ ] Observability with Open Telemetry evolution.
-  - [ ] Python example for use with `pushgateway` --> `Prometheus` --> `Grafana`
-  - [ ] Logging into log aggregation tools like `Loki`, through `Promtail`.
-  - [ ] Open telemetry example with exporters for traces. (e.g. Jaeger exporter)
-  - [ ] Setting up `Grafana` to use the observability stack of choice.
+- [X] Observability with Open Telemetry evolution.
+  - [X] Python example for use with `pushgateway` --> `Prometheus` --> `Grafana` (ekosis-prometheus + observable_fun)
+  - [X] Logging into log aggregation tools like `Loki`, through `Alloy` (replaces EOL Promtail)
+  - [X] Open telemetry example with exporters for traces (ekosis-jaeger-http + observable_fun)
+  - [X] Setting up `Grafana` to use the observability stack (provisioned dashboards in observability_platform/)
+  - [ ] Documentation: observability -- done (observability.md), needs review pass before publish
 
 - [ ] Documentation: LRU Cache
 - [ ] Example: LRU Cache

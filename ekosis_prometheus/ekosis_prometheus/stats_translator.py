@@ -1,9 +1,12 @@
-from typing import Any, Dict, Generator, Tuple
+from typing import Any, Dict, Generator, Optional, Set, Tuple
 
 
-# --------------------------------------------------------------------------------
-# Yields (metric_name, value, labels) tuples from a gathered stats response.
-# metric_name uses underscores; labels are a dict.
+# Groups excluded from endpoint_data and queue metrics by default.
+# eco.* endpoints are EcoSystem system internals -- near-zero call counts,
+# -1 p95/p99 most of the time, and irrelevant to application health monitoring.
+_DEFAULT_EXCLUDE_GROUPS: Set[str] = {"eco"}
+
+
 # --------------------------------------------------------------------------------
 def _flatten(obj: Any, prefix: str) -> Generator[Tuple[str, float], None, None]:
     if isinstance(obj, dict):
@@ -15,17 +18,66 @@ def _flatten(obj: Any, prefix: str) -> Generator[Tuple[str, float], None, None]:
 
 
 # --------------------------------------------------------------------------------
-def translate_gathered_stats(stats: Dict, service_name: str, instance: str) -> Generator[Tuple[str, float, dict], None, None]:
-    labels = {"service": service_name, "instance": instance}
+def _iter_queue_groups(
+    queue_data     : Dict,
+    exclude_groups : Set[str],
+    metric_prefix  : str,
+    labels         : Dict,
+) -> Generator[Tuple[str, float, dict], None, None]:
+    for group, endpoints in queue_data.items():
+        if group in exclude_groups:
+            continue
+        if not isinstance(endpoints, dict):
+            continue
+        for endpoint_name, sizes in endpoints.items():
+            if not isinstance(sizes, dict):
+                continue
+            queue_labels = {**labels, "group": group, "endpoint": endpoint_name}
+            pending = sizes.get("pending")
+            if pending is not None:
+                yield f"{metric_prefix}_queue_pending", float(pending), queue_labels
+            error = sizes.get("error")
+            if error is not None:
+                yield f"{metric_prefix}_queue_error", float(error), queue_labels
+
+
+# --------------------------------------------------------------------------------
+def translate_gathered_stats(
+    stats          : Dict,
+    service_name   : str,
+    instance       : str,
+    exclude_groups : Optional[Set[str]] = None,
+) -> Generator[Tuple[str, float, dict], None, None]:
+    """Yield (metric_name, value, labels) tuples from a gathered stats response.
+
+    service_name and instance are used as fallbacks only -- the stats response
+    carries application.name and application.instance which are more authoritative
+    (the service knows its own identity).
+
+    exclude_groups: set of endpoint group names to skip. Defaults to {"eco"} which
+    filters out EcoSystem internal endpoints. Pass set() to include everything.
+    """
+    if exclude_groups is None:
+        exclude_groups = _DEFAULT_EXCLUDE_GROUPS
+
+    # Application identity from the stats response itself
+    app          = stats.get("application", {})
+    service_name = app.get("name",     service_name)
+    instance     = app.get("instance", instance)
+    labels       = {"service": service_name, "instance": instance}
 
     # uptime
     uptime = stats.get("uptime")
     if uptime is not None:
         yield "ekosis_uptime_seconds", float(uptime), labels
 
-    # endpoint_data -- call_count, p95, p99 per endpoint
+    # endpoint_data -- call_count, p95, p99 per endpoint (user groups only)
     endpoint_data = stats.get("endpoint_data", {})
     for group, endpoints in endpoint_data.items():
+        if group in exclude_groups:
+            continue
+        if not isinstance(endpoints, dict):
+            continue
         for endpoint_name, data in endpoints.items():
             if not isinstance(data, dict):
                 continue
@@ -43,24 +95,31 @@ def translate_gathered_stats(stats: Dict, service_name: str, instance: str) -> G
             if p99 is not None and p99 >= 0:
                 yield "ekosis_endpoint_p99_seconds", float(p99), endpoint_labels
 
-    # buffered_endpoint_sizes -- pending and error queue depths
-    queue_sizes = stats.get("buffered_endpoint_sizes", {})
-    for group, endpoints in queue_sizes.items():
-        for endpoint_name, sizes in endpoints.items():
-            if not isinstance(sizes, dict):
-                continue
-            queue_labels = {**labels, "group": group, "endpoint": endpoint_name}
+    # buffered endpoint queues
+    yield from _iter_queue_groups(
+        stats.get("buffered_endpoint_sizes", {}),
+        exclude_groups,
+        "ekosis_buffered_endpoint",
+        labels,
+    )
 
-            pending = sizes.get("pending")
-            if pending is not None:
-                yield "ekosis_queue_pending", float(pending), queue_labels
+    # buffered sender queues
+    yield from _iter_queue_groups(
+        stats.get("buffered_sender_sizes", {}),
+        exclude_groups,
+        "ekosis_buffered_sender",
+        labels,
+    )
 
-            error = sizes.get("error")
-            if error is not None:
-                yield "ekosis_queue_error", float(error), queue_labels
-
-    # custom stats -- anything under a top-level key that isn't the known fields
-    known_keys = {"application", "endpoint_data", "buffered_endpoint_sizes", "timestamp", "uptime"}
+    # custom stats -- top-level keys not in the known set
+    known_keys = {
+        "application",
+        "endpoint_data",
+        "buffered_endpoint_sizes",
+        "buffered_sender_sizes",
+        "timestamp",
+        "uptime",
+    }
     for key, val in stats.items():
         if key in known_keys:
             continue

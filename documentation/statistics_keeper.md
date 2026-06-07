@@ -1,4 +1,8 @@
-# Statistics (Real-time Telemetry) made easy. 
+# Statistics (Real-time Telemetry) made easy.
+
+> For wiring EcoSystem telemetry into Prometheus, Grafana, Jaeger, and Loki, see
+> [observability.md](observability.md).
+
 
 ## Why it exists.
 

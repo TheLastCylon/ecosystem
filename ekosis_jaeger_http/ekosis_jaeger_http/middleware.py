@@ -1,10 +1,12 @@
+import uuid as _uuid
+
 from opentelemetry                             import trace
 from opentelemetry.sdk.trace                   import TracerProvider
 from opentelemetry.sdk.trace.export            import BatchSpanProcessor
 from opentelemetry.sdk.resources               import Resource
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.semconv.attributes.service_attributes import SERVICE_NAME
-from opentelemetry.trace                       import StatusCode
+from opentelemetry.trace                       import StatusCode, NonRecordingSpan, SpanContext, TraceFlags
 from pydantic                                  import BaseModel as PydanticBaseModel
 from ekosis.middleware.middleware_base         import MiddlewareBase
 from ekosis.data_transfer_objects              import RequestDTO
@@ -25,7 +27,14 @@ class JaegerHttpTracingMiddleware(MiddlewareBase):
         self._tracer = trace.get_tracer(service_name)
 
     async def before_routing(self, protocol_dto: RequestDTO, **kwargs) -> RequestDTO:
-        span = self._tracer.start_span(protocol_dto.route_key)
+        uid_int    = _uuid.UUID(protocol_dto.uid).int
+        parent_ctx = trace.set_span_in_context(NonRecordingSpan(SpanContext(
+            trace_id    = uid_int,
+            span_id     = uid_int & 0xFFFFFFFFFFFFFFFF,  # lower 64 bits -- non-zero for any real UUID
+            is_remote   = False,
+            trace_flags = TraceFlags(TraceFlags.SAMPLED),
+        )))
+        span = self._tracer.start_span(protocol_dto.route_key, context=parent_ctx)
         span.set_attribute("request.uid",       protocol_dto.uid)
         span.set_attribute("request.route_key", protocol_dto.route_key)
         self._active_spans[protocol_dto.uid] = span
