@@ -56,6 +56,7 @@ class StatisticsKeeper(metaclass=SingletonType):
 
         self.__statistics_current['timestamp']               = current_time
         self.__statistics_current['uptime']                  = current_time - self.__start_time
+        self.__statistics_current['gather_period']           = self.__gather_period
         self.__statistics_current['application']             = {}
         self.__statistics_current['application']['name']     = self.__config.name
         self.__statistics_current['application']['instance'] = self.__config.instance

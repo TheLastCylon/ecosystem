@@ -11,9 +11,11 @@ echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 # Machine level configurations
 export ECOENV_BUFFER_DIR=/tmp/observable_fun/queues
 export ECOENV_LOG_DIR=/var/log/ekosis
-# export ECOENV_LOG_BUF_SIZE=1500
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
+
+# Observability -- Jaeger OTLP HTTP endpoint
+export ECOENV_EXTRA_JAEGER_ENDPOINT=http://optiplexer.local:4318/v1/traces
 
 # Instance level configurations
 export ECOENV_UDP_FORTUNE_0=127.0.0.1:8100
@@ -25,19 +27,8 @@ export ECOENV_UDP_ROUTER_0=127.0.0.1:8600
 export ECOENV_UDP_TRACKER_0=127.0.0.1:8700
 export ECOENV_UDP_EKOSIS_PROMETHEUS_0=127.0.0.1:8800
 
-# Observability -- Jaeger OTLP HTTP endpoint
-export ECOENV_EXTRA_JAEGER_ENDPOINT=http://optiplexer.local:4318/v1/traces
-
 # Observability -- Prometheus Pushgateway (on optiplexer)
 export ECOENV_EXTRA_EKOSIS_PROMETHEUS_0_PUSHGATEWAY=http://optiplexer.local:9091
-# export ECOENV_EXTRA_ROUTER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_FORTUNE_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_JOKER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_LOTTERY_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_MAGIC_EIGHT_BALL_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_TIME_REPORTER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_ROUTER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
-# export ECOENV_EXTRA_TRACKER_0_JAEGER_ENDPOINT=http://localhost:4318/v1/traces
 
 echo "Creating buffered communications dir: $ECOENV_BUFFER_DIR"
 mkdir -p "$ECOENV_BUFFER_DIR"

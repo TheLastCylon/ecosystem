@@ -1,9 +1,5 @@
 from ekosis.application_base import ApplicationBase
-from ekosis.configuration.config_models                        import AppConfiguration
-from ekosis.middleware.manager                                 import MiddlewareManager
-from ekosis.middleware.buffered_middleware_manager             import BufferedMiddlewareManager
-from ekosis_jaeger_http.ekosis_jaeger_http.middleware          import JaegerHttpTracingMiddleware
-from ekosis_jaeger_http.ekosis_jaeger_http.buffered_middleware import JaegerHttpBufferedTracingMiddleware
+from ekosis_jaeger_http.setup import initiate_jaeger_tracing
 
 from .database import LogDatabase
 from .endpoints import log_request, log_response # noqa
@@ -13,10 +9,7 @@ class TrackerServer(ApplicationBase):
     def __init__(self):
         LogDatabase().initialise()
         super().__init__()
-        config   = AppConfiguration()
-        tracer   = JaegerHttpTracingMiddleware(endpoint = config.extra['JAEGER_ENDPOINT'])
-        MiddlewareManager().add(tracer)
-        BufferedMiddlewareManager().add(JaegerHttpBufferedTracingMiddleware(tracer))
+        initiate_jaeger_tracing()
 
 # --------------------------------------------------------------------------------
 def main():

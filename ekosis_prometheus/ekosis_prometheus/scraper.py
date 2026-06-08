@@ -17,6 +17,7 @@ log = logging.getLogger()
 _METRIC_DESCRIPTIONS = {
     "ekosis_service_health":                  "1 if service responded to last stats poll, 0 otherwise",
     "ekosis_uptime_seconds":                  "Seconds the service has been running since startup",
+    "ekosis_gather_period_seconds":           "Statistics gather period in seconds -- call_count resets each period",
     "ekosis_endpoint_call_count":             "Total endpoint calls in the last gather period",
     "ekosis_endpoint_p95_seconds":            "95th percentile response time in seconds",
     "ekosis_endpoint_p99_seconds":            "99th percentile response time in seconds",

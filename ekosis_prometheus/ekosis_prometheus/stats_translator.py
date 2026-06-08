@@ -71,6 +71,11 @@ def translate_gathered_stats(
     if uptime is not None:
         yield "ekosis_uptime_seconds", float(uptime), labels
 
+    # gather_period -- needed to derive per-second rates from call_count (which resets each period)
+    gather_period = stats.get("gather_period")
+    if gather_period is not None:
+        yield "ekosis_gather_period_seconds", float(gather_period), labels
+
     # endpoint_data -- call_count, p95, p99 per endpoint (user groups only)
     endpoint_data = stats.get("endpoint_data", {})
     for group, endpoints in endpoint_data.items():
@@ -119,6 +124,7 @@ def translate_gathered_stats(
         "buffered_sender_sizes",
         "timestamp",
         "uptime",
+        "gather_period",
     }
     for key, val in stats.items():
         if key in known_keys:
