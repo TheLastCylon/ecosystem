@@ -2,8 +2,6 @@
 
 ## For MVP
 
-- [X] Middleware!
-
 - [X] Observability with Open Telemetry evolution.
   - [X] Python example for use with `pushgateway` --> `Prometheus` --> `Grafana` (ekosis-prometheus + observable_fun)
   - [X] Logging into log aggregation tools like `Loki`, through `Alloy` (replaces EOL Promtail)
@@ -164,6 +162,7 @@
 - [X] Documentation: Persisted TCP and UDS clients
 - [X] Example: Ecosystem + FastAPI 
 - [X] LRU cache
+- [X] Middleware!
 
 # Possibly won't do:
 

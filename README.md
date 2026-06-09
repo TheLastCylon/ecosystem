@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="documentation/images/ecosystem_logo_sized_nobg.png" alt="EcoSystem Logo" width="15%"/>
+</div>
+
 # Ecosystem
 
 A Python framework for creating message-based, distributed systems. Allowing for
