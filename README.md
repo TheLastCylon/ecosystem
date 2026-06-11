@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="documentation/images/ecosystem_logo_sized_nobg.png" alt="EcoSystem Logo" width="15%"/>
+  <img src="https://raw.githubusercontent.com/TheLastCylon/ecosystem/main/documentation/images/ecosystem_logo_sized_nobg.png" alt="EcoSystem Logo" width="15%"/>
 </div>
 
 # Ecosystem
