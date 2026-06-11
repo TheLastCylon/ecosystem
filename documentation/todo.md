@@ -23,17 +23,24 @@
 
 - [ ] Ecosystem Node.js client
 
-
 - [ ] Sequenced Buffered Sender
   - As in: Make sure messages groups are sent in order
-
 
 - [ ] Broadcaster
   - As in: Send this message to a list of clients
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
 
-
 - [ ] Sequenced Broadcaster
+
+- [ ] multi-worker buffered sender:
+  - As in a buffered sender that has multiple worker threads and each thread has its own client.
+  - Queues are already thread safe for this.
+  - The one real tradeoff: ordering.
+  - Curently there is exactly one `__send_process_task`, so items are dispatched and completed
+    strictly in queue order. With N workers each popping and sending independently, dispatch
+    order off the queue stays sequential (pop is atomic), but completion order no longer is;
+    worker B can finish item 6 before worker A finishes item 5. For the router/notify use case
+    that's fine (each item independent). Worth flagging since buffered_sender is general-purpose.
 
 # Done
 - [X] Massive breakaway from queue terminology on endpoints and senders, to clarify their intended purpose of buffered communication.
