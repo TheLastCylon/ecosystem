@@ -2,14 +2,6 @@
 
 ## For MVP
 
-- [ ] Middleware!
-
-- [ ] Observability with Open Telemetry evolution.
-  - [ ] Python example for use with `pushgateway` --> `Prometheus` --> `Grafana`
-  - [ ] Logging into log aggregation tools like `Loki`, through `Promtail`.
-  - [ ] Open telemetry example with exporters for traces. (e.g. Jaeger exporter)
-  - [ ] Setting up `Grafana` to use the observability stack of choice.
-
 - [ ] Documentation: LRU Cache
 - [ ] Example: LRU Cache
 
@@ -31,17 +23,24 @@
 
 - [ ] Ecosystem Node.js client
 
-
 - [ ] Sequenced Buffered Sender
   - As in: Make sure messages groups are sent in order
-
 
 - [ ] Broadcaster
   - As in: Send this message to a list of clients
   - Using a map of clients to route_key, where the route_key is that of what the servers should receive the message on.
 
-
 - [ ] Sequenced Broadcaster
+
+- [ ] multi-worker buffered sender:
+  - As in a buffered sender that has multiple worker threads and each thread has its own client.
+  - Queues are already thread safe for this.
+  - The one real tradeoff: ordering.
+  - Curently there is exactly one `__send_process_task`, so items are dispatched and completed
+    strictly in queue order. With N workers each popping and sending independently, dispatch
+    order off the queue stays sequential (pop is atomic), but completion order no longer is;
+    worker B can finish item 6 before worker A finishes item 5. For the router/notify use case
+    that's fine (each item independent). Worth flagging since buffered_sender is general-purpose.
 
 # Done
 - [X] Massive breakaway from queue terminology on endpoints and senders, to clarify their intended purpose of buffered communication.
@@ -163,6 +162,13 @@
 - [X] Documentation: Persisted TCP and UDS clients
 - [X] Example: Ecosystem + FastAPI 
 - [X] LRU cache
+- [X] Middleware!
+- [X] Observability with Open Telemetry evolution.
+  - [X] Python example for use with `pushgateway` --> `Prometheus` --> `Grafana` (ekosis-prometheus + observable_fun)
+  - [X] Logging into log aggregation tools like `Loki`, through `Alloy` (replaces EOL Promtail)
+  - [X] Open telemetry example with exporters for traces (ekosis-jaeger-http + observable_fun)
+  - [X] Setting up `Grafana` to use the observability stack (provisioned dashboards in observability_platform/)
+  - [X] Documentation: observability -- middleware.md, ekosis-jaeger-http, ekosis-prometheus, observability stack + README
 
 # Possibly won't do:
 
@@ -197,4 +203,51 @@
     - We have `extra` for use by developers, should that not rather be used?
   - Create a standard `endpoint` that allows for setting of `max_uncommited` on the fly?
 
+## From 2026 Collaboration Review --- Items for Attention (to better serve Pi 1 Model B / tiny-business / IoT users)
+
+These were surfaced during an in-depth review.
+They focus on making the "lean + constrained hardware" reality more visible and supported in
+the artifact (high ROI for the actual target market of low-volume, single-SBC, budget-sensitive
+deployments).
+
+--------------------------------------------------------------------------------
+- [X] Core leanness / dependency hygiene: Remove hard numpy dependency. It is
+  currently only used for p95/p99 percentiles inside the statistics keeper.
+  Replace with a small pure-Python implementation (linear interpolation). This
+  will meaningfully reduce installed/compiled footprint. (Agreed during review;
+  pure-Python version sketched.)
+- [ ] Compilation / Nuitka path for SBCs: Elevate from experimental (benchmarking/)
+  to first-class documented, supported deployment option for infrastructure on
+  single-board computers. This is a hard requirement, not optional. Include examples
+  and guidance for real projects. (Active work noted as recently started.)
+- [ ] Documentation for constrained-hardware reality:
+  - Practical long-term ops guide: running Ecosystem (+ optional Enounce on same
+    Postgres) for years on a single old Pi.
+  - Clear decision criteria and guidance: when (and when not) to introduce Enounce.
+  - SBC-specific deployment section, prominently covering the compiled path.
+- [ ] Test strategy balance: Current heavy integration/end-to-end tests are correct
+  and aligned with ROI. Consider adding a minimal set of fast, isolated tests for
+  the highest-risk internal behaviors (retry/escalation state machines, shutdown
+  ordering, lock-file/duplicate-instance logic, persisted queue state transitions)
+  to improve refactor safety without violating the "no unnecessary test tax"
+  principle.
+- [ ] Make constraints visible: Ensure the "Raspberry Pi 1 Model B / minimal
+  resources / count businesses not size" filters are reflected in packaging
+  choices, default behaviors, and docs so other developers building for the same
+  market don't have to rediscover them the hard way.
+- [ ] Public release discipline (applies to related work such as Enounce): Before
+  publishing, ensure experimental code, dual project structures, and "work in progress"
+  are cleanly separated so the shipping artifact is unambiguous and low-surprise
+  for adopters.
+- [ ] "When to use / project types where it earns its keep" documentation: Turn the
+  synthesized list (IoT/gateways, small forever single-server businesses,
+  edge/air-gapped, low-volume internal glue, hybrid web+device) + litmus test
+  ("if the simple reliable solution would otherwise require carrier-grade tools for
+  100x bigger companies") into clear, honest guidance (including weaker fits).
+  Put in README and/or dedicated doc page. This helps the right users self-select
+  and sets realistic expectations.
+
+These items are recorded here because they directly affect whether the project can
+be successfully picked up and used by other people for the exact class of applications
+the vision targets.
 

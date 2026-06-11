@@ -11,19 +11,11 @@ class StreamServerBase(ServerBase):
         self.__ACK_byte    : int            =  6 # Decimal  6 = Ascii ACK (acknowledge) character
         self.__LF_byte     : int            = 10 # Decimal 10 = Ascii LF (line feed) character = '\n'
         self.__ACK_response: bytes          = bytes([self.__ACK_byte, self.__LF_byte])
-        self.__read_lock   : asyncio.Lock   = asyncio.Lock()
-        self.__write_lock  : asyncio.Lock   = asyncio.Lock()
-
-    # --------------------------------------------------------------------------------
-    async def __read_data(self, reader: asyncio.StreamReader):
-        async with self.__read_lock:
-            return await reader.readline()
 
     # --------------------------------------------------------------------------------
     async def __write_data(self, writer: asyncio.StreamWriter, data: bytes):
-        async with self.__write_lock:
-            writer.write(data)
-            await writer.drain()
+        writer.write(data)
+        await writer.drain()
 
     # TODO: Check client against white-list!
     # --------------------------------------------------------------------------------

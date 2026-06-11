@@ -9,15 +9,17 @@ log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 class PendingEntry(PydanticBaseModel):
-    uid    : str
-    retries: int = 0
-    data   : Any
+    uid     : str
+    retries : int  = 0
+    data    : Any
+    metadata: dict = {}
 
 # --------------------------------------------------------------------------------
 class ErrorEntry(PydanticBaseModel):
-    uid   : str
-    data  : Any
-    reason: str
+    uid     : str
+    data    : Any
+    reason  : str
+    metadata: dict = {}
 
 # --------------------------------------------------------------------------------
 class PendingQueue:
@@ -58,13 +60,13 @@ class PendingQueue:
     async def move_all_error_to_pending(self):
         while self.error_q.size() > 0:
             popped_error_entry = await self.error_q.pop()
-            await self.push_pending(uuid.UUID(popped_error_entry.uid), popped_error_entry.data, 0)
+            await self.push_pending(uuid.UUID(popped_error_entry.uid), popped_error_entry.data, 0, popped_error_entry.metadata)
 
     async def move_one_error_to_pending(self, item_uid: uuid.UUID):
-        popped_error_entry = await self.pop_error_q_uuid(item_uid)
+        popped_error_entry = await self.error_q.pop_uuid(item_uid)
         if popped_error_entry:
-            await self.push_pending(item_uid, popped_error_entry, 0)
-            return popped_error_entry
+            await self.push_pending(item_uid, popped_error_entry.data, 0, popped_error_entry.metadata)
+            return popped_error_entry.data
         return None
 
     async def clear_error_queue(self):
@@ -102,21 +104,23 @@ class PendingQueue:
         return await self._inspect_using_uuid(self.pending_q, request_uid)
 
     # --------------------------------------------------------------------------------
-    async def push_pending(self, item_uuid: uuid.UUID, item_data, retries: int = 0):
+    async def push_pending(self, item_uuid: uuid.UUID, item_data, retries: int = 0, metadata: dict | None = None):
         entry_to_queue = PendingEntry(
-            uid     = str(item_uuid),
-            data    = item_data,
-            retries = retries,
+            uid      = str(item_uuid),
+            data     = item_data,
+            retries  = retries,
+            metadata = metadata or {},
         )
         await self.pending_q.push(entry_to_queue, item_uuid)
 
     # --------------------------------------------------------------------------------
-    async def push_error(self, item_uuid: uuid.UUID, item_data, reason: str):
+    async def push_error(self, item_uuid: uuid.UUID, item_data, reason: str, metadata: dict | None = None):
         log.warning(f"Pushing message to error queue [{item_uuid}] {reason}]")
         entry_to_queue = ErrorEntry(
-            uid    = str(item_uuid),
-            data   = item_data,
-            reason = reason,
+            uid      = str(item_uuid),
+            data     = item_data,
+            reason   = reason,
+            metadata = metadata or {},
         )
         await self.error_q.push(entry_to_queue, item_uuid)
 

@@ -1,0 +1,27 @@
+# observable_fun -- local observability stack
+#
+# Spins up Jaeger for trace collection and visualisation.
+# Traces from observable_fun's router service appear here automatically.
+#
+# Usage:
+#   docker compose up -d      -- start in background
+#   docker compose down       -- stop and remove containers
+#   docker compose down -v    -- stop and remove containers + volumes
+#
+# Jaeger UI: http://localhost:16686
+# OTLP HTTP: http://localhost:4318  (this is where observable_fun sends traces)
+#
+# Storage is ephemeral -- traces are lost when the container stops.
+# For persistent traces and the full observability stack (Prometheus + Loki + Grafana),
+# see ~/dev/learning_fix/observability_platform/docker-compose.production.yml
+
+services:
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=true   # in-memory -- no disk writes, no setup required
+    ports:
+      - "127.0.0.1:16686:16686"  # Jaeger UI  -- http://localhost:16686
+      - "127.0.0.1:4318:4318"    # OTLP HTTP  -- where observable_fun sends traces

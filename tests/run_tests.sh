@@ -35,6 +35,7 @@ $VENV/coverage run -p --source=ekosis -m pytest \
   tests/log_manager_endpoints.py \
   tests/error_state_endpoints.py \
   tests/paginated_queue_unit_tests.py \
+  tests/buffered_middleware_unit_tests.py \
   tests/utility_functions.py \
   tests/error_state_keeper.py \
   tests/lru_cache.py \

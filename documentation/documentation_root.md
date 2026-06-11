@@ -48,6 +48,8 @@ will have the name `ekosis`.
 - [Distributed Tracking (Request Tracking)](./distributed_tracking.md)
 - [Running background tasks with setup_tasks](./setup_tasks.md)
 - [Transient vs. Persisted clients](./transient_vs_persistant_connections.md)
+- [Middleware](./middleware.md)
+- [Observability](./observability.md)
 - [Command line tools](./command_line_tool.md)
 - [Benchmarking](./benchmarking/benchmarking.md)
 - [Tests](../tests/README.md)

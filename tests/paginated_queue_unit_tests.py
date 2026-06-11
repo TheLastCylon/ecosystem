@@ -3,16 +3,10 @@ import os
 import pytest
 import uuid
 
-from typing import Any, List
-from pydantic import BaseModel as PydanticBaseModel
+from typing import List
 
-from ekosis.queues import PaginatedQueue
-
-# --------------------------------------------------------------------------------
-class PendingEntry(PydanticBaseModel):
-    uid    : str
-    retries: int = 0
-    data   : Any
+from ekosis.queues             import PaginatedQueue
+from ekosis.queues.pending_queue import PendingEntry
 
 # --------------------------------------------------------------------------------
 SQLITE_FILE = "/tmp/test_queues.sqlite"

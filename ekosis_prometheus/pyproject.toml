@@ -1,0 +1,32 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name             = "ekosis-prometheus"
+version          = "0.1.0"
+description      = "Prometheus metrics scraper for EcoSystem applications. Auto-discovers local services via environment variables and pushes stats to Pushgateway."
+readme           = "documentation/README.md"
+license          = "BSD-3-Clause"
+license-files    = ["LICENSE"]
+authors          = [{name = "Dirk Botha", email = "bothadj@gmail.com"}]
+requires-python  = ">=3.11.3"
+dependencies     = [
+    "ekosis>=0.16.0",
+    "prometheus-client>=0.20.0",
+]
+classifiers      = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+ekosis_prometheus = "ekosis_prometheus.application:main"
+
+[project.urls]
+Homepage = "https://github.com/TheLastCylon/ecosystem"
+
+[tool.setuptools.packages.find]
+include = ["ekosis_prometheus*"]

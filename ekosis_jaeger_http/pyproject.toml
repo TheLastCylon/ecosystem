@@ -1,0 +1,31 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name             = "ekosis-jaeger-http"
+version          = "0.1.0"
+description      = "Jaeger tracing middleware for EcoSystem applications, via OTLP HTTP."
+readme           = "documentation/README.md"
+license          = "BSD-3-Clause"
+license-files    = ["LICENSE"]
+authors          = [{name = "Dirk Botha", email = "bothadj@gmail.com"}]
+requires-python  = ">=3.11.3"
+dependencies     = [
+    "ekosis>=0.16.0",
+    "opentelemetry-api>=1.25.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.25.0",
+]
+classifiers      = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/TheLastCylon/ecosystem"
+
+[tool.setuptools.packages.find]
+include = ["ekosis_jaeger_http*"]
