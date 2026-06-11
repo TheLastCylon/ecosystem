@@ -19,6 +19,8 @@
   - Setting of the error state when that happens.
   - Clearing of the error state when it is resolved.
 
+- [ ] Quick start guide.
+
 ## Beyond MVP
 
 - [ ] Ecosystem Node.js client
