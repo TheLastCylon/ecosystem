@@ -14,8 +14,8 @@ export ECOENV_LOG_DIR=/var/log/ekosis
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
 
-# Observability -- Jaeger OTLP HTTP endpoint
-export ECOENV_EXTRA_JAEGER_ENDPOINT=http://optiplexer.local:4318/v1/traces
+# Observability -- OTLP HTTP traces endpoint
+export ECOENV_EXTRA_OTLP_TRACES_ENDPOINT=http://optiplexer.local:4318/v1/traces
 
 # Instance level configurations
 export ECOENV_UDP_FORTUNE_0=127.0.0.1:8100

@@ -80,19 +80,19 @@ pass `exclude_groups=set()` to `translate_gathered_stats`.
 
 ---
 
-## Tracing -- ekosis-jaeger-http
+## Tracing -- ekosis-otlp-traces
 
-`ekosis-jaeger-http` wires OpenTelemetry tracing into EcoSystem via the middleware system.
+`ekosis-otlp-traces` wires OpenTelemetry tracing into EcoSystem via the middleware system.
 Every endpoint in a service is automatically traced -- zero changes to endpoint code.
 
 Install:
 ```bash
-pip install -e ekosis_jaeger_http/
+pip install -e ekosis_otlp_traces/
 ```
 
 Wire into your application setup (three lines):
 ```python
-from ekosis_jaeger_http import JaegerHttpTracingMiddleware, JaegerHttpBufferedTracingMiddleware
+from ekosis_otlp_traces import JaegerHttpTracingMiddleware, JaegerHttpBufferedTracingMiddleware
 
 tracer = JaegerHttpTracingMiddleware()
 MiddlewareManager().add(tracer)

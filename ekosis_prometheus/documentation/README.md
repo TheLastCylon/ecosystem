@@ -2,7 +2,7 @@
 
 Prometheus metrics for EcoSystem applications, via Pushgateway.
 
-Unlike [ekosis-jaeger-http](../../ekosis_jaeger_http/documentation/README.md),
+Unlike [ekosis-otlp-traces](../../ekosis_otlp_traces/documentation/README.md),
 this is not middleware. It is a standalone EcoSystem application that runs
 alongside your services. It auto-discovers local services via environment
 variables, polls their built-in telemetry endpoint, and pushes the results to
