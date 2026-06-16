@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 import logging
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -10,7 +9,7 @@ from .handler_base import HandlerBase
 from .status import Status
 
 from ..util.fire_and_forget_tasks import fire_and_forget_task
-from ..data_transfer_objects import BufferedEndpointResponseDTO
+from ..data_transfer_objects import BufferedEndpointResponseDTO, SpanKey
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 from ..middleware.buffered_middleware_manager import BufferedMiddlewareManager
@@ -84,19 +83,19 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         await self.queue.clear_error_queue()
 
     # --------------------------------------------------------------------------------
-    async def get_first_x_error_uuids(self, how_many: int = 1) -> List[str]:
-        return await self.queue.get_first_x_error_uuids(how_many)
+    async def get_first_x_error_span_keys(self, how_many: int = 1) -> List[str]:
+        return await self.queue.get_first_x_error_span_keys(how_many)
 
     # --------------------------------------------------------------------------------
-    async def pop_request_from_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        buffered_request = await self.queue.pop_error_q_uuid(request_uid)
+    async def pop_request_from_error_queue(self, span_key: SpanKey) -> _T|None:
+        buffered_request = await self.queue.pop_error_q_span_key(span_key)
         if not buffered_request:
             return None
         return self.request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
-    async def inspect_request_in_error_queue(self, request_uid: uuid.UUID) -> _T | None:
-        buffered_request = await self.queue.inspect_error_q_uuid(request_uid)
+    async def inspect_request_in_error_queue(self, span_key: SpanKey) -> _T|None:
+        buffered_request = await self.queue.inspect_error_q_span_key(span_key)
         if not buffered_request:
             return None
         return self.request_dto_type(**buffered_request)
@@ -109,9 +108,9 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
         self.__check_process_queue()
 
     # --------------------------------------------------------------------------------
-    async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _T | None:
+    async def reprocess_error_queue_span_key(self, span_key: SpanKey) -> _T|None:
         self._processing_paused = True
-        buffered_request        = await self.queue.move_one_error_to_pending(request_uid)
+        buffered_request        = await self.queue.move_one_error_to_pending(span_key)
         self._processing_paused = False
         self.__check_process_queue()
         if not buffered_request:
@@ -178,19 +177,19 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     async def __do_queue_processing(self):
         while not self._processing_paused and await self.queue.has_pending():
             buffered_item = await self.queue.pop()
-            request_uid   = uuid.UUID(buffered_item.uid)
+            span_key      = buffered_item.span_key
             request_data  = self.request_dto_type(**buffered_item.data)
             retries       = buffered_item.retries
             metadata      = buffered_item.metadata
-            await BufferedMiddlewareManager().run_before_process(request_uid, request_data, metadata, retries)
-            success = await self.process_buffered_request(uid = request_uid, dto = request_data)
-            await BufferedMiddlewareManager().run_after_process(request_uid, request_data, metadata, success)
+            await BufferedMiddlewareManager().run_before_process(span_key, request_data, metadata, retries)
+            success = await self.process_buffered_request(span_key = span_key, dto = request_data)
+            await BufferedMiddlewareManager().run_after_process(span_key, request_data, metadata, success)
             if not success:
                 retries += 1
                 if retries >= self.max_retries:
-                    await self.queue.push_error(request_uid, request_data, "Max retries reached.", metadata)
+                    await self.queue.push_error(span_key, request_data, "Max retries reached.", metadata)
                 else:
-                    await self.queue.push_pending(request_uid, request_data, retries, metadata)
+                    await self.queue.push_pending(span_key, request_data, retries, metadata)
 
     # --------------------------------------------------------------------------------
     async def _process_queue(self):
@@ -214,12 +213,12 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     # --------------------------------------------------------------------------------
     async def run(self, **kwargs) -> PydanticBaseModel:
         self.log.debug(f"BufferedRequestHandlerBase.run 000 [{kwargs}]")
-        uid = kwargs.get("uid")
-        dto = kwargs.get("dto")
+        span_key: SpanKey = kwargs.get("span_key")
+        dto               = kwargs.get("dto")
         if self._receiving_paused:
             raise BufferedRequestHandlerReceivingPausedException(self._route_key)
-        metadata = await BufferedMiddlewareManager().collect_push_metadata(uid, dto)
-        fire_and_forget_task(self.queue.push_pending(uid, dto, 0, metadata))
-        response = BufferedEndpointResponseDTO(uid = str(uid))
+        metadata = await BufferedMiddlewareManager().collect_push_metadata(span_key, dto)
+        fire_and_forget_task(self.queue.push_pending(span_key, dto, 0, metadata))
+        response = BufferedEndpointResponseDTO(span_key = span_key)
         self.__check_process_queue()
         return response

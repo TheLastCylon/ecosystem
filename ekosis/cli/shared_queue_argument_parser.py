@@ -13,22 +13,22 @@ queue_one_action_group = argument_parser.add_mutually_exclusive_group()
 
 # --------------------------------------------------------------------------------
 def setup_shared_options():
-    queue_one_action_group.add_argument("-e10", "--error_10"      , required=False, action="store_true", help="Get the first 10 uuids in an error database of a queue.")
-    queue_one_action_group.add_argument("-rp1", "--reprocess_one" , required=False, action="store_true", help="Reprocess a specified entry in an error database of a queue.\n- [Requires -rid].")
+    queue_one_action_group.add_argument("-e10", "--error_10"      , required=False, action="store_true", help="Get the first 10 span-keys in an error database of a queue.")
+    queue_one_action_group.add_argument("-rp1", "--reprocess_one" , required=False, action="store_true", help="Reprocess a specified entry in an error database of a queue.\n- [Requires -sk].")
     queue_one_action_group.add_argument("-rpa", "--reprocess_all" , required=False, action="store_true", help="Reprocess all entries in an error queue.")
 
     # The danger zone
     # --------------------------------------------------------------------------------
-    queue_one_action_group.add_argument("-ins", "--inspect_request", required=False, action="store_true", help="View a request on an error database of a queue.\n- [Requires -rid].")
-    queue_one_action_group.add_argument("-pop", "--pop_request"    , required=False, action="store_true", help="Pop a request from an error database of a queue.\n- [Requires -rid].")
+    queue_one_action_group.add_argument("-ins", "--inspect_request", required=False, action="store_true", help="View a request on an error database of a queue.\n- [Requires -sk].")
+    queue_one_action_group.add_argument("-pop", "--pop_request"    , required=False, action="store_true", help="Pop a request from an error database of a queue.\n- [Requires -sk].")
     queue_one_action_group.add_argument("-clr", "--clear"          , required=False, action="store_true", help="Clear the error database of a queue completely.\n- WARNING: All requests in the error queue are deleted!")
 
     argument_parser.add_argument(
-        "-rid", "--request_uid",
-        metavar = "<request uuid>",
+        "-sk", "--span_key",
+        metavar = "<request span-key>",
         default = None,
         type    = str,
-        help    = "The UUID for an item in a queue."
+        help    = "The span-key for an item in a queue."
     )
 
 # --------------------------------------------------------------------------------

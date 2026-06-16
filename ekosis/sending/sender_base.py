@@ -1,11 +1,9 @@
-import uuid
-
 from abc import ABC, abstractmethod
 from typing import Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..clients import ClientBase
-from ..data_transfer_objects import EmptyDto
+from ..data_transfer_objects import EmptyDto, SpanKey
 
 _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)
 _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
@@ -32,10 +30,10 @@ class SenderBase(Generic[_RequestDTOType, _ResponseDTOType], ABC):
     async def send(self, *args, **kwargs): # pragma: no cover
         pass
 
-    async def send_data(self, data: _RequestDTOType, request_uid: uuid.UUID = None) -> _ResponseDTOType:
+    async def send_data(self, data: _RequestDTOType, span_key: SpanKey = None) -> _ResponseDTOType:
         return await self._client.send_message(
             self._route_key,
             data,
             self._response_dto_type,
-            request_uid
+            span_key
         )

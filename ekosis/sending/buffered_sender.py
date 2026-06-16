@@ -35,10 +35,10 @@ def buffered_sender(
         buffered_sender_keeper.add_buffered_sender(buffered_sender_instance)
 
         async def wrapper(*args, **kwargs):
-            request_uid_to_use = None
-            if "request_uid" in kwargs.keys():
-                request_uid_to_use = kwargs["request_uid"]
+            span_key_to_use = None
+            if "span_key" in kwargs.keys():
+                span_key_to_use = kwargs["span_key"]
 
-            await buffered_sender_instance.push_message(await function(*args, **kwargs), request_uid_to_use)
+            await buffered_sender_instance.push_message(await function(*args, **kwargs), span_key_to_use)
         return wrapper
     return inner_decorator

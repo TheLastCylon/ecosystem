@@ -1,12 +1,10 @@
-import uuid
-
 from typing import Type, TypeVar, Generic
 from pydantic import BaseModel as PydanticBaseModel
 
 from .buffered_sender_base import BufferedSenderBase
 
 from ..clients import ClientBase
-from ..data_transfer_objects import EmptyDto
+from ..data_transfer_objects import EmptyDto, SpanKey
 
 _RequestDTOType  = TypeVar("_RequestDTOType" , bound=PydanticBaseModel)
 _ResponseDTOType = TypeVar("_ResponseDTOType", bound=PydanticBaseModel)
@@ -33,5 +31,5 @@ class BufferedSenderClass(Generic[_RequestDTOType, _ResponseDTOType], BufferedSe
             max_retries
         )
 
-    async def push_message(self, message: _RequestDTOType, request_uuid: uuid.UUID = None):
-        await self.enqueue(message, request_uuid)
+    async def push_message(self, message: _RequestDTOType, span_key: SpanKey = None):
+        await self.enqueue(message, span_key)

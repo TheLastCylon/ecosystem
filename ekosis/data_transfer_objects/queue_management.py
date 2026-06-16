@@ -1,16 +1,14 @@
 from typing import Any, List
 from pydantic import BaseModel as PydanticBaseModel
-
+from .json_protocol import SpanKey
 
 # --------------------------------------------------------------------------------
 class QManagementRequestDto(PydanticBaseModel):
     queue_route_key: str
 
-
 # --------------------------------------------------------------------------------
 class QManagementItemRequestDto(QManagementRequestDto):
-    request_uid    : str
-
+    span_key: SpanKey
 
 # --------------------------------------------------------------------------------
 class QDatabaseSizesDto(PydanticBaseModel):
@@ -25,13 +23,11 @@ class BufferedEndpointInformationDto(PydanticBaseModel):
     processing_paused: bool
     database_sizes   : QDatabaseSizesDto
 
-
 # --------------------------------------------------------------------------------
 class BufferedSenderInformationDto(PydanticBaseModel):
     route_key           : str
     send_process_paused : bool
     database_sizes      : QDatabaseSizesDto
-
 
 # --------------------------------------------------------------------------------
 class QManagementResponseDto(PydanticBaseModel):

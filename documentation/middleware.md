@@ -166,29 +166,30 @@ graph TD
 ## Example -- request logging middleware
 
 ### The middleware code
+
 ```python
 import logging
 import uuid
 import time
 
-from ekosis.middleware         import MiddlewareBase, BufferedMiddlewareBase
-from ekosis.middleware         import MiddlewareManager, BufferedMiddlewareManager
+from ekosis.middleware import MiddlewareBase, BufferedMiddlewareBase
+from ekosis.middleware import MiddlewareManager, BufferedMiddlewareManager
 from ekosis.data_transfer_objects import RequestDTO
-from pydantic                  import BaseModel as PydanticBaseModel
+from pydantic import BaseModel as PydanticBaseModel
 
-log = logging.getLogger(__name__)
+log=logging.getLogger(__name__)
 
 
 class RequestLogger(MiddlewareBase):
     async def before_routing(self, **kwargs) -> RequestDTO:
-        protocol_dto = kwargs["protocol_dto"]
-        log.info(f"request uid={protocol_dto.request_uid} route={protocol_dto.route_key}")
+        protocol_dto=kwargs["protocol_dto"]
+        log.info(f"request uid={protocol_dto.span_key} route={protocol_dto.route_key}")
         return protocol_dto
 
     async def after_routing(self, **kwargs) -> PydanticBaseModel:
-        response_dto = kwargs["response_dto"]
-        protocol_dto = kwargs["protocol_dto"]
-        log.info(f"response uid={protocol_dto.request_uid}")
+        response_dto=kwargs["response_dto"]
+        protocol_dto=kwargs["protocol_dto"]
+        log.info(f"response uid={protocol_dto.span_key}")
         return response_dto
 
 
@@ -201,7 +202,7 @@ class BufferedRequestLogger(BufferedMiddlewareBase):
         log.info(f"buffered processing uid={uid} retries={retries}")
 
     async def after_process(self, uid: uuid.UUID, dto: PydanticBaseModel, metadata: dict, success: bool) -> None:
-        elapsed = time.monotonic() - metadata.get("queued_at", time.monotonic())
+        elapsed=time.monotonic()-metadata.get("queued_at", time.monotonic())
         log.info(f"buffered done uid={uid} success={success} queue_time={elapsed:.3f}s")
 ```
 

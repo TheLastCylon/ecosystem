@@ -1,6 +1,6 @@
 from pydantic import BaseModel as PydanticBaseModel
-
+from .json_protocol import SpanKey
 
 # --------------------------------------------------------------------------------
 class BufferedEndpointResponseDTO(PydanticBaseModel):
-    uid: str
+    span_key: SpanKey

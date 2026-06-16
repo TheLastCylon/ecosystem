@@ -27,7 +27,7 @@ class JaegerHttpTracingMiddleware(MiddlewareBase):
         self._tracer = trace.get_tracer(service_name)
 
     async def before_routing(self, protocol_dto: RequestDTO, **kwargs) -> RequestDTO:
-        uid_int    = _uuid.UUID(protocol_dto.uid).int
+        uid_int    = _uuid.UUID(protocol_dto.trace_id).int
         parent_ctx = trace.set_span_in_context(NonRecordingSpan(SpanContext(
             trace_id    = uid_int,
             span_id     = uid_int & 0xFFFFFFFFFFFFFFFF,  # lower 64 bits -- non-zero for any real UUID
@@ -35,13 +35,13 @@ class JaegerHttpTracingMiddleware(MiddlewareBase):
             trace_flags = TraceFlags(TraceFlags.SAMPLED),
         )))
         span = self._tracer.start_span(protocol_dto.route_key, context=parent_ctx)
-        span.set_attribute("request.uid",       protocol_dto.uid)
+        span.set_attribute("request.uid",       protocol_dto.trace_id)
         span.set_attribute("request.route_key", protocol_dto.route_key)
-        self._active_spans[protocol_dto.uid] = span
+        self._active_spans[protocol_dto.trace_id] = span
         return protocol_dto
 
     async def after_routing(self, protocol_dto: RequestDTO, response_dto: PydanticBaseModel, **kwargs) -> PydanticBaseModel:
-        span = self._active_spans.pop(protocol_dto.uid, None)
+        span = self._active_spans.pop(protocol_dto.trace_id, None)
         if span:
             span.set_status(StatusCode.OK)
             span.end()

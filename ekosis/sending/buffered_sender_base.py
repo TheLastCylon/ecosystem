@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 import logging
 
 from typing import Type, TypeVar, Generic, List
@@ -8,7 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from .sender_base import SenderBase
 
 from ..clients import ClientBase
-from ..data_transfer_objects import EmptyDto
+from ..data_transfer_objects import EmptyDto, SpanKey
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 from ..exceptions import ServerBusyException, CommunicationsMaxRetriesReached
@@ -53,12 +52,10 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
         pass
 
     # --------------------------------------------------------------------------------
-    async def enqueue(self, request_data: _RequestDTOType, request_uuid: uuid.UUID = None) -> None:
-        if not request_uuid:
-            uuid_to_use = uuid.uuid4()
-        else:
-            uuid_to_use = request_uuid
-        await self.queue.push_pending(uuid_to_use, request_data, 0)
+    async def enqueue(self, request_data: _RequestDTOType, span_key: SpanKey = None) -> None:
+        span_key_to_use = span_key if span_key else SpanKey.generate()
+
+        await self.queue.push_pending(span_key_to_use, request_data, 0)
         self.__check_process_send_queue()
 
     # --------------------------------------------------------------------------------
@@ -90,21 +87,21 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
     async def __do_queue_processing(self):
         while not self._sending_paused and self.queue.pending_q.size():
             buffered_item = await self.queue.pop()
-            request_uid   = uuid.UUID(buffered_item.uid)
+            span_key      = buffered_item.span_key
             request_data  = self._request_dto_type(**buffered_item.data)
             retries       = buffered_item.retries
             try:
                 if self.wait_period > 0:
                     await asyncio.sleep(self.wait_period)
-                await self.send_data(request_data, request_uid)
+                await self.send_data(request_data, span_key)
             except (ServerBusyException, CommunicationsMaxRetriesReached): # Only retry sending, if the sending is retryable
                 retries += 1
                 if retries >= self.max_retries:
-                    await self.queue.push_error(request_uid, request_data, "Max retries reached.")
+                    await self.queue.push_error(span_key, request_data, "Max retries reached.")
                 else:
-                    await self.queue.push_pending(request_uid, request_data, retries)
+                    await self.queue.push_pending(span_key, request_data, retries)
             except Exception as e : # Move it to the error queue
-                await self.queue.push_error(request_uid, request_data, str(e))
+                await self.queue.push_error(span_key, request_data, str(e))
 
     # --------------------------------------------------------------------------------
     async def __process_send_queue(self) -> None:
@@ -139,19 +136,19 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
         await self.queue.clear_error_queue()
 
     # --------------------------------------------------------------------------------
-    async def get_first_x_error_uuids(self, how_many: int = 1) -> List[str]:
-        return await self.queue.get_first_x_error_uuids(how_many)
+    async def get_first_x_error_span_keys(self, how_many: int = 1) -> List[str]:
+        return await self.queue.get_first_x_error_span_keys(how_many)
 
     # --------------------------------------------------------------------------------
-    async def pop_request_from_error_queue(self, request_uid: uuid.UUID):
-        buffered_request = await self.queue.pop_error_q_uuid(request_uid)
+    async def pop_request_from_error_queue(self, span_key: SpanKey):
+        buffered_request = await self.queue.pop_error_q_span_key(span_key)
         if not buffered_request:
             return None
         return self._request_dto_type(**buffered_request)
 
     # --------------------------------------------------------------------------------
-    async def inspect_request_in_error_queue(self, request_uid: uuid.UUID):
-        buffered_request = await self.queue.inspect_error_q_uuid(request_uid)
+    async def inspect_request_in_error_queue(self, span_key: SpanKey):
+        buffered_request = await self.queue.inspect_error_q_span_key(span_key)
         if not buffered_request:
             return None
         return self._request_dto_type(**buffered_request)
@@ -164,9 +161,9 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
         self.__check_process_send_queue()
 
     # --------------------------------------------------------------------------------
-    async def reprocess_error_queue_request_uid(self, request_uid: uuid.UUID) -> _RequestDTOType | None:
+    async def reprocess_error_queue_span_key(self, span_key: SpanKey) -> _RequestDTOType|None:
         self._sending_paused = True
-        buffered_request     = await self.queue.move_one_error_to_pending(request_uid)
+        buffered_request     = await self.queue.move_one_error_to_pending(span_key)
         self._sending_paused = False
         self.__check_process_send_queue()
         if not buffered_request:

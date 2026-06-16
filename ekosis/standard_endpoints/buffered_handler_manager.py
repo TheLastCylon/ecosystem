@@ -1,11 +1,8 @@
-import uuid
-
 from typing import Any, Dict
 from pydantic import BaseModel as PydanticBaseModel
 
 from ..requests.endpoint import endpoint
 from ..state_keepers.buffered_handler_keeper import BufferedHandlerKeeper
-from ..util.utility_functions import string_to_uuid
 from ..data_transfer_objects.queue_management import (
     QManagementRequestDto,
     QManagementItemRequestDto,
@@ -122,13 +119,13 @@ async def eco_buffered_handler_all_unpause(dto: QManagementRequestDto, **kwargs)
 @endpoint("eco.buffered_handler.errors.get_first_10", QManagementRequestDto)
 async def eco_buffered_handler_errors_get_first_10(dto: QManagementRequestDto, **kwargs) -> PydanticBaseModel:
     buffered_handler_keeper = BufferedHandlerKeeper()
-    uuid_list               = await buffered_handler_keeper.get_first_10_error_uuids(dto.queue_route_key)
-    if uuid_list is None:
+    span_key_list           = await buffered_handler_keeper.get_first_10_error_span_keys(dto.queue_route_key)
+    if span_key_list is None:
         return QManagementResponseDto(message=f"No queue for route key: [{dto.queue_route_key}]")
 
     return QManagementResponseDto(
-        queue_data = uuid_list,
-        message    = f"Buffered Endpoint[{dto.queue_route_key}]: Retrieved first 10 UUIDs for error database."
+        queue_data = span_key_list,
+        message    = f"Buffered Endpoint[{dto.queue_route_key}]: Retrieved first 10 span-keys for error database."
     )
 
 # --------------------------------------------------------------------------------
@@ -161,59 +158,47 @@ async def eco_buffered_handler_errors_clear(dto: QManagementRequestDto, **kwargs
 @endpoint("eco.buffered_handler.errors.reprocess.one", QManagementItemRequestDto)
 async def eco_buffered_handler_errors_reprocess_one(dto: QManagementItemRequestDto, **kwargs) -> PydanticBaseModel:
     buffered_handler_keeper = BufferedHandlerKeeper()
-    request_uid             = string_to_uuid(dto.request_uid)
-    if not request_uid:
-        return QManagementResponseDto(message=f"[{dto.request_uid}] is not a valid UUID.")
-
-    queue_info_dict = await buffered_handler_keeper.reprocess_error_queue_request_uid(dto.queue_route_key, uuid.UUID(dto.request_uid))
+    queue_info_dict         = await buffered_handler_keeper.reprocess_error_queue_span_key(dto.queue_route_key, dto.span_key)
 
     if queue_info_dict is None:
         return QManagementResponseDto(message=f"No queue for route key: [{dto.queue_route_key}]")
     elif not queue_info_dict:
-        return QManagementResponseDto(message=f"No request with uid [{dto.request_uid}] in error queue for route key: [{dto.queue_route_key}]")
+        return QManagementResponseDto(message=f"No request with span-key [{dto.span_key}] in error queue for route key: [{dto.queue_route_key}]")
 
     return QManagementResponseDto(
         queue_data   = make_buffered_endpoint_information_dto(dto.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"Buffered Endpoint[{dto.queue_route_key}]: Error database entry[{dto.request_uid}] moved to incoming database."
+        message      = f"Buffered Endpoint[{dto.queue_route_key}]: Error database entry[{dto.span_key}] moved to incoming database."
     )
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.buffered_handler.errors.pop_request", QManagementItemRequestDto)
 async def eco_buffered_handler_errors_pop_request(dto: QManagementItemRequestDto, **kwargs) -> PydanticBaseModel:
     buffered_handler_keeper = BufferedHandlerKeeper()
-    request_uid             = string_to_uuid(dto.request_uid)
-    if not request_uid:
-        return QManagementResponseDto(message=f"[{dto.request_uid}] is not a valid UUID.")
-
-    queue_info_dict = await buffered_handler_keeper.pop_request_from_error_queue(dto.queue_route_key, uuid.UUID(dto.request_uid))
+    queue_info_dict         = await buffered_handler_keeper.pop_request_from_error_queue(dto.queue_route_key, dto.span_key)
     if queue_info_dict is None:
         return QManagementResponseDto(message=f"No queue for route key: [{dto.queue_route_key}]")
     elif not queue_info_dict:
-        return QManagementResponseDto(message=f"No request with uid [{dto.request_uid}] in error queue for route key: [{dto.queue_route_key}]")
+        return QManagementResponseDto(message=f"No request with span-key [{dto.span_key}] in error queue for route key: [{dto.queue_route_key}]")
 
     return QManagementResponseDto(
         queue_data   = make_buffered_endpoint_information_dto(dto.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"Buffered Endpoint[{dto.queue_route_key}]: POPPED Error database entry[{dto.request_uid}]."
+        message      = f"Buffered Endpoint[{dto.queue_route_key}]: POPPED Error database entry[{dto.span_key}]."
     )
 
 # --------------------------------------------------------------------------------
 @endpoint("eco.buffered_handler.errors.inspect_request", QManagementItemRequestDto)
 async def eco_buffered_handler_errors_inspect_request(dto: QManagementItemRequestDto, **kwargs) -> PydanticBaseModel:
     buffered_handler_keeper = BufferedHandlerKeeper()
-    request_uid             = string_to_uuid(dto.request_uid)
-    if not request_uid:
-        return QManagementResponseDto(message=f"[{dto.request_uid}] is not a valid UUID.")
-
-    queue_info_dict = await buffered_handler_keeper.inspect_request_from_error_queue(dto.queue_route_key, uuid.UUID(dto.request_uid))
+    queue_info_dict         = await buffered_handler_keeper.inspect_request_from_error_queue(dto.queue_route_key, dto.span_key)
     if queue_info_dict is None:
         return QManagementResponseDto(message=f"No queue for route key: [{dto.queue_route_key}]")
     elif not queue_info_dict:
-        return QManagementResponseDto(message=f"No request with uid [{dto.request_uid}] in error queue for route key: [{dto.queue_route_key}]")
+        return QManagementResponseDto(message=f"No request with span-key [{dto.span_key}] in error queue for route key: [{dto.queue_route_key}]")
 
     return QManagementResponseDto(
         queue_data   = make_buffered_endpoint_information_dto(dto.queue_route_key, queue_info_dict),
         request_data = queue_info_dict["request_data"],
-        message      = f"Buffered Endpoint[{dto.queue_route_key}]: INSPECTING Error database entry[{dto.request_uid}]."
+        message      = f"Buffered Endpoint[{dto.queue_route_key}]: INSPECTING Error database entry[{dto.span_key}]."
     )

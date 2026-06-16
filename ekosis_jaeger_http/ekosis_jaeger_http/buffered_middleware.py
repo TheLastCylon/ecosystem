@@ -16,17 +16,17 @@ class JaegerHttpBufferedTracingMiddleware(BufferedMiddlewareBase):
         self._tracing        = tracing_middleware
         self._process_spans  = {}
 
-    async def before_push(self, uid: uuid.UUID, dto: PydanticBaseModel) -> dict:
-        span = self._tracing.get_active_span(str(uid))
+    async def before_push(self, span_key: uuid.UUID, dto: PydanticBaseModel) -> dict:
+        span = self._tracing.get_active_span(str(span_key))
         if not span:
             return {}
         ctx = span.get_span_context()
         return {
-            _TRACE_ID_KEY: ctx.trace_id,
+            _TRACE_ID_KEY: ctx.span_key,
             _SPAN_ID_KEY : ctx.span_id,
         }
 
-    async def before_process(self, uid: uuid.UUID, dto: PydanticBaseModel, metadata: dict, retries: int) -> None:
+    async def before_process(self, span_key: uuid.UUID, dto: PydanticBaseModel, metadata: dict, retries: int) -> None:
         trace_id = metadata.get(_TRACE_ID_KEY)
         span_id  = metadata.get(_SPAN_ID_KEY)
         if trace_id is None or span_id is None:
@@ -43,12 +43,12 @@ class JaegerHttpBufferedTracingMiddleware(BufferedMiddlewareBase):
             f"{dto.__class__.__name__}.process",
             context = parent_context,
         )
-        span.set_attribute("request.uid",     str(uid))
+        span.set_attribute("request.uid",     str(span_key))
         span.set_attribute("request.retries", retries)
-        self._process_spans[str(uid)] = span
+        self._process_spans[str(span_key)] = span
 
-    async def after_process(self, uid: uuid.UUID, dto: PydanticBaseModel, metadata: dict, success: bool) -> None:
-        span = self._process_spans.pop(str(uid), None)
+    async def after_process(self, span_key: uuid.UUID, dto: PydanticBaseModel, metadata: dict, success: bool) -> None:
+        span = self._process_spans.pop(str(span_key), None)
         if span:
             span.set_attribute("process.success", success)
             span.end()

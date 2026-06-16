@@ -1,7 +1,6 @@
-import uuid
-
 from typing import Dict, List, Any
 
+from ..data_transfer_objects import SpanKey
 from ..requests.buffered_handler import BufferedHandler
 from ..util import SingletonType
 
@@ -32,10 +31,10 @@ class BufferedHandlerKeeper(metaclass=SingletonType):
         }
 
     # --------------------------------------------------------------------------------
-    async def get_first_10_error_uuids(self, route_key) -> List[str] | None:
+    async def get_first_10_error_span_keys(self, route_key) -> List[str] | None:
         if route_key not in self.__buffered_handlers.keys():
             return None
-        return await self.__buffered_handlers[route_key].get_first_x_error_uuids(10)
+        return await self.__buffered_handlers[route_key].get_first_x_error_span_keys(10)
 
     # --------------------------------------------------------------------------------
     async def pause_receiving_for_buffered_handler(self, route_key: str):
@@ -82,10 +81,10 @@ class BufferedHandlerKeeper(metaclass=SingletonType):
         return await self.__get_queue_information(route_key)
 
     # --------------------------------------------------------------------------------
-    async def pop_request_from_error_queue(self, route_key: str, request_uid: uuid.UUID):
+    async def pop_request_from_error_queue(self, route_key: str, span_key: SpanKey):
         if route_key not in self.__buffered_handlers.keys():
             return None
-        result = await self.__buffered_handlers[route_key].pop_request_from_error_queue(request_uid)
+        result = await self.__buffered_handlers[route_key].pop_request_from_error_queue(span_key)
         if not result:
             return False
         queue_information = await self.__get_queue_information(route_key)
@@ -93,10 +92,10 @@ class BufferedHandlerKeeper(metaclass=SingletonType):
         return queue_information
 
     # --------------------------------------------------------------------------------
-    async def inspect_request_from_error_queue(self, route_key: str, request_uid: uuid.UUID):
+    async def inspect_request_from_error_queue(self, route_key: str, span_key: SpanKey):
         if route_key not in self.__buffered_handlers.keys():
             return None
-        result = await self.__buffered_handlers[route_key].inspect_request_in_error_queue(request_uid)
+        result = await self.__buffered_handlers[route_key].inspect_request_in_error_queue(span_key)
         if not result:
             return False
         queue_information = await self.__get_queue_information(route_key)
@@ -118,10 +117,10 @@ class BufferedHandlerKeeper(metaclass=SingletonType):
         return await self.__get_queue_information(route_key)
 
     # --------------------------------------------------------------------------------
-    async def reprocess_error_queue_request_uid(self, route_key: str, request_uid: uuid.UUID):
+    async def reprocess_error_queue_span_key(self, route_key: str, span_key: SpanKey):
         if route_key not in self.__buffered_handlers.keys():
             return None
-        result = await self.__buffered_handlers[route_key].reprocess_error_queue_request_uid(request_uid)
+        result = await self.__buffered_handlers[route_key].reprocess_error_queue_span_key(span_key)
         if not result:
             return False
         queue_information = await self.__get_queue_information(route_key)

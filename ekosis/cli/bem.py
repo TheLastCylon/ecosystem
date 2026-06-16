@@ -20,6 +20,7 @@ from .senders.buffered_endpoint_management import (
 )
 
 from ..clients import ClientBase
+from ..data_transfer_objects import SpanKey
 
 # --------------------------------------------------------------------------------
 setup_buffered_endpoint_options()
@@ -73,20 +74,20 @@ async def do_endpoint_action(client: ClientBase, route_key: str):
         await EcoBufferedHandlerErrorsClearSender(client).send(route_key)
         return
 
-    if not command_line_args.request_uid:
-        print_error(argument_parser, "--request_uid required!")
+    if not command_line_args.span_key:
+        print_error(argument_parser, "--span_key required!")
         return
 
-    request_uid = command_line_args.request_uid
+    span_key = SpanKey.from_hex(command_line_args.span_key)
 
     if command_line_args.reprocess_one:
-        await EcoBufferedHandlerErrorsReprocessOneSender(client).send(route_key, request_uid)
+        await EcoBufferedHandlerErrorsReprocessOneSender(client).send(route_key, span_key)
         return
     if command_line_args.inspect_request:
-        await EcoBufferedHandlerErrorsInspectRequestSender(client).send(route_key, request_uid)
+        await EcoBufferedHandlerErrorsInspectRequestSender(client).send(route_key, span_key)
         return
     if command_line_args.pop_request:
-        await EcoBufferedHandlerErrorsPopRequestSender(client).send(route_key, request_uid)
+        await EcoBufferedHandlerErrorsPopRequestSender(client).send(route_key, span_key)
         return
 
 # --------------------------------------------------------------------------------

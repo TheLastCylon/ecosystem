@@ -5,7 +5,8 @@ from typing import List
 from ...data_transfer_objects.queue_management import (
     QManagementRequestDto,
     QManagementItemRequestDto,
-    QManagementResponseDto
+    QManagementResponseDto,
+    SpanKey
 )
 
 from ...sending.sender_base import SenderBase
@@ -18,7 +19,7 @@ def print_response(response: QManagementResponseDto):
     print(f"{response.message}")
     print("--------------------------------------------------------------------------------")
     if isinstance(response.queue_data, List):
-        print(f"First 10 error UUIDs:\n{json.dumps(response.queue_data, indent=4)}")
+        print(f"First 10 error span-keys:\n{json.dumps(response.queue_data, indent=4)}")
     elif response.queue_data is not None:
         print(f"Queue information:\n{response.queue_data.model_dump_json(indent=4)}")
     if response.request_data:
@@ -53,10 +54,10 @@ class QueueManagementItemSenderBase(SenderBase[QManagementItemRequestDto, QManag
             QManagementResponseDto
         )
 
-    async def send(self, queue_route_key: str, request_uid: str):
+    async def send(self, queue_route_key: str, span_key: SpanKey):
         request_data = QManagementItemRequestDto(
             queue_route_key = queue_route_key,
-            request_uid     = request_uid
+            span_key        = span_key
         )
         response = await self.send_data(request_data)
         print_response(response)

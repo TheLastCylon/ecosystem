@@ -27,7 +27,7 @@ $VENV/coverage run -p --source=ekosis -m tests.test_app_a.test_app_a -i 0 -lfo &
 $VENV/coverage run -p --source=ekosis -m tests.test_app_b.test_app_b -i 0 -c ./tests/test_app_b/config.json -lfo &
 $VENV/coverage run -p --source=ekosis -m tests.test_app_c.test_app_c -i 0 -c ./tests/test_app_c/config.json -lfo &
 sleep 1
-$VENV/coverage run -p --source=ekosis -m pytest \
+$VENV/coverage run -p --source=ekosis -m pytest -v \
   tests/basic_tests.py \
   tests/check_stats_endpoint.py \
   tests/buffered_handler_endpoints.py \
