@@ -7,20 +7,23 @@ _T = TypeVar("_T", bound=PydanticBaseModel)
 class BufferedHandler(Generic[_T], BufferedRequestHandlerBase[_T]):
     def __init__(
         self,
-        route_key       : str,
+        route_key          : str,
         function,
-        request_dto_type: Type[_T],
-        page_size       : int = 100,
-        max_retries     : int = 0,
+        request_dto_type   : Type[_T],
+        page_size          : int      = 100,
+        max_retries        : int      = 0,
+        accepted_parameters: set[str] = set()
     ):
         super().__init__(
             route_key,
             request_dto_type,
             page_size,
-            max_retries
+            max_retries,
+            accepted_parameters
         )
         self.function = function
 
     # --------------------------------------------------------------------------------
     async def process_buffered_request(self, **kwargs) -> bool:
-        return await self.function(**kwargs)
+        call_kwargs = {k: v for k, v in kwargs.items() if k in self._accepted_params}
+        return await self.function(**call_kwargs)

@@ -28,23 +28,23 @@ On Linux you can execute a `netcat` command and test it right now.
 
 For TCP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc localhost 8888
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc localhost 8888
 ```
 
 For UDP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -u localhost 8889
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -u localhost 8889
 ```
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0.uds.sock
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0.uds.sock
 ```
 
 In all three cases, you'll get a response similar to:
 
 ```json
-{"uid":"abcdef01-abcd-abcd-abcd-abcdef012345","status":0,"data":{"statistics":{"timestamp":1719683259,"uptime":866,"endpoint_call_counts":{"eco":{"statistics":{"get":{"call_count":1}}}}}}}
+{"span_key":{"trace_id":"12345678-1234-1234-1234-1234567890ab","span_id":"1234567890abcdef"},"status":0,"data":{"statistics":{"endpoint_data":{"eco":{"log":{"level":{"call_count":0,"p95":-1.0,"p99":-1.0},"buffer":{"call_count":0,"p95":-1.0,"p99":-1.0}},"statistics":{"get":{"call_count":5,"p95":0.0007168467536757817,"p99":0.0007237349544084281}},"error_states":{"get":{"call_count":0,"p95":-1.0,"p99":-1.0},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0}},"buffered_handler":{"data":{"call_count":0,"p95":-1.0,"p99":-1.0},"receiving":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"processing":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"all":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"errors":{"get_first_10":{"call_count":0,"p95":-1.0,"p99":-1.0},"reprocess":{"all":{"call_count":0,"p95":-1.0,"p99":-1.0},"one":{"call_count":0,"p95":-1.0,"p99":-1.0}},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0},"pop_request":{"call_count":0,"p95":-1.0,"p99":-1.0},"inspect_request":{"call_count":0,"p95":-1.0,"p99":-1.0}}},"buffered_sender":{"data":{"call_count":0,"p95":-1.0,"p99":-1.0},"send_process":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"errors":{"get_first_10":{"call_count":0,"p95":-1.0,"p99":-1.0},"reprocess":{"all":{"call_count":0,"p95":-1.0,"p99":-1.0},"one":{"call_count":0,"p95":-1.0,"p99":-1.0}},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0},"pop_request":{"call_count":0,"p95":-1.0,"p99":-1.0},"inspect_request":{"call_count":0,"p95":-1.0,"p99":-1.0}}}}},"timestamp":1781710188.1312137,"uptime":501.13121366500854,"gather_period":300,"application":{"name":"base_example","instance":"0"}}}}
 ```
 
 By the time that is run through something that makes the JSON more readable, it looks this:
@@ -52,21 +52,74 @@ By the time that is run through something that makes the JSON more readable, it 
 {
    "data" : {
       "statistics" : {
-         "endpoint_call_counts" : {
+         "application" : {"instance" : "0", "name" : "base_example"},
+         "endpoint_data" : {
             "eco" : {
-               "statistics" : {
-                  "get" : {
-                     "call_count" : 1
+               "buffered_handler" : {
+                  "all" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  },
+                  "data" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "errors" : {
+                     "clear"          : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "get_first_10"   : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "inspect_request": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "pop_request"    : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "reprocess"      : {
+                        "all": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                        "one": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                     }
+                  },
+                  "processing" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  },
+                  "receiving" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
                   }
+               },
+               "buffered_sender" : {
+                  "data" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "errors" : {
+                     "clear"          : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "get_first_10"   : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "inspect_request": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "pop_request"    : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "reprocess"      : {
+                        "all" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                        "one" : {"call_count" : 0, "p95" : -1, "p99" : -1}
+                     }
+                  },
+                  "send_process" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  }
+               },
+               "error_states" : {
+                  "clear": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "get"  : {"call_count" : 0, "p95" : -1, "p99" : -1}
+               },
+               "log" : {
+                  "buffer": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "level" : {"call_count" : 0, "p95" : -1, "p99" : -1}
+               },
+               "statistics" : {
+                  "get" : {"call_count" : 5, "p95" : 0.000716846753675782, "p99" : 0.000723734954408428}
                }
             }
          },
-         "timestamp" : 1719683259,
-         "uptime" : 866
+         "gather_period" : 300,
+         "timestamp" : 1781710188.13121,
+         "uptime" : 501.131213665009
       }
    },
-   "status" : 0,
-   "uid" : "abcdef01-abcd-abcd-abcd-abcdef012345"
+   "span_key" : {
+      "span_id" : "1234567890abcdef",
+      "trace_id" : "12345678-1234-1234-1234-1234567890ab"
+   },
+   "status" : 0
 }
 ```
 

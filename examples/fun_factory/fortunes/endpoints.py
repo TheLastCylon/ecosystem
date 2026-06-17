@@ -1,12 +1,12 @@
 import os
 import sys
-import uuid
 import random
 import logging
 
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
+from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import FortuneResponseDto
 
@@ -28,6 +28,6 @@ with open(filepath, 'r') as f:
 
 # --------------------------------------------------------------------------------
 @endpoint("app.get_fortune")
-async def get_fortune(uid: uuid.UUID, **kwargs) -> PydanticBaseModel:
-    log.info(f"RCV: request_uuid[{uid}]")
+async def get_fortune(span_key : SpanKey) -> PydanticBaseModel:
+    log.info(f"RCV: span_key[{span_key}]")
     return FortuneResponseDto(fortune=random.choice(fortune_lines))

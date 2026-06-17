@@ -31,12 +31,13 @@ class BufferedRequestHandlerReceivingPausedException(BufferedRequestHandlerExcep
 class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
     def __init__(
         self,
-        route_key       : str,
-        request_dto_type: Type[_T],
-        page_size       : int = 0,
-        max_retries     : int = 0,
+        route_key          : str,
+        request_dto_type   : Type[_T],
+        page_size          : int = 0,
+        max_retries        : int = 0,
+        accepted_parameters: set[str] = set()
     ):
-        super().__init__(route_key, request_dto_type)
+        super().__init__(route_key, request_dto_type, accepted_parameters)
         self.running             : bool             = False
         self.statistics_keeper   : StatisticsKeeper = StatisticsKeeper()
         self.log                 : logging.Logger   = logging.getLogger()

@@ -58,28 +58,27 @@ Let's move on and take a look at the endpoints.
 #### [handlers/roll.py](../../../examples/dice_roller/handlers/roll.py)
 
 ```python
- 1: import uuid
- 2: import logging
- 3: import random
- 4: 
- 5: from pydantic import BaseModel as PydanticBaseModel
- 6: 
- 7: from ekosis.requests.endpoint import endpoint
- 8: 
- 9: from ..dtos import RollRequestDto, RollResponseDto
-10: 
-11: logger = logging.getLogger()
-12: 
-13: @endpoint("dice_roller.roll", RollRequestDto)
-14: async def dice_roller_roll(uid: uuid.UUID, dto: RollRequestDto) -> PydanticBaseModel:
-15:     logger.debug(f"dice_roller_roll 000 [{dto}]")
-16:     numbers = list(range(1, dto.sides))
-17:     return RollResponseDto(result = random.choice(numbers))
+ 1: import logging
+ 2: import random
+ 3: 
+ 4: from pydantic import BaseModel as PydanticBaseModel
+ 5: 
+ 6: from ekosis.requests.endpoint import endpoint
+ 7: 
+ 8: from ..dtos import RollRequestDto, RollResponseDto
+ 9: 
+10: logger = logging.getLogger()
+11: 
+12: @endpoint("dice_roller.roll", RollRequestDto)
+13: async def dice_roller_roll(dto: RollRequestDto) -> PydanticBaseModel:
+14:     logger.debug(f"dice_roller_roll 000 [{dto}]")
+15:     numbers = list(range(1, dto.sides))
+16:     return RollResponseDto(result = random.choice(numbers))
 ```
 
 Here you'll note that we import our DTOs in:
 ```python
-from ..dtos import RollRequestDto, RollResponseDto
+ 8: from ..dtos import RollRequestDto, RollResponseDto
 ```
 
 The endpoint itself does nothing more than:
@@ -101,39 +100,37 @@ Yes, of course that pun was on purpose! :D
 #### [handlers/guess.py](../../../examples/dice_roller/handlers/guess.py)
 
 ```python
-1: import uuid
-2: import logging
-3: import random
-4:
-5: from typing import List
-6: from pydantic import BaseModel as PydanticBaseModel
-7:
-8: from ekosis.requests.endpoint import endpoint
-9:
-10: from ..dtos import GuessResponseDto
-11:
-12: logger = logging.getLogger()
-13:
-14: @endpoint("dice_roller.guess")
-15: async def dice_roller_guess(**kwargs) -> PydanticBaseModel:
-16:     numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-17:     return GuessResponseDto(number = random.choice(numbers))
-18:
+ 1: import logging
+ 2: import random
+ 3: 
+ 4: from typing import List
+ 5: from pydantic import BaseModel as PydanticBaseModel
+ 6: 
+ 7: from ekosis.requests.endpoint import endpoint
+ 8: 
+ 9: from ..dtos import GuessResponseDto
+10: 
+11: logger = logging.getLogger()
+12: 
+13: @endpoint("dice_roller.guess")
+14: async def dice_roller_guess() -> PydanticBaseModel:
+15:     numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+16:     return GuessResponseDto(number = random.choice(numbers))
 ```
 
 Here we import our request dto with:
 
 ```python
-from ..dtos import GuessResponseDto
+ 9: from ..dtos import GuessResponseDto
 ```
 
 And declare our endpoint with:
 
 ```python
-@endpoint("dice_roller.guess")
-async def dice_roller_guess(**kwargs) -> PydanticBaseModel:
-    numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    return GuessResponseDto(number = random.choice(numbers))
+13: @endpoint("dice_roller.guess")
+14: async def dice_roller_guess() -> PydanticBaseModel:
+15:     numbers: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+16:     return GuessResponseDto(number = random.choice(numbers))
 ```
 
 Remember when we looked at the dtos earlier, you might have noticed there's no request dto in [dtos/guess.py](../../../examples/dice_roller/dtos/guess.py)?
@@ -203,50 +200,49 @@ For more on this, take a look at the documentation for:
 Let us move on with this example though.
 
 ```python
- 1: import uuid
- 2: import asyncio
- 3: import random
- 4: import logging
- 5:
- 6: from ekosis.requests.buffered_endpoint import buffered_endpoint
- 7:
+ 1: import asyncio
+ 2: import random
+ 3: import logging
+ 4: 
+ 5: from ekosis.requests.buffered_endpoint import buffered_endpoint
+ 6: from ekosis.data_transfer_objects import SpanKey
+ 7: 
  8: from ..dtos import RollTimesRequestDto
- 9:
-10:
+ 9: 
+10: 
 11: @buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
-12: async def dice_roller_roll_times(uid: uuid.UUID, dto: RollTimesRequestDto) -> bool:
+12: async def dice_roller_roll_times(span_key: SpanKey, dto: RollTimesRequestDto) -> bool:
 13:     log     = logging.getLogger()
 14:     numbers = list(range(1, dto.sides))
-15:
-16:     log.info(f"roll_times[{uid}]: Processing.")
+15: 
+16:     log.info(f"roll_times[{span_key}]: Processing.")
 17:     total_result   = 0
 18:     expected_total = (dto.sides*dto.how_many)*0.6
 19:     for times in range(dto.how_many):
 20:         total_result += random.choice(numbers) + 1
-21:
-22:     log.info(f"roll_times[{uid}]: expected_total[{expected_total}] total_result[{total_result}]")
+21: 
+22:     log.info(f"roll_times[{span_key}]: expected_total[{expected_total}] total_result[{total_result}]")
 23:     if total_result < expected_total:
-24:         log.info(f"roll_times[{uid}]: FAIL!")
+24:         log.info(f"roll_times[{span_key}]: FAIL!")
 25:         await asyncio.sleep(1)
 26:         return False
-27:
-28:     log.info(f"roll_times[{uid}]: Success.")
+27: 
+28:     log.info(f"roll_times[{span_key}]: Success.")
 29:     await asyncio.sleep(1)
 30:     return True
-31:
 ```
 
 For now, and for this example, all you really need to know is:
 
 - We import our request DTO with:
 ```python
-from ..dtos import RollTimesRequestDto
+8: from ..dtos import RollTimesRequestDto
 ```
 
 - We decorate a function that processes queued requests with:
 
 ```python
-@buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
+11: @buffered_endpoint("dice_roller.roll_times", RollTimesRequestDto)
 ```
 
 Just like the normal `endpoint`, a `buffered_endpoint` needs:
@@ -263,14 +259,14 @@ It is declared in `ekosis/data_transfer_objects/buffered_endpoint_response.py` a
 
 ```python
 from pydantic import BaseModel as PydanticBaseModel
-
+from .json_protocol import SpanKey
 
 # --------------------------------------------------------------------------------
 class BufferedEndpointResponseDTO(PydanticBaseModel):
-    uid: str
+    span_key: SpanKey
 ```
 
-The content of uid that you get in this response, is the uid of the JSON request that the server received. For more on that, look at [the protocol](../../the_protocol.md).
+The content of `span_key` that you get in this response, is the `span_key` of the JSON request that the server received. For more on that, look at [the protocol](../../the_protocol.md).
 
 And this is the point at which we answer the question:
 

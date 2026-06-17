@@ -1,3 +1,5 @@
+import inspect
+
 from typing import Type, TypeVar
 from pydantic import BaseModel as PydanticBaseModel
 
@@ -19,13 +21,14 @@ def buffered_endpoint(
     def inner_decorator(function):
         router                  = RequestRouter()
         buffered_handler_keeper = BufferedHandlerKeeper()
-
-        new_handler = BufferedHandler[_T](
+        accepted_parameters     = set(inspect.signature(function).parameters)
+        new_handler             = BufferedHandler[_T](
             route_key,
             function,
             request_dto_type,
             page_size,
-            max_retries
+            max_retries,
+            accepted_parameters
         )
         router.register_handler(new_handler)
         buffered_handler_keeper.add_buffered_handler(new_handler)

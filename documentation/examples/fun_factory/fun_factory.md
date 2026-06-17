@@ -1,6 +1,6 @@
 # The fun factory
 
-This example, gives you a better idea of what Ecosystem can do for you.
+This example, gives you a better idea of what EcoSystem can do for you.
 
 I would like you to keep in mind:
 
@@ -12,7 +12,7 @@ For instance:
 - Nowhere in this example, will you see mention of having to install things like Kafka or ZeroMQ.
 - Nothing even resembling docker or cloud services, are required.
 
-Yes, Ecosystem is all about having an ECOnomic-System!
+Yes, EcoSystem is all about having an ECOnomic-System!
 
 And yes, people have made serious money with systems as simple as this example.
 In fact, this example is inspired by a business I used to work for, not too long ago.

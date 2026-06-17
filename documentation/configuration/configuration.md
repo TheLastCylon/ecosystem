@@ -1,6 +1,6 @@
-# Configuring an Ecosystem application
+# Configuring an EcoSystem application
 
-There are three ways in which one can effect configuration of an Ecosystem application.
+There are three ways in which one can effect configuration of an EcoSystem application.
 1. Programmatically hard-code values in the application.
    1. For anything other than example code: This is BAD PRACTICE! DON'T DO IT!
 2. Through a JSON format configuration file.
@@ -20,18 +20,18 @@ Here we go ...
 ---
 ## Your application name (!!! THIS IS IMPORTANT !!!)
 
-Ecosystem is not just about creating a single service, that runs alone on one computer somewhere.
+EcoSystem is not just about creating a single service, that runs alone on one computer somewhere.
 
 The name kind of gives its purpose away: EcoSYSTEM!
 
-If all you want to do is write one service, that runs on one instance of a cloud server somewhere, Ecosystem will do that for you, rather neatly.
+If all you want to do is write one service, that runs on one instance of a cloud server somewhere, EcoSystem will do that for you, rather neatly.
 
 However, the problem it is designed to solve, is orders of magnitude bigger than that.
 
 So, a couple of standards absolutely have to be put into place, your application name is one of them. 
 
 
-Within the context of Ecosystem, your application name is:
+Within the context of EcoSystem, your application name is:
 - the basename portion of `sys.argv[0]`
 - stripped of the `.py` extension
 - converted to snake-case
@@ -45,34 +45,34 @@ When you run that script, the application name is: `my_cool_application`
 
 Of course, if the script file name is already `my_cool_application.py`, the application name is still `my_cool_application`
 
-This becomes important when you begin to run multiple Ecosystem applications on the same machine.
-It's even more important when you begin to run multiple instances, of the same Ecosystem application, on one machine.
+This becomes important when you begin to run multiple EcoSystem applications on the same machine.
+It's even more important when you begin to run multiple instances, of the same EcoSystem application, on one machine.
 
 It also effects things from configuration, all the way through to your code repository.
 Because you simply **can not** have a situation where all your applications reside in files named `server.py`.
 Even if your various project directory structures allows for that, come run-time in production, your system simply won't work.
 
-So, name your application scripts uniquely and neatly, throughout all your Ecosystem code repositories!
+So, name your application scripts uniquely and neatly, throughout all your EcoSystem code repositories!
 
 ---
 ## Running instances
 
-Every time you run an Ecosystem application, you absolutely have to specify an identifier, that indicates how you want to identify the running instance of the script you are about to start.
+Every time you run an EcoSystem application, you absolutely have to specify an identifier, that indicates how you want to identify the running instance of the script you are about to start.
 
 This is done with the `-i` or `--instance` command line options.
 
-When you start an Ecosystem application, one of the first things it does, is to make sure that there isn't an instance of itself running already.
+When you start an EcoSystem application, one of the first things it does, is to make sure that there isn't an instance of itself running already.
 If there is, the one you are trying to start will inform you of the fact, and then exit.
 
-Ecosystem applications, can be configured down to running-instance-level.
+EcoSystem applications, can be configured down to running-instance-level.
 
 So, an application named `my_cool_application` can be configured very differently for an instance identified with `feeds_cats`, than an instance identified with `feeds_dogs`
 
-The level of configurability you have with Ecosystem, without having to write a single line of code, is way beyond anything I've seen with any other framework.
+The level of configurability you have with EcoSystem, without having to write a single line of code, is way beyond anything I've seen with any other framework.
 
 Yes. I know. You're welcome. It's my pleasure, I assure you.
 
-Think about it: I did not create Ecosystem in a vacuum. I was the first Ecosystem user, even before it was named Ecosystem, I was using it.
+Think about it: I did not create EcoSystem in a vacuum. I was the first EcoSystem user, even before it was named EcoSystem, I was using it.
 
 These features exist, because I needed them. I'm rather certain others need them too.
 
