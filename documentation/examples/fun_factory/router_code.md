@@ -325,7 +325,7 @@ Everything up to the import for `run_soon`, you have seen before. We'll get to l
 After that import, we import `SpanKey` this is what you can use to get the `span_key` of the current request.
 
 ---
-### The `endpoint` or rather: How to use `uid` to save you both time and money
+### The `endpoint` or rather: How to use `stak_key` to save you both time and money
 
 Before we get to the varius helper functions and what they do, take a look at the `process_message` function that we decorate with `endpoint`.
 
@@ -388,7 +388,7 @@ Take a look at how we are invoking our sender function `get_fortune`.
     return (await get_fortune(span_key=span_key)).fortune
 ```
 
-We are passing it, the `span_key` of the request we received, as a key-word argument `request_uid`.
+We are passing it, the `span_key` of the request we received, as a key-word argument `span_key`.
 
 This is why our sender functions were defined to have `*args` and `**kwargs`
 
