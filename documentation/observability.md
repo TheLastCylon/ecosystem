@@ -19,12 +19,12 @@ opt-in observability packages for metrics, traces, and logs via a professional o
 The central stack (Prometheus, Pushgateway, Loki, Jaeger, Grafana) runs on one machine via
 docker-compose. Alloy is an agent installed on each machine where EcoSystem apps run.
 
-Stack files: `~/dev/learning_fix/observability_platform/`
+For details on how to get this stack running in a docker image, see [observability/prometheus_grafana_jaeger_loki.md](observability/prometheus_grafana_jaeger_loki.md).
 
 Start the stack:
 ```bash
 export GRAFANA_ADMIN_PASSWORD=yourpassword
-docker compose -f docker-compose.production.yml up -d
+docker compose -f docker-compose.yml up -d
 ```
 
 ---
@@ -46,7 +46,7 @@ $VENV_BIN/ekosis_prometheus -i 0 -lfo &
 ```
 
 Config via `ECOENV_EXTRA_*`:
-- `ECOENV_EXTRA_PUSHGATEWAY` -- Pushgateway URL, e.g. `http://optiplexer.local:9091`
+- `ECOENV_EXTRA_PUSHGATEWAY` -- Pushgateway URL, e.g. `http://<YOUR HOST NAME>:9091`
 - `ECOENV_EXTRA_JOB_NAME` -- push group name (default: `{app_name}-{instance}`)
 
 To monitor ekosis-prometheus itself, give it a UDP port and include it in discovery:
@@ -56,19 +56,19 @@ ECOENV_UDP_EKOSIS_PROMETHEUS_0=127.0.0.1:8800
 
 ### Metrics exposed
 
-| Metric                                  | Labels                              | Description                                    |
-|-----------------------------------------|-------------------------------------|------------------------------------------------|
-| `ekosis_service_health`                 | service, instance                   | 1 = UP, 0 = DOWN (poll failed)                 |
-| `ekosis_uptime_seconds`                 | service, instance                   | Seconds since startup                          |
-| `ekosis_gather_period_seconds`          | service, instance                   | Statistics gather period in seconds            |
-| `ekosis_endpoint_call_count`            | service, instance, group, endpoint  | Calls in the last gather period                |
-| `ekosis_endpoint_p95_seconds`           | service, instance, group, endpoint  | 95th percentile response time                  |
-| `ekosis_endpoint_p99_seconds`           | service, instance, group, endpoint  | 99th percentile response time                  |
-| `ekosis_buffered_endpoint_queue_pending`| service, instance, group, endpoint  | Items pending in buffered endpoint queue       |
-| `ekosis_buffered_endpoint_queue_error`  | service, instance, group, endpoint  | Items in buffered endpoint error queue         |
-| `ekosis_buffered_sender_queue_pending`  | service, instance, group, endpoint  | Items pending in buffered sender queue         |
-| `ekosis_buffered_sender_queue_error`    | service, instance, group, endpoint  | Items in buffered sender error queue           |
-| `ekosis_custom_*`                       | service, instance                   | Custom statistics (via StatisticsKeeper)       |
+| Metric                                   | Labels                             | Description                              |
+|------------------------------------------|------------------------------------|------------------------------------------|
+| `ekosis_service_health`                  | service, instance                  | 1 = UP, 0 = DOWN (poll failed)           |
+| `ekosis_uptime_seconds`                  | service, instance                  | Seconds since startup                    |
+| `ekosis_gather_period_seconds`           | service, instance                  | Statistics gather period in seconds      |
+| `ekosis_endpoint_call_count`             | service, instance, group, endpoint | Calls in the last gather period          |
+| `ekosis_endpoint_p95_seconds`            | service, instance, group, endpoint | 95th percentile response time            |
+| `ekosis_endpoint_p99_seconds`            | service, instance, group, endpoint | 99th percentile response time            |
+| `ekosis_buffered_endpoint_queue_pending` | service, instance, group, endpoint | Items pending in buffered endpoint queue |
+| `ekosis_buffered_endpoint_queue_error`   | service, instance, group, endpoint | Items in buffered endpoint error queue   |
+| `ekosis_buffered_sender_queue_pending`   | service, instance, group, endpoint | Items pending in buffered sender queue   |
+| `ekosis_buffered_sender_queue_error`     | service, instance, group, endpoint | Items in buffered sender error queue     |
+| `ekosis_custom_*`                        | service, instance                  | Custom statistics (via StatisticsKeeper) |
 
 `group` is the route key prefix (e.g. `tracker` in `tracker.log_request_fail`).
 `service` and `instance` are read from the stats response itself (`application.name` /
@@ -90,17 +90,15 @@ Install:
 pip install -e ekosis_otlp_traces/
 ```
 
-Wire into your application setup (three lines):
+Wire into your application setup (one import, one call):
 ```python
-from ekosis_otlp_traces import JaegerHttpTracingMiddleware, JaegerHttpBufferedTracingMiddleware
+from ekosis_otlp_traces.setup import initiate_otlp_tracing
 
-tracer = JaegerHttpTracingMiddleware()
-MiddlewareManager().add(tracer)
-BufferedMiddlewareManager().add(JaegerHttpBufferedTracingMiddleware(tracer))
+initiate_otlp_tracing()
 ```
 
 Config via `ECOENV_EXTRA_*`:
-- `ECOENV_EXTRA_JAEGER_ENDPOINT` -- OTLP HTTP endpoint, e.g. `http://optiplexer.local:4318/v1/traces`
+- `ECOENV_EXTRA_OTLP_TRACES_ENDPOINT` -- OTLP HTTP endpoint, e.g. `http://<YOUR HOST NAME>:4318/v1/traces`
 
 Service name auto-derives from `{app_name}-{instance}` (e.g. `tracker-0`).
 
@@ -111,7 +109,7 @@ receive span
   └── process attempt (retries=1, success=True)
 ```
 
-Jaeger UI: `http://optiplexer.local:16686`
+Jaeger UI: `http://<YOUR HOST NAME>:16686`
 
 ---
 
@@ -121,7 +119,8 @@ EcoSystem writes structured log files. Alloy ships them to Loki without any chan
 application code.
 
 EcoSystem log format includes `application_name` and `application_instance` fields baked in.
-In Grafana/Loki, you can query by `request_uid` to trace a full request chain across services.
+In Grafana/Loki, you can query by `trace_id` (the chain-correlation half of a request's
+`span_key`) to trace a full request chain across services.
 
 Alloy config: `~/dev/learning_fix/observability_platform/alloy-config.production.alloy`
 
@@ -135,7 +134,7 @@ sudo apt install alloy
 
 ## Grafana
 
-Grafana: `http://optiplexer.local:3000`
+Grafana: `http://<YOUR HOST NAME>:3000`
 
 ### EcoSystem Services dashboard
 

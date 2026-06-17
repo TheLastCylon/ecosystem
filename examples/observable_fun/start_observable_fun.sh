@@ -10,12 +10,12 @@ echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 
 # Machine level configurations
 export ECOENV_BUFFER_DIR=/tmp/observable_fun/queues
-export ECOENV_LOG_DIR=/var/log/ekosis
+export ECOENV_LOG_DIR=/tmp/observable_fun
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
 
 # Observability -- OTLP HTTP traces endpoint
-export ECOENV_EXTRA_OTLP_TRACES_ENDPOINT=http://optiplexer.local:4318/v1/traces
+export ECOENV_EXTRA_OTLP_TRACES_ENDPOINT=http://<YOURHOSTNAME_HERE>:4318/v1/traces
 
 # Instance level configurations
 export ECOENV_UDP_FORTUNE_0=127.0.0.1:8100
@@ -27,8 +27,8 @@ export ECOENV_UDP_ROUTER_0=127.0.0.1:8600
 export ECOENV_UDP_TRACKER_0=127.0.0.1:8700
 export ECOENV_UDP_EKOSIS_PROMETHEUS_0=127.0.0.1:8800
 
-# Observability -- Prometheus Pushgateway (on optiplexer)
-export ECOENV_EXTRA_EKOSIS_PROMETHEUS_0_PUSHGATEWAY=http://optiplexer.local:9091
+# Observability -- Prometheus Pushgateway (on your host)
+export ECOENV_EXTRA_EKOSIS_PROMETHEUS_0_PUSHGATEWAY=http://<YOURHOSTNAME_HERE>:9091
 
 echo "Creating buffered communications dir: $ECOENV_BUFFER_DIR"
 mkdir -p "$ECOENV_BUFFER_DIR"
@@ -37,7 +37,7 @@ echo "Creating log dir: $ECOENV_LOG_DIR"
 mkdir -p "$ECOENV_LOG_DIR"
 
 # Extra configs
-export ECOENV_EXTRA_TRACKER_0_DB_FILE=/tmp/observable_fun-tracker-0-database.sqlite
+export ECOENV_EXTRA_TRACKER_0_DB_FILE=/tmp/observable_fun/tracker-0-database.sqlite
 
 cd "$REPOSITORY_DIR"
 
