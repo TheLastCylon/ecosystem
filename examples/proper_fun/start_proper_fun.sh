@@ -9,8 +9,7 @@ echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 
 # Machine level configurations
 export ECOENV_BUFFER_DIR=/tmp/proper_fun/queues
-export ECOENV_LOG_DIR=/var/log/ekosis
-export ECOENV_LOG_BUF_SIZE=1500
+export ECOENV_LOG_DIR=/tmp/proper_fun
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
 

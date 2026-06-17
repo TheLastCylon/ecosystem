@@ -87,7 +87,7 @@ this far in the examples, you are more than capable of figuring out what you'll 
 For the people with Linux/Unix/Other POSIX systems:
 
 You'll notice a shell-script named
-[`start_fun_factory.sh`](../../examples/proper_fun/start_fun_factory.sh)
+[`start_proper_fun.sh`](../../examples/proper_fun/start_proper_fun.sh)
 in the `examples/proper_fun` directory.
 
 Here's what's in there:
@@ -98,16 +98,13 @@ SCRIPT_PATH="$(readlink -f "${0}")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 EXAMPLES_DIR="$(dirname "$SCRIPT_DIR")"
 REPOSITORY_DIR="$(dirname "$EXAMPLES_DIR")"
+VENV="$REPOSITORY_DIR/.venv/bin/python"
 
 echo "REPOSITORY_DIR: $REPOSITORY_DIR"
 
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/shims:/home/linuxbrew/.linuxbrew/bin:$PATH"
-
 # Machine level configurations
-export ECOENV_BUFFER_DIR=/tmp
-export ECOENV_LOG_DIR=/tmp
-export ECOENV_LOG_BUF_SIZE=1500
+export ECOENV_BUFFER_DIR=/tmp/proper_fun/queues
+export ECOENV_LOG_DIR=/tmp/proper_fun
 export ECOENV_STAT_GP=60
 export ECOENV_STAT_HL=60
 
@@ -120,32 +117,37 @@ export ECOENV_UDP_TIME_REPORTER_0=127.0.0.1:8500
 export ECOENV_UDP_ROUTER_0=127.0.0.1:8600
 export ECOENV_UDP_TRACKER_0=127.0.0.1:8700
 
+echo "Creating buffered communications dir: $ECOENV_BUFFER_DIR"
+mkdir -p "$ECOENV_BUFFER_DIR"
+
+echo "Creating log dir: $ECOENV_BUFFER_DIR"
+mkdir -p "$ECOENV_LOG_DIR"
+
 # Extra configs
 export ECOENV_EXTRA_TRACKER_0_DB_FILE=/tmp/tracker-0-database.sqlite
 
 cd "$REPOSITORY_DIR"
 
 # Start the system
-pipenv run python3 -m examples.proper_fun.fortunes.fortune                  -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.joker.joker                       -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.lottery.lottery                   -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.magic_eight_ball.magic_eight_ball -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.time_reporter.time_reporter       -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.router.router                     -i 0 -lfo &
-pipenv run python3 -m examples.proper_fun.tracker.tracker                   -i 0 -lfo &
+$VENV -m examples.proper_fun.fortunes.fortune                  -i 0 -lfo &
+$VENV -m examples.proper_fun.joker.joker                       -i 0 -lfo &
+$VENV -m examples.proper_fun.lottery.lottery                   -i 0 -lfo &
+$VENV -m examples.proper_fun.magic_eight_ball.magic_eight_ball -i 0 -lfo &
+$VENV -m examples.proper_fun.time_reporter.time_reporter       -i 0 -lfo &
+$VENV -m examples.proper_fun.router.router                     -i 0 -lfo &
+$VENV -m examples.proper_fun.tracker.tracker                   -i 0 -lfo &
 
 cd "$CURRENT_DIR"
 ```
 
 I use this to start the system in my environment. You might have to alter the
-lines for `PYENV_ROOT` and `PATH`, but the rest should work as is.
+line for `VENV`, but the rest should work as is.
 
 Take note that:
 
 1. I'm setting:
-   - The machine level queue directory to: `/tmp`
-   - The log file directory to: `/tmp`
-   - The log file write buffer size to: `1500`
+   - The machine level queue directory to: `/tmp/proper_fun/queues`
+   - The log file directory to: `/tmp/proper_fun`
    - The stats/telemetry gathering period to: `60` seconds
    - The history length to: `60` i.e. One hour of history.
 2. Then I configure the various UDP details for each of the components.
@@ -159,13 +161,13 @@ Take note that:
 
 If you take the time to count the number of lines of code in this entire example.
 You'll find that, once we remove white-space and comment lines, we are at a grand
-total of: `476`!
+total of: `544`!
 
 Yup, an entire system, that includes telemetry, queueing, UDP communications and
-actually works ... In less than `500` lines of code!
+actually works ... In less than `600` lines of code!
 
 Even if you argue that the environment variable setting should also be counted,
-we are still only at `489` lines.
+we are still under `600` lines.
 
 Personally, I've never achieved so much, with so little code.
 

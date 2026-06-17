@@ -1,10 +1,10 @@
 import sys
-import uuid
 import asyncio
 import random
 
 from ekosis.sending.sender import sender
 from ekosis.clients import UDPClient
+from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
@@ -21,10 +21,10 @@ async def sender_app_process_message(message: str, **kwargs):
 
 # --------------------------------------------------------------------------------
 async def send_message(message: str):
-    uuid_to_use = uuid.uuid4()
+    span_key_to_use = SpanKey.generate()
     print("================================================================================")
-    print(f"Sending : UUID[{uuid_to_use}] message[{message}]")
-    response: RouterResponseDto = await sender_app_process_message(message, request_uid=uuid_to_use) # noqa
+    print(f"Sending : span_key[{span_key_to_use}] message[{message}]")
+    response: RouterResponseDto = await sender_app_process_message(message, span_key=span_key_to_use) # noqa
     print("--------------------------------------------------------------------------------")
     print(f"Received: [{response.response}]")
 
