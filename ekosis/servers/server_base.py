@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from ..data_transfer_objects import RequestDTO, ResponseDTO, SpanKey
 from ..requests.request_router import RequestRouter, RoutingExceptionBase
+from ..requests.request_context import _set_current_span_key, _reset_current_span_key
 from ..requests.status import Status
 from ..state_keepers.statistics_keeper import StatisticsKeeper
 
@@ -34,18 +35,22 @@ class ServerBase:
             request_dict = json.loads(request_text.strip())
             protocol_dto = RequestDTO(**request_dict)
             span_key     = protocol_dto.span_key
-            request      = {
-                "span_key"    : span_key,
-                "protocol_dto": protocol_dto,
-            }
-            response     = await self._request_router.route_request(**request)
-            end_time     = timeit.default_timer() - start_time
-            self._statistics_keeper.add_endpoint_stats(protocol_dto.route_key, end_time)
-            return ResponseDTO(
-                span_key = span_key,
-                status   = Status.SUCCESS.value,
-                data     = response
-            )
+            token        = _set_current_span_key(span_key)
+            try:
+                request      = {
+                    "span_key"    : span_key,
+                    "protocol_dto": protocol_dto,
+                }
+                response     = await self._request_router.route_request(**request)
+                end_time     = timeit.default_timer() - start_time
+                self._statistics_keeper.add_endpoint_stats(protocol_dto.route_key, end_time)
+                return ResponseDTO(
+                    span_key = span_key,
+                    status   = Status.SUCCESS.value,
+                    data     = response
+                )
+            finally:
+                _reset_current_span_key(token)
         except json.decoder.JSONDecodeError as e:
             return ResponseDTO(
                 span_key = span_key,

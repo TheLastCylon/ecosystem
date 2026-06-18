@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Type, TypeVar, Generic, List
 
 from .handler_base import HandlerBase
+from .request_context import _set_current_span_key, _reset_current_span_key
 from .status import Status
 
 from ..util.fire_and_forget_tasks import fire_and_forget_task
@@ -182,15 +183,19 @@ class BufferedRequestHandlerBase(Generic[_T], HandlerBase, ABC):
             request_data  = self.request_dto_type(**buffered_item.data)
             retries       = buffered_item.retries
             metadata      = buffered_item.metadata
-            await BufferedMiddlewareManager().run_before_process(span_key, request_data, metadata, retries)
-            success = await self.process_buffered_request(span_key = span_key, dto = request_data)
-            await BufferedMiddlewareManager().run_after_process(span_key, request_data, metadata, success)
-            if not success:
-                retries += 1
-                if retries >= self.max_retries:
-                    await self.queue.push_error(span_key, request_data, "Max retries reached.", metadata)
-                else:
-                    await self.queue.push_pending(span_key, request_data, retries, metadata)
+            token         = _set_current_span_key(span_key)
+            try:
+                await BufferedMiddlewareManager().run_before_process(span_key, request_data, metadata, retries)
+                success = await self.process_buffered_request(span_key = span_key, dto = request_data)
+                await BufferedMiddlewareManager().run_after_process(span_key, request_data, metadata, success)
+                if not success:
+                    retries += 1
+                    if retries >= self.max_retries:
+                        await self.queue.push_error(span_key, request_data, "Max retries reached.", metadata)
+                    else:
+                        await self.queue.push_pending(span_key, request_data, retries, metadata)
+            finally:
+                _reset_current_span_key(token)
 
     # --------------------------------------------------------------------------------
     async def _process_queue(self):

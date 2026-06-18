@@ -12,3 +12,5 @@ from .log_management import LogLevelRequestDto, LogLevelResponseDto, LogBufferRe
 from .error_states import ErrorsResponseDto, ErrorCleanerRequestDto
 
 from .span_id import SpanId, span_id_gen
+
+from .otlp_log_record import OtlpLogRecord, severity_for_levelno
