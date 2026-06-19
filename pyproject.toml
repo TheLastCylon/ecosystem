@@ -25,4 +25,4 @@ classifiers      = [
 Homepage = "https://github.com/TheLastCylon/ecosystem"
 
 [tool.setuptools.packages.find]
-include = ["ekosis*"]
+include = ["ekosis", "ekosis.*"]
