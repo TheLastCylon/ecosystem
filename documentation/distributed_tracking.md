@@ -87,10 +87,8 @@ async def process_message(span_key : SpanKey, dto: RouterRequestDto) -> Pydantic
 
 You'll notice the `span_key` parameter. In the function signature.
 
-Yes, all your endpoint function have to be able to accept that parameter.
-
-Wither you use it in your function or not, does not matter. They all
-have to be able to receive that parameter when called.
+When you want to have access to the `span_key` within your endpoint,
+you simple add it as a paramter for your endpoint function.
 
 Moving along with the example though:
 
@@ -105,9 +103,9 @@ This is how you get your logs/traces to show the value of `span_key` and
 propagate it through your entire system.
 
 The steps are:
-1. Use `span_key` in your logs/traces.
-2. Make sure to pass it on to any sender functions that might get called, due
-   to your endpoint function being invoked.
+1. Make sure `span_key` is in your `endpoint` or `buffered_endpoint function`
+   signature.
+2. Pass it on deeper into your own code if needed.
 
 Using this, will allow you to track entire message chains, regardless of how big
 your system becomes. So, take it from those of us who have had to deal with this

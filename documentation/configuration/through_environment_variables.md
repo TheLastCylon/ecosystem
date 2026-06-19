@@ -44,17 +44,6 @@ What follows below, is a list of EcoSystem environment variables, that set thing
 
 ---
 ### For logging:
-- `ECOENV_LOG_FORMAT`
-  - Sets the format for log entries.
-  - This is the format as specified and used by Python's logger.
-  - More specifically, the use of `logging.Formatter`, as is available in Python's standard `import logging`
-  - For more on what exactly you can do with that, please refer to the Python documentation.
-  - The default used by EcoSystem is: `%(asctime)s.%(msecs)03d|%(levelname)s|%(filename)s|%(lineno)d|%(message)s`
-- `ECOENV_LOG_DATE_FORMAT`
-  - Sets the format for dates in log entries.
-  - Here again, this is from Python's standard logging mechanisms.
-  - For details about it, please refer to Python's documentation.
-  - The default used by EcoSystem is: `%Y%m%d%H%M%S`
 - `ECOENV_LOG_LEVEL`
   - Sets the logging level.
   - Valid options are: `debug`,`info`,`warn`,`error`,`critical`.

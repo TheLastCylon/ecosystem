@@ -10,16 +10,14 @@ To run it, get into your terminal and go to the directory you have cloned this r
 You should see output similar to this:
 
 ```
-20240629173313.404|INFO|statistics_keeper.py|94|Starting stats gathering.
-20240629173313.405|INFO|tcp.py|19|Setting up TCP server.
-20240629173313.405|INFO|udp.py|21|Setting up UDP server.
-20240629173313.405|INFO|udp.py|57|Serving UDP on [127.0.0.1:8889]
-20240629173313.405|INFO|uds.py|21|Setting up UDS server.
-20240629173313.405|INFO|uds.py|46|Serving UDS on /tmp/base_example_0_uds.sock
-20240629173313.405|INFO|tcp.py|41|Serving TCP on ('127.0.0.1', 8888)
-20240629173813.691|INFO|statistics_keeper.py|119|Gathering statistics
-20240629174313.990|INFO|statistics_keeper.py|119|Gathering statistics
-20240629174814.285|INFO|statistics_keeper.py|119|Gathering statistics
+{"timestamp":"2026-06-19T20:28:05.189040+00:00","severity_number":5,"severity_text":"DEBUG","body":"Using selector: EpollSelector","attributes":{"application_name":"base_example","application_instance":"0","filename":"selector_events.py","lineno":64,"module":"selector_events","funcName":"__init__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189567+00:00","severity_number":9,"severity_text":"INFO","body":"Starting stats gathering.","attributes":{"application_name":"base_example","application_instance":"0","filename":"statistics_keeper.py","lineno":135,"module":"statistics_keeper","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189706+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up TCP server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"tcp.py","lineno":19,"module":"tcp","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189821+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up UDP server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"udp.py","lineno":55,"module":"udp","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189909+00:00","severity_number":9,"severity_text":"INFO","body":"Serving UDP on [127.0.0.1:8889]","attributes":{"application_name":"base_example","application_instance":"0","filename":"udp.py","lineno":74,"module":"udp","funcName":"__create_datagram_listener"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190082+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up UDS server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"uds.py","lineno":21,"module":"uds","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190327+00:00","severity_number":9,"severity_text":"INFO","body":"Serving UDS on /tmp/base_example_0.uds.sock","attributes":{"application_name":"base_example","application_instance":"0","filename":"uds.py","lineno":46,"module":"uds","funcName":"__setup_server"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190554+00:00","severity_number":9,"severity_text":"INFO","body":"Serving TCP on ('127.0.0.1', 8888)","attributes":{"application_name":"base_example","application_instance":"0","filename":"tcp.py","lineno":41,"module":"tcp","funcName":"__setup_server"},"trace_id":null,"span_id":null}
 ```
 
 Believe it or not, that is a complete application that will do TCP, UDP and UDS communications.

@@ -142,8 +142,6 @@ Let's take a look at a complete configuration, for a single instance:
                "socket_file_name" : "DEFAULT"
             },
             "logging"         : {
-                "format"       : "%(asctime)s.%(msecs)03d|%(levelname)s|%(filename)s|%(lineno)d|%(message)s",
-                "date_format"  : "%Y%m%d%H%M%S",
                 "level"        : "debug",
                 "file_logging" : {
                     "directory"         : "/tmp/log_files",
@@ -194,8 +192,6 @@ entries set to the corresponding environment variable names discussed in:
                "socket_file_name" : "Base name portion of: ECOENV_UDS_{uppercase application name}_{uppercase instance}"
             },
             "logging"         : {
-                "format"       : "ECOENV_LOG_FORMAT",
-                "date_format"  : "ECOENV_LOG_DATE_FORMAT",
                 "level"        : "ECOENV_LOG_LEVEL",
                 "file_logging" : {
                     "directory"         : "ECOENV_LOG_DIR",

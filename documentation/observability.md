@@ -130,6 +130,9 @@ Install Alloy on each app server (not in the docker-compose stack):
 sudo apt install alloy
 ```
 
+*NOTE*: There is an EcoSystem specific alternative to Alloy. For more on this
+take a look at `ekosis_log_shipper` in the `ecosystem` repository.
+
 ---
 
 ## Grafana
