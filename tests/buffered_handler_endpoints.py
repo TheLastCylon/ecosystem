@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 import pytest
 
 from typing import cast
@@ -11,6 +10,7 @@ from ekosis.data_transfer_objects.queue_management import (
     QManagementItemRequestDto,
 )
 from ekosis.data_transfer_objects.buffered_endpoint_response import BufferedEndpointResponseDTO
+from ekosis.data_transfer_objects import SpanKey
 from .dtos.dtos import AppRequestDto
 
 # --------------------------------------------------------------------------------
@@ -73,18 +73,18 @@ async def do_app_buffered_endpoint_fail(message: str, **kwargs):
 
 # --------------------------------------------------------------------------------
 @sender(app_B_tcp_client, "eco.buffered_handler.errors.reprocess.one", QManagementResponseDto)
-async def do_eco_buffered_handler_errors_reprocess_one(uid: str, route_key: str = "app.b.buffered_endpoint_fail"):
-    return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
+async def do_eco_buffered_handler_errors_reprocess_one(span_key: SpanKey, route_key: str = "app.b.buffered_endpoint_fail"):
+    return QManagementItemRequestDto(queue_route_key=route_key,  span_key=span_key)
 
 # --------------------------------------------------------------------------------
 @sender(app_B_tcp_client, "eco.buffered_handler.errors.inspect_request", QManagementResponseDto)
-async def do_eco_buffered_handler_errors_inspect_request(uid: str, route_key: str = "app.b.buffered_endpoint_fail"):
-    return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
+async def do_eco_buffered_handler_errors_inspect_request(span_key: SpanKey, route_key: str = "app.b.buffered_endpoint_fail"):
+    return QManagementItemRequestDto(queue_route_key=route_key,  span_key=span_key)
 
 # --------------------------------------------------------------------------------
 @sender(app_B_tcp_client, "eco.buffered_handler.errors.pop_request", QManagementResponseDto)
-async def do_eco_buffered_handler_errors_pop_request(uid: str, route_key: str = "app.b.buffered_endpoint_fail"):
-    return QManagementItemRequestDto(queue_route_key=route_key,  request_uid=uid)
+async def do_eco_buffered_handler_errors_pop_request(span_key: SpanKey, route_key: str = "app.b.buffered_endpoint_fail"):
+    return QManagementItemRequestDto(queue_route_key=route_key,  span_key=span_key)
 
 # The following tests verify that:
 # 1. The expected standard endpoint does exist.
@@ -218,77 +218,62 @@ async def test_eco_buffered_handler_errors_clear_invalid_route_key():
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_reprocess_one_invalid_uid():
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one("asdf"))
-    assert response.message.endswith(" is not a valid UUID.")
-
-# --------------------------------------------------------------------------------
-@pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_inspect_request_invalid_uid():
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request("asdf"))
-    assert response.message.endswith(" is not a valid UUID.")
-
-# --------------------------------------------------------------------------------
-@pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_pop_request_invalid_uid():
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request("asdf"))
-    assert response.message.endswith(" is not a valid UUID.")
-
-# --------------------------------------------------------------------------------
-@pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_reprocess_one_invalid_route_key():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(uuid_to_use, "asdf"))
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(span_key_to_use, "asdf"))
     assert response.message.startswith("No queue for route key:")
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_inspect_request_invalid_route_key():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(uuid_to_use, "asdf"))
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(span_key_to_use, "asdf"))
     assert response.message.startswith("No queue for route key:")
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_pop_request_invalid_route_key():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(uuid_to_use, "asdf"))
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(span_key_to_use, "asdf"))
     assert response.message.startswith("No queue for route key:")
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_reprocess_one_valid_uid_not_in_queue():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(uuid_to_use))
-    assert response.message.startswith("No request with uid ")
+async def test_eco_buffered_handler_errors_reprocess_one_valid_span_key_not_in_queue():
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(span_key_to_use))
+    assert response.message.startswith("No request with span-key ")
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_inspect_request_valid_uid_not_in_queue():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(uuid_to_use))
-    assert response.message.startswith("No request with uid ")
+async def test_eco_buffered_handler_errors_inspect_request_valid_span_key_not_in_queue():
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(span_key_to_use))
+    assert response.message.startswith("No request with span-key ")
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_eco_buffered_handler_errors_pop_request_valid_uid_not_in_queue():
-    uuid_to_use = str(uuid.uuid4())
-    response = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(uuid_to_use))
-    assert response.message.startswith("No request with uid ")
+async def test_eco_buffered_handler_errors_pop_request_valid_span_key_not_in_queue():
+    span_key_to_use = SpanKey.generate()
+    response        = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(span_key_to_use))
+    assert response.message.startswith("No request with span-key ")
 
-UUID_TO_USE = uuid.uuid4()
+SPAN_KEY_TO_USE = SpanKey.generate()
+
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_reprocess_one():
-    uuid_to_use = UUID_TO_USE
-    response_1  = cast(BufferedEndpointResponseDTO, await do_app_buffered_endpoint_fail("Test Message", request_uid=uuid_to_use))
-    assert str(uuid_to_use) == response_1.uid
+    span_key_to_use = SPAN_KEY_TO_USE
+    response_1      = cast(BufferedEndpointResponseDTO, await do_app_buffered_endpoint_fail("Test Message", span_key=span_key_to_use))
+    assert span_key_to_use == response_1.span_key
+
     response_2  = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_get_first_10("app.b.buffered_endpoint_fail"))
     while len(response_2.queue_data) < 1:
         await asyncio.sleep(1)
         response_2  = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_get_first_10("app.b.buffered_endpoint_fail"))
-    assert str(uuid_to_use) == response_2.queue_data[0]
-    response_3  = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(str(uuid_to_use)))
+    assert span_key_to_use == response_2.queue_data[0]
+
+    response_3  = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_reprocess_one(span_key_to_use))
     assert response_3.queue_data.database_sizes.pending == 1
     assert response_3.queue_data.database_sizes.error == 0
     assert response_3.queue_data.receiving_paused is False
@@ -297,31 +282,36 @@ async def test_eco_buffered_handler_errors_reprocess_one():
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_inspect_request():
-    uuid_to_use   = UUID_TO_USE
-    response_1    = cast(QManagementResponseDto, await do_eco_buffered_handler_data("app.b.buffered_endpoint_fail"))
+    span_key_to_use = SPAN_KEY_TO_USE
+    response_1      = cast(QManagementResponseDto, await do_eco_buffered_handler_data("app.b.buffered_endpoint_fail"))
     while response_1.queue_data.database_sizes.error < 1:
         await asyncio.sleep(1)
         response_1 = cast(QManagementResponseDto, await do_eco_buffered_handler_data("app.b.buffered_endpoint_fail"))
+
     assert response_1.queue_data.receiving_paused is False
     assert response_1.queue_data.processing_paused is False
     assert response_1.queue_data.database_sizes.pending == 0
     assert response_1.queue_data.database_sizes.error > 0
+
     response_2    = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_get_first_10("app.b.buffered_endpoint_fail"))
-    assert str(uuid_to_use) == response_2.queue_data[0]
-    response      = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(str(uuid_to_use)))
+    assert span_key_to_use == response_2.queue_data[0]
+
+    response      = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_inspect_request(span_key_to_use))
     check_message = response.model_dump()
     assert check_message["request_data"]["message"] == "Test Message"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_eco_buffered_handler_errors_pop_request():
-    uuid_to_use   = UUID_TO_USE
-    response_1    = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_get_first_10("app.b.buffered_endpoint_fail"))
-    assert str(uuid_to_use) == response_1.queue_data[0]
-    response_2    = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(str(uuid_to_use)))
+    span_key_to_use = SPAN_KEY_TO_USE
+    response_1      = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_get_first_10("app.b.buffered_endpoint_fail"))
+    assert span_key_to_use == response_1.queue_data[0]
+
+    response_2 = cast(QManagementResponseDto, await do_eco_buffered_handler_errors_pop_request(span_key_to_use))
     assert response_2.queue_data.receiving_paused is False
     assert response_2.queue_data.processing_paused is False
     assert response_2.queue_data.database_sizes.error == 0
     assert response_2.queue_data.database_sizes.pending == 0
+
     check_message = response_2.model_dump()
     assert check_message["request_data"]["message"] == "Test Message"

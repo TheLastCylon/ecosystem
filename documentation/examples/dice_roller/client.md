@@ -10,7 +10,13 @@ You should take note though, in terms of communication speed:
   - Keep in mind that UDS can only be used by two components running on the same machine.
 - UDP, at least in my experience, is close to twice as fast as UDS, when both components are running on the same machine!
 
-I'm choosing to use TCP as the example code, simply because that's what most developers will be familiar with.
+BUT! And this is a big BUT!
+
+That is only true of transient TCP and UDP connections.
+Persisted TCP and UDP connections (Also supported by EcoSystem) tend to outpace UDP.
+We'll get to the difference between transient and persistent connections later.
+
+For now, I'm choosing to use Transient TCP as the example code, simply because that's what most developers will be familiar with.
 
 With that in mind, let's start looking at the code:
 
@@ -110,8 +116,8 @@ async def sender_dice_roller_roll_times(sides: int, how_many: int):
 
 async def roll_several_dice(sides: int, how_many: int):
     print(f"roll_several_dice: sides[{sides}] how_many[{how_many}]. ", end="")
-    tcp_response=await sender_dice_roller_roll_times(sides, how_many)
-    print(f"Received: [{tcp_response.uid}]")
+    tcp_response = await sender_dice_roller_roll_times(sides, how_many)
+    print(f"Received: [{tcp_response.span_key}]")
 ```
 
 In our imports, the important thing here, is the import of `BufferedEndpointResponseDTO`

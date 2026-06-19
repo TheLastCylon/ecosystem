@@ -1,11 +1,10 @@
-import uuid
 import json
 
 from abc import ABC, abstractmethod
 from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
-from ..data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto
+from ..data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto, SpanKey
 from ..requests.status import Status
 
 from ..exceptions import (
@@ -68,16 +67,12 @@ class ClientBase(ABC):
         route_key        : str,
         data             : PydanticBaseModel,
         response_dto_type: Type[PydanticBaseModel] = EmptyDto,
-        request_uid      : uuid.UUID               = None
+        span_key         : SpanKey                 = None,
     ) -> PydanticBaseModel:
-        if not request_uid:
-            uuid_to_use = uuid.uuid4()
-        else:
-            uuid_to_use = request_uid
-
+        span_key_to_use  = span_key if span_key else SpanKey.generate()
         self.success     = False
         self.retry_count = 0
-        request          = RequestDTO(uid=str(uuid_to_use), route_key = route_key, data = data)
+        request          = RequestDTO(span_key = span_key_to_use, route_key = route_key, data = data)
         request_str      = request.model_dump_json()
         response_str     = await self._send_message_retry_loop(f"{request_str}\n")
         response_dict    = json.loads(response_str)

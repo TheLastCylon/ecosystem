@@ -1,4 +1,3 @@
-import uuid
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.application_base import ApplicationBase
@@ -10,7 +9,7 @@ from .dtos import EchoRequestDto, EchoResponseDto
 
 # --------------------------------------------------------------------------------
 @endpoint("echo", EchoRequestDto)
-async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
+async def echo_this_message(dto: EchoRequestDto) -> PydanticBaseModel:
     return EchoResponseDto(message = dto.message)
 
 

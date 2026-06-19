@@ -232,12 +232,12 @@ The other parameters you can set are:
 3. `max_retries`:
    - Again, as discussed in
      [technical stuff for `buffered_endpoint`](../../buffereds/technical_stuff.md),
-     this tells Ecosystem how many times it should try sending a message, before giving
+     this tells EcoSystem how many times it should try sending a message, before giving
      up on it and moving it to the `error` database of the queue.
-   - It's important to note, that Ecosystem will only retry sending, if it makes
+   - It's important to note, that EcoSystem will only retry sending, if it makes
      sense to retry. In other words, for almost all cases other than the server being
      busy, the message will be moved to the `error` database.
-   - As for `buffered_endpoint`, Ecosystem already has all the functionality you need to
+   - As for `buffered_endpoint`, EcoSystem already has all the functionality you need to
      do things like:
      - Inspect the queues
      - Get statistical information on the queues
@@ -245,7 +245,7 @@ The other parameters you can set are:
      - Yes, in the event that the server you are trying to contact is down, you'll be
        able to re-process messages when it comes back up again.
      - Right now, this requires human intervention. When I get around to it though,
-       Ecosystem will be enhanced to do this for you, automatically.
+       EcoSystem will be enhanced to do this for you, automatically.
    - In the example, I set it to `10`, but the default is `0`.
 
 Let us take a look at one of these `buffered_senders` though:
@@ -297,75 +297,83 @@ Now let us take a look at the endpoints. This, is where the interesting stuff ha
 #### The imports
 
 ```python
-import uuid
 import logging
 import time
 
-from typing import cast, List
+from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
 from ekosis.util.fire_and_forget_tasks import run_soon
+from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
-from .senders import (get_fortune, get_joke, pick_numbers, get_prediction, get_time, log_request, log_response)
+from .senders import (
+    get_fortune,
+    get_joke,
+    pick_numbers,
+    get_prediction,
+    get_time,
+    log_request,
+    log_response
+)
 ```
 
 Everything up to the import for `run_soon`, you have seen before. We'll get to looking at `run_soon` ... Soon. `:)`
 
-After that import, we simply import our DTOs and then our various senders.
+After that import, we import `SpanKey` this is what you can use to get the `span_key` of the current request.
 
 ---
-### The `endpoint` or rather: How to use `uid` to save you both time and money
+### The `endpoint` or rather: How to use `stak_key` to save you both time and money
 
 Before we get to the varius helper functions and what they do, take a look at the `process_message` function that we decorate with `endpoint`.
 
 ```python
 # --------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 @endpoint("app.process_message", RouterRequestDto)
-async def process_message(uid: uuid.UUID, dto: RouterRequestDto) -> PydanticBaseModel:
-    _log_request(uid, dto.request, time.time())
-    log.info(f"RCV: request_uuid[{uid}]")
+async def process_message(span_key : SpanKey, dto: RouterRequestDto) -> PydanticBaseModel:
+    _log_request(span_key, dto.request, time.time())
+    log.info(f"RCV: span_key[{span_key}]")
     request_data = dto.request.split(" ")
 
     if "fortune" == request_data[0].strip().lower():
-        response = await _get_fortune(uid)
+        response = await _get_fortune(span_key)
     elif "joke" == request_data[0].strip().lower():
-        response = await _get_joke(uid)
+        response = await _get_joke(span_key)
     elif "lotto" == request_data[0].strip().lower():
-        response = await _get_lotto(uid, request_data)
+        response = await _get_lotto(span_key, request_data)
     elif "time" == request_data[0].strip().lower():
-        response = await _get_time(uid)
+        response = await _get_time(span_key)
     else:
-        response = await _get_prediction(uid, dto.request)
+        response = await _get_prediction(span_key, dto.request)
 
-    log.info(f"RSP: request_uuid[{uid}]")
-    _log_response(uid, response, time.time())
+    log.info(f"RSP: span_key[{span_key}]")
+    _log_response(span_key, response, time.time())
     return RouterResponseDto(response=response)
 ```
 
 ---
-#### Using `uid` and the implications thereof.
+#### Using `span_key` and the implications thereof.
 
-Unlike previous examples, you'll notice we are actually using `uid` this time.
+Unlike previous examples, you'll notice we are actually using `span_key` this time.
 
-Ecosystem invokes your `endpoint` functions, with that as a parameter. It
-literally contains the protocol level UUID, of the request your function is
+EcoSystem invokes your `endpoint` functions, with that as a parameter. It
+literally contains the protocol level `span_key`, of the request your function is
 invoked to process.
 
-This is also the same UUID used, in both the `pending` and `error` databases,
+This is also the same `span_key` used, in both the `pending` and `error` databases,
 created when you use `buffered_endpoint` and `buffered_sender`.
 
 If you are paying attention, you might begin to see the **real-world** implications
-of this, and why I designed Ecosystem to facilitate it.
+of this, and why I designed EcoSystem to facilitate it.
 
 Before we get into that though, lets take a look at one of the helper functions:
 
 ```python
-# --------------------------------------------------------------------------------
-async def _get_fortune(uid: uuid.UUID) -> str:
-    return (await get_fortune(request_uid=uid)).fortune
+async def _get_fortune(span_key : SpanKey) -> str:
+    return (await get_fortune(span_key=span_key)).fortune
 ```
 
 I arbitrarily selected `_get_fortune` for this, it really is just the first one
@@ -377,20 +385,20 @@ bit is how we invoke our sender functions from them.
 Take a look at how we are invoking our sender function `get_fortune`.
 
 ```python
-    return (await get_fortune(request_uid=uid)).fortune
+    return (await get_fortune(span_key=span_key)).fortune
 ```
 
-We are passing it, the UUID of the request we received, as a key-word argument `request_uid`.
+We are passing it, the `span_key` of the request we received, as a key-word argument `span_key`.
 
 This is why our sender functions were defined to have `*args` and `**kwargs`
 
-Doing this, causes Ecosystem to use the UUID we specify, as the UUID for the request
+Doing this, causes EcoSystem to use the `span_key` we specify, as the `span_key` for the request
 it makes to the `[fortunes]` service.
 
 The real-world effect of this is:
 - `[client]`, `[router]`, `[fortunes]` and `[trakcer]` are all using the same
-  UUID for an **entire** communications chain!
-- The logs created, all log the exact same UUID, for the **entire** communications
+  `span_key` for an **entire** communications chain!
+- The logs created, all log the exact same `span_key`, for the **entire** communications
   chain.
 
 If you get it now, you have very likely spent hours pouring over logs of a
@@ -398,7 +406,7 @@ distributed system. You possibly even resorted to putting your logs in some
 searchable database, so you can try to figure out where things are going wrong.
 Some of you may even have resorted to using 3rd party services for this.
 
-With Ecosystem, if you apply this little bit of effort, and combine it with logging.
+With EcoSystem, if you apply this little bit of effort, and combine it with logging.
 You can achieve all of that, with a single `grep`, `awk` or `ag` command.
 
 That means: All of that log searching ability ... For free.
@@ -427,50 +435,50 @@ Let's take a look at what the endpoint function does, again:
 ```python
 # --------------------------------------------------------------------------------
 @endpoint("app.process_message", RouterRequestDto)
-async def process_message(uid: uuid.UUID, dto: RouterRequestDto) -> PydanticBaseModel:
-    _log_request(uid, dto.request, time.time())
-    log.info(f"RCV: request_uuid[{uid}]")
+async def process_message(span_key : SpanKey, dto: RouterRequestDto) -> PydanticBaseModel:
+    _log_request(span_key, dto.request, time.time())
+    log.info(f"RCV: span_key[{span_key}]")
     request_data = dto.request.split(" ")
 
     if "fortune" == request_data[0].strip().lower():
-        response = await _get_fortune(uid)
+        response = await _get_fortune(span_key)
     elif "joke" == request_data[0].strip().lower():
-        response = await _get_joke(uid)
+        response = await _get_joke(span_key)
     elif "lotto" == request_data[0].strip().lower():
-        response = await _get_lotto(uid, request_data)
+        response = await _get_lotto(span_key, request_data)
     elif "time" == request_data[0].strip().lower():
-        response = await _get_time(uid)
+        response = await _get_time(span_key)
     else:
-        response = await _get_prediction(uid, dto.request)
+        response = await _get_prediction(span_key, dto.request)
 
-    log.info(f"RSP: request_uuid[{uid}]")
-    _log_response(uid, response, time.time())
+    log.info(f"RSP: span_key[{span_key}]")
+    _log_response(span_key, response, time.time())
     return RouterResponseDto(response=response)
 ```
 
 Notice the invocations of:
 ```python
-    _log_request(uid, dto.request, time.time())
+    _log_request(span_key, dto.request, time.time())
 ```
 
 and
 
 ```python
-    _log_response(uid, response, time.time())
+    _log_response(span_key, response, time.time())
 ```
 
 Now also take a look at the definitions for those functions:
 ```python
 # --------------------------------------------------------------------------------
 @run_soon
-async def _log_request(uid: uuid.UUID, data: str, timestamp: float):
-    await log_request(data, timestamp, request_uid=uid)
+async def _log_request(span_key : SpanKey, data: str, timestamp: float):
+    await log_request(data, timestamp, span_key=span_key)
 
 
 # --------------------------------------------------------------------------------
 @run_soon
-async def _log_response(uid: uuid.UUID, data: str, timestamp: float):
-    await log_response(data, timestamp, request_uid=uid)
+async def _log_response(span_key : SpanKey, data: str, timestamp: float):
+    await log_response(data, timestamp, span_key=span_key)
 ```
 
 You'll note your IDE and/or linting tools will be screaming about where
@@ -481,7 +489,7 @@ My advice: Hand it a pill and tell it to chill!
 
 Or as the new generation will say: Leave it on read.
 
-Neither IDEs nor Linting tools have the ability to track what Ecosystem is doing
+Neither IDEs nor Linting tools have the ability to track what EcoSystem is doing
 here. They will catch up. Eventually. It really isn't anything special or
 complicated. You could achieve the same with a little bit of research into
 `asyncio` and python decorators.
@@ -504,7 +512,7 @@ event loop.
 
 `run_soon` takes care of that for you.
 
-As promised, Ecosystem does the heavy lifting with respect to `asyncio`, for you.
+As promised, EcoSystem does the heavy lifting with respect to `asyncio`, for you.
 
 ---
 ### The rest of it
@@ -515,15 +523,15 @@ of the services. Then taking the response from that service, and returning it to
 `[client]`
 
 All of this was really just to teach you about:
-1. Using `request_uuid` to make your life easier when it comes to doing investigations.
+1. Using `span_key` to make your life easier when it comes to doing investigations.
 2. How to use `buffered_sender` and
 3. What `run_soon` does for you.
 
 By the time you have gotten a grip on this example, and what it does, you'll have all
-the tools you need to start creating your own distributed systems, using Ecosystem.
+the tools you need to start creating your own distributed systems, using EcoSystem.
 
 You are most welcome. I assure you, the pleasure is all mine!
 
-Ecosystem isn't so much for all of you out there, as it is for: ME!
+EcoSystem isn't so much for all of you out there, as it is for: ME!
 
 I wanted this, so I built it.

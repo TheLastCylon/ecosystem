@@ -198,8 +198,8 @@ common:
   path_prefix: /loki
   storage:
     filesystem:
-      chunks_directory: /loki/chunks
-      rules_directory:  /loki/rules
+      chunks_directory: /loki/chunks  # Was /tmp/loki/chunks -- /tmp is ephemeral
+      rules_directory:  /loki/rules   # Was /tmp/loki/rules  -- /tmp is ephemeral
   replication_factor: 1
   ring:
     kvstore:
@@ -208,15 +208,15 @@ common:
 schema_config:
   configs:
     - from: 2020-10-24
-      store:        boltdb-shipper
+      store:        tsdb
       object_store: filesystem
-      schema:       v11
+      schema:       v13
       index:
         prefix: index_
         period: 24h
 
 limits_config:
-  allow_structured_metadata: false
+  allow_structured_metadata: true
 
 ruler:
   alertmanager_url: http://localhost:9093
@@ -280,7 +280,7 @@ The EcoSystem dashboard JSON (`ekosis.json`) is in the ecosystem repo at
 ## Starting the stack
 
 ```bash
-export GRAFANA_ADMIN_PASSWORD=yourpassword
+export GRAFANA_ADMIN_PASSWORD=###YOURPASSWORD###
 export UID=$(id -u)
 export GID=$(id -g)
 docker compose up -d
@@ -314,17 +314,46 @@ Create `/etc/alloy/config.alloy`:
 
 ```
 local.file_match "ekosis" {
-  path_targets = [{"__path__" = "/var/log/ekosis/*.log", job = "ekosis", host = "your-hostname"}]
+  path_targets = [{"__path__" = "/tmp/observable_fun/*.log", job = "ekosis", host = "###YOUR HOSTNAME###"}]
 }
 
 loki.source.file "ekosis" {
   targets    = local.file_match.ekosis.targets
+  forward_to = [loki.process.ekosis.receiver]
+}
+
+loki.process "ekosis" {
   forward_to = [loki.write.central.receiver]
+
+  stage.json {
+    expressions = {
+      trace_id            = "trace_id",
+      span_id             = "span_id",
+      severity_text       = "severity_text",
+      service_name        = "attributes.application_name",
+      service_instance_id = "attributes.application_instance",
+    }
+  }
+
+  stage.labels {
+    values = {
+      severity_text       = "severity_text",
+      service_name        = "service_name",
+      service_instance_id = "service_instance_id",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      trace_id = "trace_id",
+      span_id  = "span_id",
+    }
+  }
 }
 
 loki.write "central" {
   endpoint {
-    url = "http://your-central-stack-host:3100/loki/api/v1/push"
+    url = "http://###YOUR HOSTNAME###:3100/loki/api/v1/push"
   }
 }
 ```
@@ -342,7 +371,7 @@ and make it writable by your application user:
 
 ```bash
 sudo mkdir -p /var/log/ekosis
-sudo chown youruser:youruser /var/log/ekosis
+sudo chown ###YOUR LINUX USER ID###:###YOUR LINUX USER ID### /var/log/ekosis
 ```
 
 ---
@@ -351,5 +380,5 @@ sudo chown youruser:youruser /var/log/ekosis
 
 Set `ECOENV_EXTRA_JAEGER_ENDPOINT` and `ECOENV_EXTRA_*_PUSHGATEWAY` in your start
 script. See `examples/observable_fun/start_observable_fun.sh` for a complete
-working example. It shows how to wire `ekosis-jaeger-http` and `ekosis-prometheus`
+working example. It shows how to wire `ekosis-otlp-http` and `ekosis-prometheus`
 into a multiservice EcoSystem application alongside the observability stack.

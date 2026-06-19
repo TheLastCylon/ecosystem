@@ -10,7 +10,7 @@ Two optional packages bridge that telemetry to external observability backends:
 
 | Package                                                                | What it does                                    |
 |------------------------------------------------------------------------|-------------------------------------------------|
-| [ekosis-jaeger-http](../../ekosis_jaeger_http/documentation/README.md) | Distributed tracing via Jaeger, using OTLP HTTP |
+| [ekosis-otlp-traces](../../ekosis_otlp_traces/documentation/README.md) | Distributed tracing via Jaeger, using OTLP HTTP |
 | [ekosis-prometheus](../../ekosis_prometheus/documentation/README.md)   | Metrics via Prometheus Pushgateway              |
 
 These packages are opt-in. EcoSystem makes no demands on your observability tooling.

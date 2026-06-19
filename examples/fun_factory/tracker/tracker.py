@@ -8,9 +8,9 @@ from .endpoints import log_request, log_response # noqa
 # -------------------------------------------------------------------------------
 class TrackerServer(ApplicationBase):
     def __init__(self):
-        self._configuration.tcp             = ConfigTCP(host="127.0.0.1", port=8700)
+        self._configuration.tcp              = ConfigTCP(host="127.0.0.1", port=8700)
         self._configuration.buffer_directory ='/tmp'
-        self.log_database                   = LogDatabase()
+        self.log_database                    = LogDatabase()
         self.log_database.initialise(f"/tmp/{self._configuration.name}-{self._configuration.instance}-database.sqlite")
         self._configuration.stats_keeper.gather_period  = 60
         self._configuration.stats_keeper.history_length = 60

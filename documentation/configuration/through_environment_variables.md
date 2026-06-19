@@ -10,16 +10,16 @@ Let's get into it then.
 ---
 # Configuration using environment variables.
 
-All Ecosystem environment variables start with: `ECOENV_`
+All EcoSystem environment variables start with: `ECOENV_`
 
 All of them.
 
-Even your environment variables that have nothing to do with Ecosystem, can start with `ECOENV_`
+Even your environment variables that have nothing to do with EcoSystem, can start with `ECOENV_`
 
 ---
 ## Machine level configuration
 
-What follows below, is a list of Ecosystem environment variables, that set things for all Ecosystem applications, running on the same machine.
+What follows below, is a list of EcoSystem environment variables, that set things for all EcoSystem applications, running on the same machine.
 
 ---
 ### For directories/folders:
@@ -37,24 +37,13 @@ What follows below, is a list of Ecosystem environment variables, that set thing
 - `ECOENV_BUFFER_DIR`
   - Sets the location for the sqlite database files (used by buffered communications).
   - TAKE NOTE:
-    - Ecosystem will NEVER try to use some kind of default for the location of buffer databases.
+    - EcoSystem will NEVER try to use some kind of default for the location of buffer databases.
     - If your application uses things like `buffered_endpoint`, you will have to explicitly set this location, for at least machine level.
     - These databases are simply too important to have their location left up to some kind of computed default.
-    - Ecosystem forces you to be explicit about this, because losing these sqlite files, or having them in a location that you do not consciously know and keep track of, can cause disasters.
+    - EcoSystem forces you to be explicit about this, because losing these sqlite files, or having them in a location that you do not consciously know and keep track of, can cause disasters.
 
 ---
 ### For logging:
-- `ECOENV_LOG_FORMAT`
-  - Sets the format for log entries.
-  - This is the format as specified and used by Python's logger.
-  - More specifically, the use of `logging.Formatter`, as is available in Python's standard `import logging`
-  - For more on what exactly you can do with that, please refer to the Python documentation.
-  - The default used by Ecosystem is: `%(asctime)s.%(msecs)03d|%(levelname)s|%(filename)s|%(lineno)d|%(message)s`
-- `ECOENV_LOG_DATE_FORMAT`
-  - Sets the format for dates in log entries.
-  - Here again, this is from Python's standard logging mechanisms.
-  - For details about it, please refer to Python's documentation.
-  - The default used by Ecosystem is: `%Y%m%d%H%M%S`
 - `ECOENV_LOG_LEVEL`
   - Sets the logging level.
   - Valid options are: `debug`,`info`,`warn`,`error`,`critical`.
@@ -63,7 +52,7 @@ What follows below, is a list of Ecosystem environment variables, that set thing
   - The number of log lines to buffer, before writing to the log file.
   - Note: Buffering your log file writes can have very desirable impact on performance. Keep in mind
     though, this means you might be missing vital logs if something goes wrong.
-  - Ecosystem makes every possible attempt to flush logs in the event of a shutdown, even if due to some
+  - EcoSystem makes every possible attempt to flush logs in the event of a shutdown, even if due to some
     exception or another. But if the application is killed or crashes for some reason, unwritten log
     entries will be lost.
   - That means: Use this sparingly in test environments, make sure everything works, then let production
@@ -78,7 +67,7 @@ What follows below, is a list of Ecosystem environment variables, that set thing
 
 A word on log file names:
 
-For an Ecosystem application, it's log file will always have the name `{application name}-{insance}.log`
+For an EcoSystem application, it's log file will always have the name `{application name}-{insance}.log`
 Rotated log file names will be named `{application name}-{insance}.log.{rotation number}`
 
 That means:
@@ -166,7 +155,7 @@ Now let us look at the configurations that can only be set at instance level.
            2. have the name `my_cool_application_feeds_cats.uds.sock`
     - If you do NOT use this, it is completely up to you to make sure:
       - the socket file names for every single running instance,
-      - of every Ecosystem application,
+      - of every EcoSystem application,
       - running on any given single machine,
       - ARE UNIQUE to that running instance!
 

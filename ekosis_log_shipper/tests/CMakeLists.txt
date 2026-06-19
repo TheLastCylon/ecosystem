@@ -1,0 +1,3 @@
+add_executable(manual_rotation_check manual_rotation_check.cpp)
+target_link_libraries(manual_rotation_check PRIVATE ekosis_log_shipper_lib)
+add_test(NAME rotation_survival COMMAND manual_rotation_check)

@@ -1,6 +1,7 @@
-# ekosis-jaeger-http
+# ekosis-otlp-traces
 
-Jaeger distributed tracing for EcoSystem applications, via OTLP HTTP.
+OTLP HTTP distributed tracing for EcoSystem applications (Jaeger, Tempo, or any other
+OTLP-compatible backend).
 
 Wires into the EcoSystem [middleware](../../documentation/middleware.md) system. Every endpoint
 in a service is automatically traced. No changes to endpoint-code required. 😎
@@ -9,8 +10,9 @@ in a service is automatically traced. No changes to endpoint-code required. 😎
 
 ## How it works
 
-Every EcoSystem request carries a `request_uid`, `ekosis-jaeger-http` uses that UUID as the Jaeger trace ID.
-One `request_uid`, one trace, full distributed trace visible across all services.
+Every EcoSystem request carries a `span_key` (`trace_id` + `span_id`). `ekosis-otlp-traces`
+reads `span_key.trace_id` as the OTel trace ID, so one `span_key`, one trace, full distributed
+trace visible across all services -- regardless of how many hops the request takes.
 
 For regular endpoints, a span opens when the request arrives (`before_routing`) and closes
 when the response is sent (`after_routing`). For buffered endpoints, the receive span is linked
@@ -22,21 +24,21 @@ queuing and processing, including across retries.
 ## Install
 
 ```bash
-pip install ekosis-jaeger-http
+pip install ekosis-otlp-traces
 ```
 
 ---
 
 ## Configuration
 
-Set the Jaeger OTLP HTTP endpoint via `ECOENV_EXTRA_*`:
+Set the OTLP HTTP traces endpoint via `ECOENV_EXTRA_*`:
 
 ```bash
-ECOENV_EXTRA_JAEGER_ENDPOINT=http://your-jaeger-host:4318/v1/traces
+ECOENV_EXTRA_OTLP_TRACES_ENDPOINT=http://your-otlp-host:4318/v1/traces
 ```
 
-The service name in Jaeger auto-derives from `{app_name}-{instance}` (e.g. `tracker-0`).
-No explicit configuration required.
+The service name in your tracing backend auto-derives from `{app_name}-{instance}` (e.g.
+`tracker-0`). No explicit configuration required.
 
 ---
 
@@ -45,21 +47,21 @@ No explicit configuration required.
 ### Setup helper (recommended)
 
 ```python
-from ekosis_jaeger_http.setup import initiate_jaeger_tracing
+from ekosis_otlp_traces.setup import initiate_otlp_tracing
 
-initiate_jaeger_tracing()
+initiate_otlp_tracing()
 ```
 
-One call. Reads `ECOENV_EXTRA_JAEGER_ENDPOINT`, creates both middleware instances, and
+One call. Reads `ECOENV_EXTRA_OTLP_TRACES_ENDPOINT`, creates both middleware instances, and
 registers them with `MiddlewareManager` and `BufferedMiddlewareManager`.
 
 Place the call before `app.start()`, typically at the top of your application's `__init__`:
 
 ```python
-from ekosis.application_base          import ApplicationBase
-from ekosis_jaeger_http.setup         import initiate_jaeger_tracing
+from ekosis.application_base    import ApplicationBase
+from ekosis_otlp_traces.setup   import initiate_otlp_tracing
 
-initiate_jaeger_tracing()
+initiate_otlp_tracing()
 
 # --------------------------------------------------------------------------------
 class MyServer(ApplicationBase):
@@ -82,18 +84,16 @@ If you need access to the middleware instances directly (for example, to compose
 with your own middleware):
 
 ```python
-from ekosis.middleware                      import MiddlewareManager, BufferedMiddlewareManager
-from ekosis_jaeger_http                     import JaegerHttpTracingMiddleware
-from ekosis_jaeger_http.buffered_middleware import JaegerHttpBufferedTracingMiddleware
+from ekosis.middleware       import MiddlewareManager, BufferedMiddlewareManager
+from ekosis_otlp_traces      import OtlpTracingMiddleware, OtlpBufferedTracingMiddleware
 
-tracer = JaegerHttpTracingMiddleware(endpoint="http://your-jaeger-host:4318/v1/traces")
+tracer = OtlpTracingMiddleware(endpoint="http://your-otlp-host:4318/v1/traces")
 MiddlewareManager().add(tracer)
-BufferedMiddlewareManager().add(JaegerHttpBufferedTracingMiddleware(tracer))
+BufferedMiddlewareManager().add(OtlpBufferedTracingMiddleware(tracer))
 ```
 
-`JaegerHttpBufferedTracingMiddleware` takes the `JaegerHttpTracingMiddleware`
-instance as an argument. It is used to retrieve the active receive-span at push
-time and link the process spans to it.
+`OtlpBufferedTracingMiddleware` takes the `OtlpTracingMiddleware` instance as an argument.
+It is used to retrieve the active receive-span at push time and link the process spans to it.
 
 ---
 
@@ -104,17 +104,18 @@ time and link the process spans to it.
 One span per request, named with the route key:
 
 ```
-tracker.log_request     (trace_id = request_uid)
+tracker.log_request     (trace_id = span_key.trace_id)
   |
-  +-> request.uid       = "3f2a1b..."
-  |
+  +-> request.trace_id  = "3f2a1b..."
+  +-> request.span_id   = "9c7e..."
   +-> request.route_key = "tracker.log_request"
 ```
 
 ### Buffered endpoint
 
 The receive span is the root. Each process attempt (including retries) produces a child
-span linked back to the receive span via the persisted trace and span IDs:
+span linked back to the receive span via the persisted span id, carried through
+`PendingEntry.metadata`:
 
 ```
 tracker.log_request_fail        (receive span)
@@ -127,6 +128,11 @@ tracker.log_request_fail        (receive span)
 The child span name is the DTO class name + `.process`. The `retries` attribute
 shows which attempt produced the span. `process.success=False` means the item
 was returned to the queue for retry or moved to the error queue.
+
+If the receive span is no longer in memory when a process attempt runs (e.g. after a
+restart), the process span falls back to using `span_key.span_id` as its own parent --
+it stays in-trace rather than becoming orphaned, it just can't be linked back to a
+receive span that no longer exists.
 
 ---
 

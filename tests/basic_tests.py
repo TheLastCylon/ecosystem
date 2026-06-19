@@ -10,6 +10,7 @@ from ekosis.clients import (
 )
 from ekosis.sending.sender import sender
 from ekosis.exceptions import RouteKeyUnknownException, ProcessingException, UnhandledException
+from ekosis.data_transfer_objects import SpanKey
 from .dtos.dtos import AppRequestDto, AppResponseDto, AppMiddlewareTestRequestDto, AppMiddlewareTestResponseDto
 
 # --------------------------------------------------------------------------------
@@ -89,73 +90,73 @@ async def app_test_application_exception_response(message: str, **kwargs):
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_transient_tcp_echo():
-    response = await transient_tcp_send(message="test echo", request_uid=uuid.uuid4())
+    response = await transient_tcp_send(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_persisted_tcp_echo():
-    response = await persisted_tcp_send(message="test echo", request_uid=uuid.uuid4())
+    response = await persisted_tcp_send(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_transient_uds_echo():
-    response = await transient_uds_send(message="test echo", request_uid=uuid.uuid4())
+    response = await transient_uds_send(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_persisted_uds_echo():
-    response = await persisted_uds_send(message="test echo", request_uid=uuid.uuid4())
+    response = await persisted_uds_send(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_udp_echo():
-    response = await udp_send(message="test echo", request_uid=uuid.uuid4())
+    response = await udp_send(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_endpoint_does_not_exist():
     with pytest.raises(RouteKeyUnknownException):
-        response = await endpoint_does_not_exist(message="test echo", request_uid=uuid.uuid4())
+        response = await endpoint_does_not_exist(message="test echo", span_key = SpanKey.generate())
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_app_pass_trough():
-    response = await app_pass_trough(message="test echo", request_uid=uuid.uuid4())
+    response = await app_pass_trough(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_app_queued_pass_trough():
-    response = await app_queued_pass_trough(message="test echo", request_uid=uuid.uuid4())
+    response = await app_queued_pass_trough(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_app_test_queued_sender():
-    response = await app_test_queued_sender(message="test echo", request_uid=uuid.uuid4())
+    response = await app_test_queued_sender(message="test echo", span_key = SpanKey.generate())
     assert response.message == "test echo"
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_app_test_unhandled_exception_response():
     with pytest.raises(UnhandledException):
-        response = await app_test_unhandled_exception_response(message="test echo", request_uid=uuid.uuid4())
+        response = await app_test_unhandled_exception_response(message="test echo", span_key = SpanKey.generate())
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_app_test_application_exception_response():
     with pytest.raises(ProcessingException):
-        response = await app_test_application_exception_response(message="test echo", request_uid=uuid.uuid4())
+        response = await app_test_application_exception_response(message="test echo", span_key = SpanKey.generate())
 
 # --------------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_middleware_transient_tcp_send():
-    response = await middleware_transient_tcp_send(message="test echo", request_uid=uuid.uuid4())
+    response = await middleware_transient_tcp_send(message="test echo", span_key = SpanKey.generate())
     assert response.before_routing is True
     assert response.after_routing  is True
     assert response.message == "test echo"

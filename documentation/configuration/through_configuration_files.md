@@ -11,9 +11,9 @@ Here we go.
 
 # Configuration with files.
 
-## Ecosystem will never support default configuration, through files!
+## EcoSystem will never support default configuration, through files!
 
-Ecosystem has never, does not currently, and will never allow for default
+EcoSystem has never, does not currently, and will never allow for default
 configuration, through files. It does not do any kind of searching for configuration
 files or default setup using configuration files.
 
@@ -32,7 +32,7 @@ up being used for a production environment.
 
 So. No!
 
-Ecosystem does not, and will not do any kind of default configuration file searching.
+EcoSystem does not, and will not do any kind of default configuration file searching.
 
 Not now. NOT EVER!
 
@@ -47,9 +47,9 @@ to have seen entire systems go down, because of this kind of thing.
 
 So, again: Do! Not! Even! Ask! For! This!
 
-If you use configuration files in your Ecosystem production environments. It will
+If you use configuration files in your EcoSystem production environments. It will
 be because YOU made the choice to do so. And have explicitly told every single
-instance, of every single Ecosystem application, to use a configuration file.
+instance, of every single EcoSystem application, to use a configuration file.
 
 ## This is for development environments!
 
@@ -59,18 +59,18 @@ are set. And get set, every single time the machine they work on, has to be rest
 This becomes even more painful, when you have to have several applications running,
 in order to test the one you are working on.
 
-Ecosystem's configuration through files, is intended as a means to ease the lives
+EcoSystem's configuration through files, is intended as a means to ease the lives
 of the people who develop software with it. And to speed up the development process.
 
 ## Configuration files overwrite settings done with environment variables.
 
-Ecosystem will always try to load as much configuration as it can, from environment
+EcoSystem will always try to load as much configuration as it can, from environment
 variables. When there are none, it will do it's best to select appropriate defaults
 for things like:
 - the location of log and lock files,
 - the gathering period for statistics and how much statistical history to keep.
 
-The act of telling an Ecosystem application, to load its configuration from a file, causes
+The act of telling an EcoSystem application, to load its configuration from a file, causes
 the configuration it built from environment variables, to be overwritten with what ever
 is in the configuration file.
 
@@ -86,14 +86,14 @@ configuration file to be used, don't set environment variables for anything you 
 
 ## Specifying the configuration file you want to use.
 
-In order to get an Ecosystem application to load its configuration from a file,
+In order to get an EcoSystem application to load its configuration from a file,
 you have to explicitly invoke it with a path to the file you want to use.
 
 This is done using the `-c` or `--config_file` command line option.
 
 So, when you do something like: `python ./my_cool_application.py -i 0 -c ./my_config.json`
 
-If `my_cool_application.py` is an Ecosystem application, you are telling it to run as instance `0`,
+If `my_cool_application.py` is an EcoSystem application, you are telling it to run as instance `0`,
 and load its configuration from a file named `my_config.json`, located in the current directory.
 
 ## The content of configuration files.
@@ -113,7 +113,7 @@ Finally, we get to the content of configuration files. Let's take a look at a si
 }
 ```
 
-This configuration file, tells Ecosystem that when the application using this
+This configuration file, tells EcoSystem that when the application using this
 file is set to run as instance `0`, that instance should have its TCP server
 listening on host `127.0.0.1` and port `1234`
 
@@ -142,8 +142,6 @@ Let's take a look at a complete configuration, for a single instance:
                "socket_file_name" : "DEFAULT"
             },
             "logging"         : {
-                "format"       : "%(asctime)s.%(msecs)03d|%(levelname)s|%(filename)s|%(lineno)d|%(message)s",
-                "date_format"  : "%Y%m%d%H%M%S",
                 "level"        : "debug",
                 "file_logging" : {
                     "directory"         : "/tmp/log_files",
@@ -194,8 +192,6 @@ entries set to the corresponding environment variable names discussed in:
                "socket_file_name" : "Base name portion of: ECOENV_UDS_{uppercase application name}_{uppercase instance}"
             },
             "logging"         : {
-                "format"       : "ECOENV_LOG_FORMAT",
-                "date_format"  : "ECOENV_LOG_DATE_FORMAT",
                 "level"        : "ECOENV_LOG_LEVEL",
                 "file_logging" : {
                     "directory"         : "ECOENV_LOG_DIR",
@@ -219,4 +215,4 @@ Just put them under `"instances"` and make sure your instance identifier is the
 key.
 
 There you have it. Everything you need to know about configuration files as
-used by Ecosystem.
+used by EcoSystem.

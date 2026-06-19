@@ -1,10 +1,10 @@
-import uuid
 import random
 import logging
 
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
+from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import Magic8BallRequestDto, Magic8BallResponseDto
 
@@ -37,6 +37,6 @@ possible_responses = [
 
 # --------------------------------------------------------------------------------
 @endpoint("app.get_prediction", Magic8BallRequestDto)
-async def get_prediction(uid: uuid.UUID, **kwargs) -> PydanticBaseModel:
-    log.info(f"RCV: uid[{uid}]")
+async def get_prediction(span_key : SpanKey) -> PydanticBaseModel:
+    log.info(f"RCV: span_key[{span_key}]")
     return Magic8BallResponseDto(prediction=random.choice(possible_responses))

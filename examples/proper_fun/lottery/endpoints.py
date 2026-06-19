@@ -1,4 +1,3 @@
-import uuid
 import random
 import logging
 
@@ -6,6 +5,7 @@ from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 
 from ekosis.requests.endpoint import endpoint
+from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import NumberPickerRequestDto, NumberPickerResponseDto
 
@@ -46,6 +46,6 @@ def pick_numbers(how_many: int) -> List[str]:
 
 # --------------------------------------------------------------------------------
 @endpoint("app.pick_numbers", NumberPickerRequestDto)
-async def pick_numbers_endpoint(uid: uuid.UUID, dto: NumberPickerRequestDto) -> PydanticBaseModel:
-    log.info(f"RCV: request_uuid[{uid}]")
+async def pick_numbers_endpoint(span_key : SpanKey, dto: NumberPickerRequestDto) -> PydanticBaseModel:
+    log.info(f"RCV: span_key[{span_key}]")
     return NumberPickerResponseDto(numbers=pick_numbers(dto.how_many))

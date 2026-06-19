@@ -13,23 +13,23 @@ On Linux you can execute a `netcat` command and test it.
 
 For TCP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data": {"message": "This is a test"}}' | nc localhost 8888
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "echo", "data": {"message": "This is a test"}}' | nc localhost 8888
 ```
 
 For UDP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data": {"message": "This is a test"}}' | nc -u localhost 8889
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "echo", "data": {"message": "This is a test"}}' | nc -u localhost 8889
 ```
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "echo", "data": {"message": "This is a test"}}' | nc -U /tmp/echo_example_0.uds.sock
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "echo", "data": {"message": "This is a test"}}' | nc -U /tmp/echo_example_0.uds.sock
 ```
 
 The response you get should be similar to:
 
 ```json
-{"uid":"abcdef01-abcd-abcd-abcd-abcdef012345","status":0,"data":{"message":"This is a test"}}
+{"span_key":{"trace_id":"12345678-1234-1234-1234-1234567890ab","span_id":"1234567890abcdef"},"status":0,"data":{"message":"This is a test"}}
 ```
 
 ---
@@ -37,70 +37,66 @@ The response you get should be similar to:
 
 As with all frameworks, we will now examine how to get a server to give you back, what you sent in.
 
-Yes, an Ecosystem ... Echo-server.
+Yes, an EcoSystem ... Echo-server.
 
 Here's the code:
 
 ```python
-1: import uuid
-2: from pydantic import BaseModel as PydanticBaseModel
-3:
-4: from ekosis.application_base import ApplicationBase
-5: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
-6: from ekosis.requests.endpoint import endpoint
-7:
-8: from .dtos import EchoRequestDto, EchoResponseDto
-9:
-10:
-11: # --------------------------------------------------------------------------------
-12: @endpoint("echo", EchoRequestDto)
-13: async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
-14:     return EchoResponseDto(message = dto.message)
-15:
-16:
-17: # --------------------------------------------------------------------------------
-18: class EchoExampleServer(ApplicationBase):
-19:     def __init__(self):
-20:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
-21:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
-22:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-23:         super().__init__()
-24:
-25:
-26: # --------------------------------------------------------------------------------
-27: def main():
-28:     with EchoExampleServer() as app:
-29:         app.start()
-30:
-31:
-32: # --------------------------------------------------------------------------------
-33: if __name__ == '__main__':
-34:     try:
-35:         main()
-36:     except Exception as e:
-37:         print(str(e))
-38:
+ 1: from pydantic import BaseModel as PydanticBaseModel
+ 2: 
+ 3: from ekosis.application_base import ApplicationBase
+ 4: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+ 5: from ekosis.requests.endpoint import endpoint
+ 6: 
+ 7: from .dtos import EchoRequestDto, EchoResponseDto
+ 8: 
+ 9: 
+10: # --------------------------------------------------------------------------------
+11: @endpoint("echo", EchoRequestDto)
+12: async def echo_this_message(dto: EchoRequestDto) -> PydanticBaseModel:
+13:     return EchoResponseDto(message = dto.message)
+14: 
+15: 
+16: # --------------------------------------------------------------------------------
+17: class EchoExampleServer(ApplicationBase):
+18:     def __init__(self):
+19:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
+20:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
+21:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+22:         super().__init__()
+23: 
+24: 
+25: # --------------------------------------------------------------------------------
+26: def main():
+27:     with EchoExampleServer() as app:
+28:         app.start()
+29: 
+30: 
+31: # --------------------------------------------------------------------------------
+32: if __name__ == '__main__':
+33:     try:
+34:         main()
+35:     except Exception as e:
+36:         print(str(e))
 ```
 
 ### Imports
 
 ```python
- 1: import uuid
- 2: from pydantic import BaseModel as PydanticBaseModel
- 3: 
- 4: from ekosis.application_base import ApplicationBase
- 5: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
- 6: from ekosis.requests.endpoint import endpoint
- 7: 
- 8: from .dtos import EchoRequestDto, EchoResponseDto
+ 1: from pydantic import BaseModel as PydanticBaseModel
+ 2: 
+ 3: from ekosis.application_base import ApplicationBase
+ 4: from ekosis.configuration.config_models import ConfigTCP, ConfigUDP, ConfigUDS
+ 5: from ekosis.requests.endpoint import endpoint
+ 6: 
+ 7: from .dtos import EchoRequestDto, EchoResponseDto
 ```
 
-1. Line 1 gives us the python `uuid` stuff we'll need with creating an endpoint.
-2. Line 2 gives us the Pydantic base model.
+1. Line 2 gives us the Pydantic base model.
    1. Note that I'm importing Pydantic's `BaseModel` class as `PydanticBaseModel`. Strictly speaking this isn't necessary for this example, but it sets a base-line for good development with Ecosystem.
-3. Lines 4 and 5 are the same as lines 1 and 2 in our [previous example](../base.md).
-4. Line 6 gets us the Ecosystem `endpoint` decorator function.
-5. And lastly, we import the two types of Data Transfer Objects (DTOs) we declared for this example.
+2. Lines 3 and 5 are the same as lines 1 and 2 in our [previous example](../base.md).
+3. Line 6 gets us the Ecosystem `endpoint` decorator function.
+4. And lastly, we import the two types of Data Transfer Objects (DTOs) we declared for this example.
    1. The DTOs are located in [examples/echo/dtos.py](../../../examples/echo/dtos.py)
 
 ### Declaring our Data Transfer Objects (DTOs for short)
@@ -128,10 +124,10 @@ Let's get back to the server code then.
 
 ### The endpoint decorator
 ```python
-12: @endpoint("echo", EchoRequestDto)
+11: @endpoint("echo", EchoRequestDto)
 ```
 
-Here, on line 12, we use the Ecosystem `endpoint` decorator, to create an endpoint for us.
+Here, on line 11, we use the Ecosystem `endpoint` decorator, to create an endpoint for us.
 
 It expects two things:
 1. A route key, in this case `"echo"`
@@ -151,17 +147,17 @@ IMPORTANT: A route key absolutely must be unique within your application. An Eco
 
 ### The function
 ```python
-13: async def echo_this_message(uid: uuid.UUID, dto: EchoRequestDto) -> PydanticBaseModel:
-14:     return EchoResponseDto(message = dto.message)
+11: @endpoint("echo", EchoRequestDto)
+12: async def echo_this_message(dto: EchoRequestDto) -> PydanticBaseModel:
+13:     return EchoResponseDto(message = dto.message)
 ```
-On line 13, we declare our endpoint function.
+On line 12, we declare our endpoint function.
+
+Take note: The data you receive will be passed to the function as a parameter named `dto`.
 
 Yes, it must follow that signature.
 
 The parameter list and return type must match.
-
-We'll get to what `uid` is used for in later examples.
-Right now, just understand that this function creates an instance of `EchoResponseDto` and returns it.
 
 Of course, the function name may be any valid Python function name.
 
@@ -171,27 +167,27 @@ Don't freak out if you've not used `asyncio`, or have had trouble using it in th
 
 # Declaring the application class, and running it.
 ```python
-17: # --------------------------------------------------------------------------------
-18: class EchoExampleServer(ApplicationBase):
-19:     def __init__(self):
-20:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
-21:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
-22:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
-23:         super().__init__()
-24:                                                                                          
-25:                                                                                          
-26: # --------------------------------------------------------------------------------
-27: def main():
-28:     with EchoExampleServer() as app:
-29:         app.start()
-30:                                                                                          
-31:                                                                                          
-32: # --------------------------------------------------------------------------------
-33: if __name__ == '__main__':
-34:     try:
-35:         main()
-36:     except Exception as e:
-37:         print(str(e))
+16: # --------------------------------------------------------------------------------
+17: class EchoExampleServer(ApplicationBase):
+18:     def __init__(self):
+19:         self._configuration.tcp = ConfigTCP(host="127.0.0.1", port=8888)
+20:         self._configuration.udp = ConfigUDP(host="127.0.0.1", port=8889)
+21:         self._configuration.uds = ConfigUDS(directory="/tmp", socket_file_name="DEFAULT")
+22:         super().__init__()
+23: 
+24: 
+25: # --------------------------------------------------------------------------------
+26: def main():
+27:     with EchoExampleServer() as app:
+28:         app.start()
+29: 
+30: 
+31: # --------------------------------------------------------------------------------
+32: if __name__ == '__main__':
+33:     try:
+34:         main()
+35:     except Exception as e:
+36:         print(str(e))
 ```
 
 As with our [previous example](../base.md). We declare our application class and run it.

@@ -2,6 +2,7 @@ import logging
 import sys
 
 from .buffered_rotating_file_handler import BufferedRotatingFileHandler
+from .otlp_formatter import OtlpFormatter
 
 from ..configuration.config_models import AppConfiguration, ConfigLogging
 from ..util import SingletonType
@@ -78,7 +79,7 @@ class EcoLogger(metaclass=SingletonType):
         log_file_config.base_file_name = f"{self.__app_config.name}-{self.__app_config.instance}"
         log_file_config.base_file_path = f"{log_file_config.directory}/{log_file_config.base_file_name}.log"
         self.__logger                  = logging.getLogger() # Yes, we are configuring the root logger!
-        self.__formatter               = logging.Formatter(self.__log_config.format, datefmt=self.__log_config.date_format)
+        self.__formatter               = OtlpFormatter()
 
         if not self.__log_config.console_only:
             self.__setup_file_logging()

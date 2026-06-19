@@ -113,12 +113,6 @@ class ConfigLoggingFile(PydanticBaseModel):
 
 # ConfigLogging
 # --------------------------------------------------------------------------------
-def get_logging_date_format():
-    return get_eco_env("LOG_DATE_FORMAT", '%Y%m%d%H%M%S') # Default to '%Y%m%d%H%M%S'
-
-def get_logging_format():
-    return get_eco_env("LOG_FORMAT", f'%(asctime)s.%(msecs)03d|%(levelname)s|{application_name}|{application_instance}|%(filename)s|%(lineno)d|%(message)s')
-
 def get_logging_level():
     # List of options here: 'debug', 'info', 'warn', 'error', 'critical'
     return get_eco_env("LOG_LEVEL", 'info')
@@ -130,11 +124,12 @@ class ConfigLogging(PydanticBaseModel):
     # logging for the application is lost.
     # Therefore, we force the user to make a choice, and remain conscious of
     # the fact that they are making a choice.
+    # Log shape itself (OTLP-style JSON, see OtlpLogRecord) is NOT
+    # user-configurable -- that's the property that lets ekosis-log-shipper
+    # parse every log line the same fixed way, with no format DSL.
     console_only: bool              = command_line_args.log_console_only
     file_only   : bool              = command_line_args.log_file_only
     file_logging: ConfigLoggingFile = ConfigLoggingFile()
-    date_format : str               = Field(default_factory=get_logging_date_format)
-    format      : str               = Field(default_factory=get_logging_format)
     level       : str               = Field(default_factory=get_logging_level)
 
 # ConfigTCP

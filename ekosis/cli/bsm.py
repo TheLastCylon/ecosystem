@@ -16,6 +16,7 @@ from .senders.buffered_sender_management import (
 )
 
 from ..clients import ClientBase
+from ..data_transfer_objects import SpanKey
 
 # --------------------------------------------------------------------------------
 setup_buffered_sender_options()
@@ -60,20 +61,20 @@ async def do_sender_action(client: ClientBase, route_key: str):
         await EcoBufferedSenderErrorsClearSender(client).send(route_key)
         return
 
-    if not command_line_args.request_uid:
-        print_error(argument_parser, "--request_uid required!")
+    if not command_line_args.span_key:
+        print_error(argument_parser, "--span_key required!")
         return
 
-    request_uid = command_line_args.request_uid
+    span_key = SpanKey.from_hex(command_line_args.span_key)
 
     if command_line_args.reprocess_one:
-        await EcoBufferedSenderErrorsReprocessOneSender(client).send(route_key, request_uid)
+        await EcoBufferedSenderErrorsReprocessOneSender(client).send(route_key, span_key)
         return
     if command_line_args.inspect_request:
-        await EcoBufferedSenderErrorsInspectRequestSender(client).send(route_key, request_uid)
+        await EcoBufferedSenderErrorsInspectRequestSender(client).send(route_key, span_key)
         return
     if command_line_args.pop_request:
-        await EcoBufferedSenderErrorsPopRequestSender(client).send(route_key, request_uid)
+        await EcoBufferedSenderErrorsPopRequestSender(client).send(route_key, span_key)
         return
 
 # --------------------------------------------------------------------------------

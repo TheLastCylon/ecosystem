@@ -10,16 +10,14 @@ To run it, get into your terminal and go to the directory you have cloned this r
 You should see output similar to this:
 
 ```
-20240629173313.404|INFO|statistics_keeper.py|94|Starting stats gathering.
-20240629173313.405|INFO|tcp.py|19|Setting up TCP server.
-20240629173313.405|INFO|udp.py|21|Setting up UDP server.
-20240629173313.405|INFO|udp.py|57|Serving UDP on [127.0.0.1:8889]
-20240629173313.405|INFO|uds.py|21|Setting up UDS server.
-20240629173313.405|INFO|uds.py|46|Serving UDS on /tmp/base_example_0_uds.sock
-20240629173313.405|INFO|tcp.py|41|Serving TCP on ('127.0.0.1', 8888)
-20240629173813.691|INFO|statistics_keeper.py|119|Gathering statistics
-20240629174313.990|INFO|statistics_keeper.py|119|Gathering statistics
-20240629174814.285|INFO|statistics_keeper.py|119|Gathering statistics
+{"timestamp":"2026-06-19T20:28:05.189040+00:00","severity_number":5,"severity_text":"DEBUG","body":"Using selector: EpollSelector","attributes":{"application_name":"base_example","application_instance":"0","filename":"selector_events.py","lineno":64,"module":"selector_events","funcName":"__init__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189567+00:00","severity_number":9,"severity_text":"INFO","body":"Starting stats gathering.","attributes":{"application_name":"base_example","application_instance":"0","filename":"statistics_keeper.py","lineno":135,"module":"statistics_keeper","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189706+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up TCP server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"tcp.py","lineno":19,"module":"tcp","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189821+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up UDP server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"udp.py","lineno":55,"module":"udp","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.189909+00:00","severity_number":9,"severity_text":"INFO","body":"Serving UDP on [127.0.0.1:8889]","attributes":{"application_name":"base_example","application_instance":"0","filename":"udp.py","lineno":74,"module":"udp","funcName":"__create_datagram_listener"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190082+00:00","severity_number":9,"severity_text":"INFO","body":"Setting up UDS server.","attributes":{"application_name":"base_example","application_instance":"0","filename":"uds.py","lineno":21,"module":"uds","funcName":"__aenter__"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190327+00:00","severity_number":9,"severity_text":"INFO","body":"Serving UDS on /tmp/base_example_0.uds.sock","attributes":{"application_name":"base_example","application_instance":"0","filename":"uds.py","lineno":46,"module":"uds","funcName":"__setup_server"},"trace_id":null,"span_id":null}
+{"timestamp":"2026-06-19T20:28:05.190554+00:00","severity_number":9,"severity_text":"INFO","body":"Serving TCP on ('127.0.0.1', 8888)","attributes":{"application_name":"base_example","application_instance":"0","filename":"tcp.py","lineno":41,"module":"tcp","funcName":"__setup_server"},"trace_id":null,"span_id":null}
 ```
 
 Believe it or not, that is a complete application that will do TCP, UDP and UDS communications.
@@ -28,23 +26,23 @@ On Linux you can execute a `netcat` command and test it right now.
 
 For TCP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc localhost 8888
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc localhost 8888
 ```
 
 For UDP:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -u localhost 8889
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -u localhost 8889
 ```
 
 For UDS:
 ```shell
-echo '{"uid": "abcdef01-abcd-abcd-abcd-abcdef012345", "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0.uds.sock
+echo '{"span_key": {"trace_id": "12345678-1234-1234-1234-1234567890ab", "span_id": "1234567890abcdef"}, "route_key": "eco.statistics.get", "data": {"type": "current"}}' | nc -U /tmp/base_example_0.uds.sock
 ```
 
 In all three cases, you'll get a response similar to:
 
 ```json
-{"uid":"abcdef01-abcd-abcd-abcd-abcdef012345","status":0,"data":{"statistics":{"timestamp":1719683259,"uptime":866,"endpoint_call_counts":{"eco":{"statistics":{"get":{"call_count":1}}}}}}}
+{"span_key":{"trace_id":"12345678-1234-1234-1234-1234567890ab","span_id":"1234567890abcdef"},"status":0,"data":{"statistics":{"endpoint_data":{"eco":{"log":{"level":{"call_count":0,"p95":-1.0,"p99":-1.0},"buffer":{"call_count":0,"p95":-1.0,"p99":-1.0}},"statistics":{"get":{"call_count":5,"p95":0.0007168467536757817,"p99":0.0007237349544084281}},"error_states":{"get":{"call_count":0,"p95":-1.0,"p99":-1.0},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0}},"buffered_handler":{"data":{"call_count":0,"p95":-1.0,"p99":-1.0},"receiving":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"processing":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"all":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"errors":{"get_first_10":{"call_count":0,"p95":-1.0,"p99":-1.0},"reprocess":{"all":{"call_count":0,"p95":-1.0,"p99":-1.0},"one":{"call_count":0,"p95":-1.0,"p99":-1.0}},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0},"pop_request":{"call_count":0,"p95":-1.0,"p99":-1.0},"inspect_request":{"call_count":0,"p95":-1.0,"p99":-1.0}}},"buffered_sender":{"data":{"call_count":0,"p95":-1.0,"p99":-1.0},"send_process":{"pause":{"call_count":0,"p95":-1.0,"p99":-1.0},"unpause":{"call_count":0,"p95":-1.0,"p99":-1.0}},"errors":{"get_first_10":{"call_count":0,"p95":-1.0,"p99":-1.0},"reprocess":{"all":{"call_count":0,"p95":-1.0,"p99":-1.0},"one":{"call_count":0,"p95":-1.0,"p99":-1.0}},"clear":{"call_count":0,"p95":-1.0,"p99":-1.0},"pop_request":{"call_count":0,"p95":-1.0,"p99":-1.0},"inspect_request":{"call_count":0,"p95":-1.0,"p99":-1.0}}}}},"timestamp":1781710188.1312137,"uptime":501.13121366500854,"gather_period":300,"application":{"name":"base_example","instance":"0"}}}}
 ```
 
 By the time that is run through something that makes the JSON more readable, it looks this:
@@ -52,21 +50,74 @@ By the time that is run through something that makes the JSON more readable, it 
 {
    "data" : {
       "statistics" : {
-         "endpoint_call_counts" : {
+         "application" : {"instance" : "0", "name" : "base_example"},
+         "endpoint_data" : {
             "eco" : {
-               "statistics" : {
-                  "get" : {
-                     "call_count" : 1
+               "buffered_handler" : {
+                  "all" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  },
+                  "data" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "errors" : {
+                     "clear"          : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "get_first_10"   : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "inspect_request": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "pop_request"    : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "reprocess"      : {
+                        "all": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                        "one": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                     }
+                  },
+                  "processing" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  },
+                  "receiving" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
                   }
+               },
+               "buffered_sender" : {
+                  "data" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "errors" : {
+                     "clear"          : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "get_first_10"   : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "inspect_request": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "pop_request"    : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "reprocess"      : {
+                        "all" : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                        "one" : {"call_count" : 0, "p95" : -1, "p99" : -1}
+                     }
+                  },
+                  "send_process" : {
+                     "pause"  : {"call_count" : 0, "p95" : -1, "p99" : -1},
+                     "unpause": {"call_count" : 0, "p95" : -1, "p99" : -1}
+                  }
+               },
+               "error_states" : {
+                  "clear": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "get"  : {"call_count" : 0, "p95" : -1, "p99" : -1}
+               },
+               "log" : {
+                  "buffer": {"call_count" : 0, "p95" : -1, "p99" : -1},
+                  "level" : {"call_count" : 0, "p95" : -1, "p99" : -1}
+               },
+               "statistics" : {
+                  "get" : {"call_count" : 5, "p95" : 0.000716846753675782, "p99" : 0.000723734954408428}
                }
             }
          },
-         "timestamp" : 1719683259,
-         "uptime" : 866
+         "gather_period" : 300,
+         "timestamp" : 1781710188.13121,
+         "uptime" : 501.131213665009
       }
    },
-   "status" : 0,
-   "uid" : "abcdef01-abcd-abcd-abcd-abcdef012345"
+   "span_key" : {
+      "span_id" : "1234567890abcdef",
+      "trace_id" : "12345678-1234-1234-1234-1234567890ab"
+   },
+   "status" : 0
 }
 ```
 
