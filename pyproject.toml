@@ -13,6 +13,7 @@ requires-python  = ">=3.11.3"
 dependencies     = [
     "sqlalchemy>=2.0.31",
     "pydantic>=2.8.2",
+    "msgpack>=1.0.8",
 ]
 classifiers      = [
     "Development Status :: 4 - Beta",

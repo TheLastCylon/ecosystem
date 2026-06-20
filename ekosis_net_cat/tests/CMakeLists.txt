@@ -1,0 +1,3 @@
+add_executable(manual_frame_roundtrip manual_frame_roundtrip.cpp)
+target_link_libraries(manual_frame_roundtrip PRIVATE ekosis_net_cat_lib)
+add_test(NAME frame_roundtrip COMMAND manual_frame_roundtrip)

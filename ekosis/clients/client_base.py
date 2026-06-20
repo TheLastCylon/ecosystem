@@ -1,10 +1,13 @@
-import json
+import msgpack
 
 from abc import ABC, abstractmethod
 from typing import Type
 from pydantic import BaseModel as PydanticBaseModel
 
-from ..data_transfer_objects import RequestDTO, ResponseDTO, EmptyDto, SpanKey
+from ..data_transfer_objects import (
+    RequestDTO, ResponseDTO, EmptyDto, SpanKey,
+    HEADER_LENGTH, pack_frame, parse_header, split_route_key_and_body,
+)
 from ..requests.status import Status
 
 from ..exceptions import (
@@ -32,7 +35,7 @@ class ClientBase(ABC):
 
     # --------------------------------------------------------------------------------
     @abstractmethod
-    async def _send_message_retry_loop(self, request: str) -> str: # pragma: no cover
+    async def _send_message_retry_loop(self, request: bytes) -> bytes: # pragma: no cover
         pass
 
     # --------------------------------------------------------------------------------
@@ -72,14 +75,21 @@ class ClientBase(ABC):
         span_key_to_use  = span_key if span_key else SpanKey.generate()
         self.success     = False
         self.retry_count = 0
-        request          = RequestDTO(span_key = span_key_to_use, route_key = route_key, data = data)
-        request_str      = request.model_dump_json()
-        response_str     = await self._send_message_retry_loop(f"{request_str}\n")
-        response_dict    = json.loads(response_str)
-        response         = ResponseDTO(**response_dict)
+        request_dto      = RequestDTO(span_key = span_key_to_use, route_key = route_key, data = data)
+        request_body     = msgpack.packb(request_dto.model_dump(mode="json")["data"])
+        request_frame    = pack_frame(request_dto.span_key, request_dto.route_key, request_body)
+
+        response_frame   = await self._send_message_retry_loop(request_frame)
+
+        response_span_key, route_key_len, total_len, _ = parse_header(response_frame[:HEADER_LENGTH])
+        _, response_body = split_route_key_and_body(
+            response_frame[HEADER_LENGTH:HEADER_LENGTH + total_len], route_key_len
+        )
+        response_dict    = msgpack.unpackb(response_body, raw=False)
+        response         = ResponseDTO(span_key = response_span_key, **response_dict)
 
         if response.status != Status.SUCCESS.value:
             raise self.generate_response_exception(response)
 
-        response_dto     = response_dto_type(**response.data)
+        response_dto    = response_dto_type(**response.data)
         return response_dto

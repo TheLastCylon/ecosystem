@@ -1,16 +1,17 @@
 import asyncio
+import msgpack
 
 from .server_base import ServerBase
+
+from ..data_transfer_objects import (
+    HEADER_LENGTH, PING_FLAG, parse_header, split_route_key_and_body, pack_response_frame, pack_ping_frame,
+)
 
 # --------------------------------------------------------------------------------
 class StreamServerBase(ServerBase):
     def __init__(self):
         super().__init__()
-        self._server       : asyncio.Server = None
-        self.__ENQ_byte    : int            =  5 # Decimal  5 = Ascii ENQ (enquiry) character
-        self.__ACK_byte    : int            =  6 # Decimal  6 = Ascii ACK (acknowledge) character
-        self.__LF_byte     : int            = 10 # Decimal 10 = Ascii LF (line feed) character = '\n'
-        self.__ACK_response: bytes          = bytes([self.__ACK_byte, self.__LF_byte])
+        self._server: asyncio.Server = None
 
     # --------------------------------------------------------------------------------
     async def __write_data(self, writer: asyncio.StreamWriter, data: bytes):
@@ -24,23 +25,29 @@ class StreamServerBase(ServerBase):
             return
         while True: # We keep the connection open.
             try:
-                bytes_read = await reader.readline()
-
-                # Check if the client closed the connection.
-                # Take note: An incomplete read due to EOF is treated as a client disconnect,
-                # So we check if the last byte read is '\n' i.e. Decimal 10/Ascii symbol: LF
-                if not bytes_read or bytes_read[-1] != self.__LF_byte:
-                    break
-
-                if bytes_read[0] == self.__ENQ_byte: # The client is asking if we are still connected.
-                    await self.__write_data(writer, self.__ACK_response)
-                else:
-                    response_dict = await self._route_request(bytes_read.decode())
-                    await self.__write_data(
-                        writer,
-                        (response_dict.model_dump_json() + '\n').encode()
-                    )
-            except ConnectionResetError:
-                self._logger.info("Connection reset by peer")
+                header = await reader.readexactly(HEADER_LENGTH)
+            except (asyncio.IncompleteReadError, ConnectionResetError):
                 break
+
+            span_key, route_key_len, total_len, flags = parse_header(header)
+
+            if flags & PING_FLAG: # A liveness probe -- answer it directly, never reaching _route_request.
+                await self.__write_data(writer, pack_ping_frame(span_key))
+                continue
+
+            try:
+                rest = await reader.readexactly(total_len)
+            except (asyncio.IncompleteReadError, ConnectionResetError):
+                break
+
+            route_key, body = split_route_key_and_body(rest, route_key_len)
+
+            try:
+                data = msgpack.unpackb(body, raw=False)
+            except Exception as e:
+                response = self._build_parsing_error_response(span_key, e)
+            else:
+                response = await self._route_request(span_key, route_key, data)
+
+            await self.__write_data(writer, pack_response_frame(response))
         writer.close()

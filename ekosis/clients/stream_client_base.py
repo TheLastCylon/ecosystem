@@ -6,6 +6,8 @@ from typing import Tuple
 
 from .client_base import ClientBase
 
+from ..data_transfer_objects import HEADER_LENGTH, parse_header
+
 from ..exceptions import (
     CommunicationsNonRetryable,
     CommunicationsMaxRetriesReached,
@@ -31,27 +33,30 @@ class StreamClientBase(ClientBase, ABC):
         pass
 
     # --------------------------------------------------------------------------------
-    async def _send_message(self, request: str) -> str:
+    async def _send_message(self, request: bytes) -> bytes:
         reader, writer = await self.open_connection()
-        writer.write(request.encode())
+        writer.write(request)
 
-        data = await asyncio.wait_for(reader.readline(), self.__timeout)
-        if not data:
+        try:
+            header = await asyncio.wait_for(reader.readexactly(HEADER_LENGTH), self.__timeout)
+        except asyncio.IncompleteReadError:
             raise CommunicationsEmptyResponse()
 
-        response_str = data.decode()
+        _, _, total_len, _ = parse_header(header)
+        rest            = await asyncio.wait_for(reader.readexactly(total_len), self.__timeout)
+
         writer.close()
         await writer.wait_closed()
-        return response_str
+        return header + rest
 
     # --------------------------------------------------------------------------------
-    async def _send_message_retry_loop(self, request: str) -> str:
+    async def _send_message_retry_loop(self, request: bytes) -> bytes:
         retry_count = 0
         while retry_count < self.max_retries and not self.success:
             try:
-                response_str = await self._send_message(request)
+                response = await self._send_message(request)
                 self.success = True
-                return response_str
+                return response
             except (
                 TimeoutError,           # Timeouts mean the connection is fine
                 asyncio.TimeoutError,   # it's just taking too long. i.e. Retryable.

@@ -29,6 +29,8 @@ $VENV/coverage run -p --source=ekosis -m tests.test_app_c.test_app_c -i 0 -c ./t
 sleep 1
 $VENV/coverage run -p --source=ekosis -m pytest -v \
   tests/basic_tests.py \
+  tests/binary_protocol_tests.py \
+  tests/persisted_client_failure_tests.py \
   tests/check_stats_endpoint.py \
   tests/buffered_handler_endpoints.py \
   tests/buffered_sender_endpoints.py \

@@ -7,6 +7,8 @@ from typing import Tuple
 
 from .client_base import ClientBase
 
+from ..data_transfer_objects import HEADER_LENGTH, PING_FLAG, SpanKey, parse_header, pack_ping_frame
+
 from ..exceptions import (
     CommunicationsNonRetryable,
     CommunicationsMaxRetriesReached,
@@ -17,11 +19,6 @@ log = logging.getLogger()
 
 # --------------------------------------------------------------------------------
 class PersistentStreamClientBase(ClientBase, ABC):
-    __ENQ_byte   : int   =  5 # Decimal  5 = Ascii ENQ (enquiry) character
-    __ACK_byte   : int   =  6 # Decimal  6 = Ascii ACK (acknowledge) character
-    __LF_byte    : int   = 10 # Decimal 10 = Ascii LF (line feed) character = '\n'
-    __ENQ_request: bytes = bytes([__ENQ_byte, __LF_byte])
-
     def __init__(
         self,
         timeout         : float = 5,
@@ -30,15 +27,15 @@ class PersistentStreamClientBase(ClientBase, ABC):
         retry_delay     : float = 0.1,
     ):
         super().__init__(max_retries, retry_delay)
-        self.__timeout          : float                = timeout
-        self.__heartbeat_time   : float                = heartbeat_period
-        self.__connected        : bool                 = False
-        self.__last_send        : float                = 0
-        self.__read_lock        : asyncio.Lock         = asyncio.Lock()
-        self.__write_lock       : asyncio.Lock         = asyncio.Lock()
-        self.__reader           : asyncio.StreamReader = None
-        self.__writer           : asyncio.StreamWriter = None
-        self.__heartbeat_task   : asyncio.Task         = None
+        self.__timeout       : float                = timeout
+        self.__heartbeat_time: float                = heartbeat_period
+        self.__connected     : bool                 = False
+        self.__last_send     : float                = 0
+        self.__read_lock     : asyncio.Lock         = asyncio.Lock()
+        self.__write_lock    : asyncio.Lock         = asyncio.Lock()
+        self.__reader        : asyncio.StreamReader = None
+        self.__writer        : asyncio.StreamWriter = None
+        self.__heartbeat_task: asyncio.Task         = None
 
     # --------------------------------------------------------------------------------
     @abstractmethod
@@ -62,29 +59,41 @@ class PersistentStreamClientBase(ClientBase, ABC):
             self.__writer.write(data)
 
     # --------------------------------------------------------------------------------
-    async def __do_read(self) -> bytes:
+    async def __do_read(self, length: int) -> bytes:
         async with self.__read_lock:
-            return await asyncio.wait_for(self.__reader.readline(), self.__timeout) # There needs to be a timeout here.
+            return await asyncio.wait_for(self.__reader.readexactly(length), self.__timeout)
 
     # --------------------------------------------------------------------------------
+    # A ping is a bare 32-byte frame (no route_key, no body, PING_FLAG set), answered
+    # by the transport layer alone on the server side -- never reaching RequestRouter
+    # or StatisticsKeeper. Cheap by construction: no msgpack, no routing, just a
+    # header round trip. This is the stale-connection detector this class used to do
+    # with raw ENQ/ACK bytes, rebuilt on the binary protocol instead.
     async def __do_heartbeat(self):
         try:
             await self.__check_connected() # check if we did connect in the past
-        except ConnectionRefusedError as e:
+        except ConnectionRefusedError:
             return
 
-        await self.__do_write(self.__ENQ_request)
-
-        data = await self.__do_read()
-
-        if (
-            not data or
-            data[-1] != self.__LF_byte or
-            data[0]  != self.__ACK_byte
+        try:
+            await self.__do_write(pack_ping_frame(SpanKey.generate()))
+            pong_header = await self.__do_read(HEADER_LENGTH)
+        except (
+            asyncio.IncompleteReadError,
+            TimeoutError,
+            asyncio.TimeoutError,
+            ConnectionResetError,
+            ConnectionAbortedError,
+            BrokenPipeError,
         ):
             self.__connected = False
-        else:
+            return
+
+        _, _, _, flags = parse_header(pong_header)
+        if flags & PING_FLAG:
             self.__last_send = time.time()
+        else:
+            self.__connected = False
 
     # --------------------------------------------------------------------------------
     async def __heartbeat_check(self):
@@ -101,22 +110,25 @@ class PersistentStreamClientBase(ClientBase, ABC):
             self.__heartbeat_task = loop.create_task(self.__heartbeat_check())
 
     # --------------------------------------------------------------------------------
-    async def _send_message(self, request: str) -> str:
+    async def _send_message(self, request: bytes) -> bytes:
         try:
             await self.__check_connected()
         except ConnectionRefusedError as e:
             raise e
 
-        await self.__do_write(request.encode())
+        await self.__do_write(request)
 
-        data = await self.__do_read()
-        if not data or data[-1] != self.__LF_byte:
+        try:
+            header = await self.__do_read(HEADER_LENGTH)
+        except asyncio.IncompleteReadError:
             self.__connected = False
             raise CommunicationsEmptyResponse()
 
+        _, _, total_len, _ = parse_header(header)
+        rest                = await self.__do_read(total_len)
+
         self.__last_send = time.time()
-        response_str = data.decode()
-        return response_str
+        return header + rest
 
     # --------------------------------------------------------------------------------
     async def __do_retry_logic(self, retry_count: int):
@@ -128,15 +140,15 @@ class PersistentStreamClientBase(ClientBase, ABC):
         return retry_count
 
     # --------------------------------------------------------------------------------
-    async def _send_message_retry_loop(self, request: str) -> str:
+    async def _send_message_retry_loop(self, request: bytes) -> bytes:
         await self.__check_heartbeat_task()
 
         retry_count = 0
         while retry_count < self.max_retries and not self.success:
             try:
-                response_str = await self._send_message(request)
+                response = await self._send_message(request)
                 self.success = True
-                return response_str
+                return response
             except (TimeoutError, asyncio.TimeoutError):
                 retry_count = await self.__do_retry_logic(retry_count)
             except (

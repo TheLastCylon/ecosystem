@@ -24,14 +24,14 @@ class DatagramProtocolClient(asyncio.DatagramProtocol):
     # --------------------------------------------------------------------------------
     def datagram_received(self, data: bytes, address: tuple[str, int]) -> None:
         if self.response:
-            self.response.set_result(data.decode())
+            self.response.set_result(data)
             self.response = None
 
     # --------------------------------------------------------------------------------
-    async def send_message(self, message: str):
+    async def send_message(self, message: bytes):
         if self.transport is not None:
             self.response = asyncio.Future()
-            self.transport.sendto(message.encode())
+            self.transport.sendto(message)
             return await asyncio.wait_for(self.response, timeout=self.timeout)
         else:
             return None
@@ -57,7 +57,7 @@ class DatagramClientBase(ClientBase, asyncio.DatagramProtocol):
         self.send_lock  : asyncio.Lock              = asyncio.Lock()
 
     # --------------------------------------------------------------------------------
-    async def _send_message(self, message: str) -> str:
+    async def _send_message(self, message: bytes) -> bytes:
         if not self.initialised:
             self.loop            = asyncio.get_running_loop()
             self.transport, self.protocol = await self.loop.create_datagram_endpoint(
@@ -70,7 +70,7 @@ class DatagramClientBase(ClientBase, asyncio.DatagramProtocol):
             return await self.protocol.send_message(message)
 
     # --------------------------------------------------------------------------------
-    async def _send_message_retry_loop(self, request: str) -> str:
+    async def _send_message_retry_loop(self, request: bytes) -> bytes:
         retry_count = 0
         while retry_count < self.max_retries:
             try:
