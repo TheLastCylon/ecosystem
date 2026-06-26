@@ -1,37 +1,49 @@
-#include <asio.hpp>
-#include <iostream>
+#include <spdlog/spdlog.h>
 
-#include "connection_handler.hpp"
-#include "request_router.hpp"
+#include "application_base.hpp"
+#include "configuration/argument_parser.hpp"
+#include "configuration/config_models.hpp"
+#include "exceptions/exceptions.hpp"
+#include "logs/eco_logger.hpp"
 
 namespace {
 
 // A handler declaring both injectable types, in order -- the simplest
 // possible proof that function_traits-based dispatch is wired end to end.
 // Returns the received body straight back, so the round trip is visible.
-nlohmann::json echo_handler(SpanKey span_key, RequestDTO& dto) {
-    std::cout << "[" << span_key.to_string() << "] " << dto.data.dump() << std::endl;
-    return dto.data;
+// Logs via spdlog::info rather than std::cout now that EcoLogger/
+// OtlpFormatter exist -- proves ambient span_key propagation against real
+// traffic, not just the standalone smoke tests.
+RequestDTO echo_handler(SpanKey span_key, RequestDTO& dto) {
+    spdlog::info("[{}] {}", span_key.to_string(), dto.data.dump());
+    return dto;
 }
 
-asio::awaitable<void> listen(asio::ip::tcp::acceptor acceptor, RequestRouter& router) {
-    for (;;) {
-        auto socket = co_await acceptor.async_accept(asio::use_awaitable);
-        asio::co_spawn(acceptor.get_executor(), handle_connection(std::move(socket), router), asio::detached);
+// Registers the echo endpoint in the constructor, per ApplicationBase's
+// explicit-registration convention -- this is the first real consumer of
+// ApplicationBase itself (lock-file check, configured transports, signal
+// shutdown), replacing the hand-rolled io_context/TCPServer that predated it.
+class EkocppServer : public ApplicationBase {
+public:
+    EkocppServer() {
+        register_endpoint("echo", echo_handler);
     }
-}
+};
 
 } // namespace
 
-int main() {
-    asio::io_context io_context(1);
+int main(int argc, char** argv) {
+    const CommandLineArgs args = parse_command_line_args(argc, argv);
+    AppConfiguration::initialize(argv[0], args);
+    EcoLogger::instance().setup();
 
-    RequestRouter router;
-    router.register_endpoint("echo", echo_handler);
+    try {
+        EkocppServer server;
+        server.start();
+    } catch (const std::exception& ex) {
+        spdlog::error("Fatal: {}", ex.what());
+        return 1;
+    }
 
-    asio::ip::tcp::acceptor acceptor(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 9999));
-    asio::co_spawn(io_context, listen(std::move(acceptor), router), asio::detached);
-
-    io_context.run();
     return 0;
 }

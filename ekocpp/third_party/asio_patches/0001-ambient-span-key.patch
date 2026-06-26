@@ -1,0 +1,168 @@
+diff --color -ruN /usr/include/asio/impl/awaitable.hpp third_party/asio/include/asio/impl/awaitable.hpp
+--- /usr/include/asio/impl/awaitable.hpp	2024-02-05 10:25:13.000000000 +0200
++++ third_party/asio/include/asio/impl/awaitable.hpp	2026-06-23 20:38:45.855950825 +0200
+@@ -30,6 +30,9 @@
+ #include "asio/system_error.hpp"
+ #include "asio/this_coro.hpp"
+ 
++// ekocpp PATCH (2026-06-23): see documentation/ambient_span_context.md.
++#include "../../../../../src/coroutines/ambient_span_context.hpp"
++
+ #if defined(ASIO_ENABLE_HANDLER_TRACKING)
+ # if defined(ASIO_HAS_SOURCE_LOCATION)
+ #  include "asio/detail/source_location.hpp"
+@@ -198,6 +201,63 @@
+       };
+   }
+ 
++  // ekocpp PATCH (2026-06-23): obtains this coroutine's ambient SpanKey.
++  // Mirrors the executor_t transformation below exactly -- no real
++  // suspension, just synchronous access to data already on this frame.
++  auto await_transform(this_coro::span_key_t) noexcept
++  {
++    struct result
++    {
++      awaitable_frame_base* this_;
++
++      bool await_ready() const noexcept
++      {
++        return true;
++      }
++
++      void await_suspend(coroutine_handle<void>) noexcept
++      {
++      }
++
++      auto await_resume() const noexcept
++      {
++        return this_->span_key;
++      }
++    };
++
++    return result{this};
++  }
++
++  // ekocpp PATCH (2026-06-23): sets this coroutine's ambient SpanKey, both
++  // on the frame (so it survives this coroutine's own future suspend/resume
++  // cycles via resume(), and is inherited by any nested awaitable<T> this
++  // coroutine itself co_awaits via push_frame()) and immediately into
++  // thread_local_span_key() (so it's correct even before this coroutine's
++  // own next resume()).
++  auto await_transform(this_coro::set_span_key_t tag) noexcept
++  {
++    span_key = tag.key;
++    thread_local_span_key() = tag.key;
++
++    struct result
++    {
++      bool await_ready() const noexcept
++      {
++        return true;
++      }
++
++      void await_suspend(coroutine_handle<void>) noexcept
++      {
++      }
++
++      void await_resume() const noexcept
++      {
++      }
++    };
++
++    return result{};
++  }
++
+   // This await transformation obtains the associated executor of the thread of
+   // execution.
+   auto await_transform(this_coro::executor_t) noexcept
+@@ -476,6 +536,9 @@
+     attached_thread_ = caller_->attached_thread_;
+     attached_thread_->entry_point()->top_of_stack_ = this;
+     caller_->attached_thread_ = nullptr;
++    span_key = caller_->span_key; // ekocpp PATCH (2026-06-23): nested
++                                   // awaitable<T> inherits the caller's
++                                   // ambient SpanKey automatically.
+   }
+ 
+   void pop_frame() noexcept
+@@ -495,6 +558,12 @@
+ 
+   void resume()
+   {
++    // ekocpp PATCH (2026-06-23): the one chokepoint every resumption path
++    // funnels through, regardless of which await_transform overload led
++    // here -- correct even though some other frame may have run on this
++    // thread, with a different span_key, while this one was suspended.
++    thread_local_span_key() = span_key;
++
+     resume_context context;
+     resume_context_ = &context;
+     coro_.resume();
+@@ -519,6 +588,7 @@
+   awaitable_frame_base<Executor>* caller_ = nullptr;
+   std::exception_ptr pending_exception_ = nullptr;
+   resume_context* resume_context_ = nullptr;
++  SpanKey span_key{}; // ekocpp PATCH (2026-06-23)
+ };
+ 
+ template <typename T, typename Executor>
+diff --color -ruN /usr/include/asio/this_coro.hpp third_party/asio/include/asio/this_coro.hpp
+--- /usr/include/asio/this_coro.hpp	2024-02-05 10:25:13.000000000 +0200
++++ third_party/asio/include/asio/this_coro.hpp	2026-06-23 20:37:04.004186990 +0200
+@@ -20,6 +20,12 @@
+ 
+ #include "asio/detail/push_options.hpp"
+ 
++// ekocpp PATCH (2026-06-23): brings SpanKey into scope for the span_key_t/
++// set_span_key_t tags below. A deliberate, documented coupling -- this
++// vendored asio copy is ekocpp's own fork, not a drop-in replacement for
++// anyone else's vanilla asio. See documentation/ambient_span_context.md.
++#include "../../../../src/data_transfer_objects/span_key.hpp"
++
+ namespace asio {
+ namespace this_coro {
+ 
+@@ -38,6 +44,43 @@
+ __declspec(selectany) executor_t executor;
+ #endif
+ 
++// ekocpp PATCH (2026-06-23): span_key_t/set_span_key_t -- the asio-native
++// equivalent of ekosis's request_context.py ContextVar. Read with
++// `co_await asio::this_coro::span_key;`, write with
++// `co_await asio::this_coro::set_span_key(new_key);`. See
++// awaitable_frame_base's await_transform overloads in impl/awaitable.hpp
++// for the actual mechanism (this is just the tag, same shape as executor_t
++// above) and documentation/ambient_span_context.md for the full design.
++
++/// Awaitable type that returns the current coroutine's ambient SpanKey.
++struct span_key_t
++{
++  ASIO_CONSTEXPR span_key_t()
++  {
++  }
++};
++
++/// Awaitable object that returns the current coroutine's ambient SpanKey.
++#if defined(ASIO_HAS_CONSTEXPR) || defined(GENERATING_DOCUMENTATION)
++constexpr span_key_t span_key;
++#elif defined(ASIO_MSVC)
++__declspec(selectany) span_key_t span_key;
++#endif
++
++/// Awaitable type that sets the current coroutine's ambient SpanKey.
++struct set_span_key_t
++{
++  SpanKey key;
++};
++
++/// Returns an awaitable object that sets the current coroutine's ambient
++/// SpanKey -- inherited automatically by any nested asio::awaitable<T> this
++/// coroutine itself co_awaits (see push_frame() in impl/awaitable.hpp).
++inline set_span_key_t set_span_key(SpanKey key)
++{
++  return set_span_key_t{key};
++}
++
+ /// Awaitable type that returns the cancellation state of the current coroutine.
+ struct cancellation_state_t
+ {
