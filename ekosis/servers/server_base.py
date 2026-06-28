@@ -66,7 +66,7 @@ class ServerBase:
         except ValidationError as e:
             return ResponseDTO(
                 span_key = span_key,
-                status   = Status.PYDANTIC_VALIDATION_ERROR.value,
+                status   = Status.VALIDATION_ERROR.value,
                 data     = str(e)
             )
         except RoutingExceptionBase as e:

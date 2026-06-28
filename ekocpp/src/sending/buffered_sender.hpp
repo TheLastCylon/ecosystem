@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../clients/client_base.hpp"
+#include "../data_transfer_objects/json_dto.hpp"
 #include "../data_transfer_objects/span_key.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../queues/pending_queue.hpp"
@@ -75,6 +76,12 @@ public:
         queue_.push_pending(span_key, data, 0);
         check_process_send_queue();
     }
+
+    template <JsonDTO Dto>
+    void enqueue(const Dto& data, SpanKey span_key = SpanKey::generate()) {
+        enqueue(data.to_json(), span_key);
+    }
+
 
     void pause_send_process() { sending_paused_.store(true); }
     void unpause_send_process() { sending_paused_.store(false); check_process_send_queue(); }

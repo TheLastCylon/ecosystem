@@ -18,7 +18,7 @@ std::string status_to_string(int status) {
         case 0:   return "SUCCESS";
         case 100: return "PROTOCOL_PARSING_ERROR";
         case 200: return "CLIENT_DENIED";
-        case 300: return "PYDANTIC_VALIDATION_ERROR";
+        case 300: return "VALIDATION_ERROR";
         case 400: return "ROUTE_KEY_UNKNOWN";
         case 500: return "APPLICATION_BUSY";
         case 600: return "PROCESSING_FAILURE";

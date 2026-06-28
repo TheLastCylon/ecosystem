@@ -10,7 +10,7 @@ from .response import (
     ResponseException,
     ProtocolParsingException,
     ClientDeniedException,
-    PydanticValidationException,
+    ValidationException,
     RouteKeyUnknownException,
     ServerBusyException,
     ProcessingException,

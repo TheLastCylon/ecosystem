@@ -56,9 +56,9 @@ class ClientDeniedException : public ResponseException {
 public:
     explicit ClientDeniedException(const std::string& message) : ResponseException(static_cast<int>(Status::CLIENT_DENIED), message) {}
 };
-class PydanticValidationException : public ResponseException {
+class ValidationException : public ResponseException {
 public:
-    explicit PydanticValidationException(const std::string& message) : ResponseException(static_cast<int>(Status::PYDANTIC_VALIDATION_ERROR), message) {}
+    explicit ValidationException(const std::string& message) : ResponseException(static_cast<int>(Status::VALIDATION_ERROR), message) {}
 };
 class RouteKeyUnknownException : public ResponseException {
 public:

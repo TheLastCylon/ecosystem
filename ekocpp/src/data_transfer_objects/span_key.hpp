@@ -37,6 +37,7 @@ public:
     // this process ever reads it.
     nlohmann::json to_json() const { return nlohmann::json(to_string()); }
     static SpanKey from_json(const nlohmann::json& j) { return from_string(j.get<std::string>()); }
+    void           validate()                    const {}
 };
 
 namespace std {

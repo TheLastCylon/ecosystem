@@ -196,6 +196,8 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
         auto popped = self->queue_.pop();
         if (!popped) break;
 
+        co_await asio::this_coro::set_span_key(popped->span_key);
+
         RequestDTO     local_dto{popped->data};
         RequestContext context{popped->span_key, local_dto};
         auto&          bmm     = BufferedMiddlewareManager::instance();

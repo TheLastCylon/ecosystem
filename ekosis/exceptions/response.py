@@ -22,8 +22,8 @@ class ClientDeniedException(ResponseException):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# PYDANTIC_VALIDATION_ERROR
-class PydanticValidationException(ResponseException):
+# VALIDATION_ERROR
+class ValidationException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 

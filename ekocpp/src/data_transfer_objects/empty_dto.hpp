@@ -9,4 +9,5 @@
 struct EmptyDto {
     static EmptyDto    from_json(const nlohmann::json&) { return {}; }
     nlohmann::json     to_json()                  const { return nlohmann::json::object(); }
+    void               validate()                 const {}
 };

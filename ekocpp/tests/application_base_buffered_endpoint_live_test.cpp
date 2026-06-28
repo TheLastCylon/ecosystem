@@ -19,7 +19,6 @@
 
 #include "../src/application_base.hpp"
 #include "../src/clients/transient_tcp_client.hpp"
-#include "../src/configuration/argument_parser.hpp"
 
 namespace {
 
@@ -40,7 +39,7 @@ bool buffered_echo_handler(SpanKey, RequestDTO&) {
 
 class TestApp : public ApplicationBase {
 public:
-    TestApp() {
+    TestApp(int argc, char** argv) : ApplicationBase(argc, argv) {
         register_buffered_endpoint("buffered_echo", buffered_echo_handler, /*page_size=*/100, /*max_retries=*/2);
     }
 };
@@ -62,10 +61,8 @@ int main() {
     char arg1[] = "-i";
     char arg2[] = "live_test";
     char* argv[] = {argv0, arg1, arg2};
-    const CommandLineArgs args = parse_command_line_args(3, argv);
-    AppConfiguration::initialize(argv0, args);
 
-    TestApp app;
+    TestApp app(3, argv);
 
     std::thread server_thread([&app]() { app.start(); });
 

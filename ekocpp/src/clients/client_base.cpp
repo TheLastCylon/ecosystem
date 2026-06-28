@@ -37,7 +37,7 @@ void ClientBase::throw_response_exception(int status, const nlohmann::json& data
     switch (static_cast<Status>(status)) {
         case Status::PROTOCOL_PARSING_ERROR:    throw ProtocolParsingException(message);
         case Status::CLIENT_DENIED:             throw ClientDeniedException(message);
-        case Status::PYDANTIC_VALIDATION_ERROR: throw PydanticValidationException(message);
+        case Status::VALIDATION_ERROR: throw ValidationException(message);
         case Status::ROUTE_KEY_UNKNOWN:          throw RouteKeyUnknownException(message);
         case Status::APPLICATION_BUSY:          throw ServerBusyException(message);
         case Status::PROCESSING_FAILURE:        throw ProcessingException(message);

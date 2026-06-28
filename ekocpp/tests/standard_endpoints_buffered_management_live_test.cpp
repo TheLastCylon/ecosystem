@@ -16,9 +16,7 @@
 
 #include "../src/application_base.hpp"
 #include "../src/clients/transient_tcp_client.hpp"
-#include "../src/configuration/argument_parser.hpp"
 #include "../src/data_transfer_objects/binary_frame.hpp"
-#include "../src/logs/eco_logger.hpp"
 
 namespace {
 
@@ -47,7 +45,7 @@ class TestApp : public ApplicationBase {
 public:
     std::shared_ptr<BufferedSender> sender;
 
-    TestApp() {
+    TestApp(int argc, char** argv) : ApplicationBase(argc, argv) {
         register_buffered_endpoint("managed_handler", always_fails_handler, /*page_size=*/100, /*max_retries=*/0);
         sender = register_buffered_sender("managed_sender", std::make_shared<AlwaysFailClient>(), std::chrono::milliseconds{0}, 100, 0);
     }
@@ -67,11 +65,8 @@ int main() {
     char arg1[] = "-i";
     char arg2[] = "live_test";
     char* argv[] = {argv0, arg1, arg2};
-    const CommandLineArgs args = parse_command_line_args(3, argv);
-    AppConfiguration::initialize(argv0, args);
-    EcoLogger::instance().setup();
 
-    TestApp app;
+    TestApp app(3, argv);
     std::thread server_thread([&app]() { app.start(); });
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 

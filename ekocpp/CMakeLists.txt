@@ -16,7 +16,7 @@ find_package(SQLiteCpp      REQUIRED)
 # await_transform overload set is closed to externally-defined awaitable types.
 set(ASIO_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/asio/include)
 
-add_library(ekocpp_lib
+add_library(ekocpp
         src/data_transfer_objects/span_key.cpp
         src/data_transfer_objects/binary_frame.cpp
     src/servers/server_base.cpp
@@ -46,45 +46,49 @@ add_library(ekocpp_lib
     src/standard_endpoints/buffered_sender_manager.cpp
     src/application_base.cpp
 )
-target_include_directories(ekocpp_lib PUBLIC src ${ASIO_INCLUDE_DIRS})
-target_link_libraries(ekocpp_lib PUBLIC nlohmann_json::nlohmann_json Threads::Threads spdlog::spdlog SQLiteCpp)
-target_compile_definitions(ekocpp_lib PUBLIC ASIO_STANDALONE)
+target_include_directories(ekocpp PUBLIC src ${ASIO_INCLUDE_DIRS})
+target_link_libraries(ekocpp PUBLIC nlohmann_json::nlohmann_json Threads::Threads spdlog::spdlog SQLiteCpp)
+target_compile_definitions(ekocpp PUBLIC ASIO_STANDALONE)
 
 add_executable(ekocpp_server src/main.cpp)
-target_link_libraries(ekocpp_server PRIVATE ekocpp_lib)
+target_link_libraries(ekocpp_server PRIVATE ekocpp)
 
 add_executable(queue_smoke_test tests/queue_smoke_test.cpp)
-target_link_libraries(queue_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(queue_smoke_test PRIVATE ekocpp)
 
 add_executable(statistics_keeper_smoke_test tests/statistics_keeper_smoke_test.cpp)
-target_link_libraries(statistics_keeper_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(statistics_keeper_smoke_test PRIVATE ekocpp)
 
 add_executable(buffered_request_handler_smoke_test tests/buffered_request_handler_smoke_test.cpp)
-target_link_libraries(buffered_request_handler_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(buffered_request_handler_smoke_test PRIVATE ekocpp)
 
 add_executable(application_base_buffered_endpoint_live_test tests/application_base_buffered_endpoint_live_test.cpp)
-target_link_libraries(application_base_buffered_endpoint_live_test PRIVATE ekocpp_lib)
+target_link_libraries(application_base_buffered_endpoint_live_test PRIVATE ekocpp)
 
 add_executable(buffered_sender_smoke_test tests/buffered_sender_smoke_test.cpp)
-target_link_libraries(buffered_sender_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(buffered_sender_smoke_test PRIVATE ekocpp)
 
 add_executable(standard_endpoints_phase1to3_live_test tests/standard_endpoints_phase1to3_live_test.cpp)
-target_link_libraries(standard_endpoints_phase1to3_live_test PRIVATE ekocpp_lib)
+target_link_libraries(standard_endpoints_phase1to3_live_test PRIVATE ekocpp)
 
 add_executable(standard_endpoints_buffered_management_live_test tests/standard_endpoints_buffered_management_live_test.cpp)
-target_link_libraries(standard_endpoints_buffered_management_live_test PRIVATE ekocpp_lib)
+target_link_libraries(standard_endpoints_buffered_management_live_test PRIVATE ekocpp)
 
 add_executable(request_router_exception_smoke_test tests/request_router_exception_smoke_test.cpp)
-target_link_libraries(request_router_exception_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(request_router_exception_smoke_test PRIVATE ekocpp)
 
 add_executable(fire_and_forget_smoke_test tests/fire_and_forget_smoke_test.cpp)
-target_link_libraries(fire_and_forget_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(fire_and_forget_smoke_test PRIVATE ekocpp)
 
 add_executable(lru_cache_smoke_test tests/lru_cache_smoke_test.cpp)
-target_link_libraries(lru_cache_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(lru_cache_smoke_test PRIVATE ekocpp)
 
 add_executable(json_dto_smoke_test tests/json_dto_smoke_test.cpp)
-target_link_libraries(json_dto_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(json_dto_smoke_test PRIVATE ekocpp)
 
 add_executable(middleware_smoke_test tests/middleware_smoke_test.cpp)
-target_link_libraries(middleware_smoke_test PRIVATE ekocpp_lib)
+target_link_libraries(middleware_smoke_test PRIVATE ekocpp)
+
+add_subdirectory(otlp_traces)
+add_subdirectory(otlp_metrics)
+add_subdirectory(examples/observable_fun)

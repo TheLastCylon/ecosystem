@@ -12,16 +12,40 @@
 #include "../data_transfer_objects/json_dto.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../middleware/middleware_manager.hpp"
+#include "../state_keepers/statistics_keeper.hpp"
 #include "function_traits.hpp"
 #include "request_context.hpp"
 #include "status.hpp"
 
-// The injectable-type registry: add one specialization here per type a
-// handler is allowed to ask for. Nothing else in the mechanism changes.
-template <typename T> T resolve(RequestContext& request_context);
-
-template <> inline SpanKey     resolve<SpanKey>    (RequestContext& request_context) { return request_context.span_key; }
-template <> inline RequestDTO& resolve<RequestDTO&>(RequestContext& request_context) { return request_context.dto; }
+// The injectable-type registry: resolve<T>() maps a handler parameter type
+// to its value at dispatch time. Three cases:
+//   SpanKey    -- injected directly from the request context
+//   RequestDTO& -- raw inbound DTO, for handlers that do their own parsing
+//   JsonDTO T  -- framework deserialises from_json(), then calls validate();
+//                 nlohmann structural errors are caught and re-thrown as
+//                 ValidationException (status 300) rather than surfacing as
+//                 UNHANDLED (status 999). Unsupported types are a compile error.
+template <typename T>
+T resolve(RequestContext& request_context) {
+    if constexpr (std::is_same_v<T, SpanKey>) {
+        return request_context.span_key;
+    } else if constexpr (std::is_same_v<T, RequestDTO&>) {
+        return request_context.dto;
+    } else {
+        static_assert(JsonDTO<T>,
+            "Handler parameter must be SpanKey, RequestDTO&, or a type satisfying JsonDTO "
+            "(implement to_json(), static from_json(), and validate()).");
+        try {
+            T dto = T::from_json(request_context.dto.data);
+            dto.validate();
+            return dto;
+        } catch (const ValidationException&) {
+            throw;
+        } catch (const nlohmann::json::exception& e) {
+            throw ValidationException(std::string("DTO deserialisation failed: ") + e.what());
+        }
+    }
+}
 
 template <typename Handler, size_t... IndexSequence>
 auto invoke_with_context(Handler handler, RequestContext& request_context, std::index_sequence<IndexSequence...>) {
@@ -88,7 +112,19 @@ class RequestRouter {
 public:
     template <typename Handler>
     void register_endpoint(std::string route_key, Handler handler) {
+        StatisticsKeeper::instance().track_endpoint_data(route_key);
         route_table_[std::move(route_key)] = make_handler_wrapper(handler);
+    }
+
+    // Member function overload: binds instance + method into a callable and
+    // forwards to the single-handler overload. The generated lambda is a
+    // one-liner (not itself a coroutine), so coroutine member functions
+    // (returning asio::awaitable<T>) also work without triggering the GCC 13 ICE.
+    template <typename ClassType, typename ReturnType, typename... Args>
+    void register_endpoint(std::string route_key, ClassType* instance, ReturnType (ClassType::*method)(Args...)) {
+        register_endpoint(std::move(route_key), [instance, method](Args... args) -> ReturnType {
+            return (instance->*method)(std::forward<Args>(args)...);
+        });
     }
 
     // For registering a handler that already matches HandlerWrapper's shape
@@ -96,6 +132,7 @@ public:
     // make_handler_wrapper's function_traits-based call generation --
     // BufferedRequestHandler::push is the first such case.
     void register_raw_handler(std::string route_key, HandlerWrapper wrapper) {
+        StatisticsKeeper::instance().track_endpoint_data(route_key);
         route_table_[std::move(route_key)] = std::move(wrapper);
     }
 

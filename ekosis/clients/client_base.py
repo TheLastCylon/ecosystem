@@ -13,7 +13,7 @@ from ..requests.status import Status
 from ..exceptions import (
     ProtocolParsingException,
     ClientDeniedException,
-    PydanticValidationException,
+    ValidationException,
     RouteKeyUnknownException,
     ServerBusyException,
     ProcessingException,
@@ -47,8 +47,8 @@ class ClientBase(ABC):
         if request.status == Status.CLIENT_DENIED.value:
             return ClientDeniedException(str(request.data.json()))
 
-        if request.status == Status.PYDANTIC_VALIDATION_ERROR.value:
-            return PydanticValidationException(str(request.data))
+        if request.status == Status.VALIDATION_ERROR.value:
+            return ValidationException(str(request.data))
 
         if request.status == Status.ROUTE_KEY_UNKNOWN.value:
             return RouteKeyUnknownException(str(request.data))

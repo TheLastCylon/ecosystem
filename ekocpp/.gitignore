@@ -1,0 +1,6 @@
+# Built binaries
+ekocpp_server
+ekocpp_otlp_metrics
+*_smoke_test
+*_live_test
+observable_fun_*

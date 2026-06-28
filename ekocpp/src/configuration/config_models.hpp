@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 
 #include "argument_parser.hpp"
 
@@ -97,11 +98,18 @@ public:
     const ConfigLogging&            logging() const;
     const ConfigStatisticsKeeper&   stats_keeper() const;
 
+    // Mirrors ekosis/configuration/config_models.py's get_app_instance_extra() --
+    // scans environ at startup and strips the tier-appropriate prefix so that
+    // ECOENV_EXTRA_<APP>_<INSTANCE>_<KEY> becomes just <KEY> in the map.
+    // Three tiers (global/app/instance); instance wins over app wins over global.
+    std::string extra(const std::string& key, const std::string& default_value = "") const;
+
 private:
     AppConfiguration(const char* argv0, const CommandLineArgs& args);
 
     void load_from_env();
     void load_from_file(const std::string& path);
+    void load_extra_from_env();
 
     // The three-tier ECOENV_<postfix>[_<APP>[_<INSTANCE>]] precedence chain
     // -- instance-level wins, then app-level, then global, then default.
@@ -115,6 +123,7 @@ private:
     std::string                instance_;
     std::string                lock_directory_;
     std::optional<std::string> buffer_directory_;
+    std::unordered_map<std::string, std::string> extra_;
 
     std::optional<ConfigTCP> tcp_;
     std::optional<ConfigUDP> udp_;

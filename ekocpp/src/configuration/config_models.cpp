@@ -66,6 +66,11 @@ const std::optional<ConfigUDS>& AppConfiguration::uds() const { return uds_; }
 const ConfigLogging&            AppConfiguration::logging() const { return logging_; }
 const ConfigStatisticsKeeper&   AppConfiguration::stats_keeper() const { return stats_keeper_; }
 
+std::string AppConfiguration::extra(const std::string& key, const std::string& default_value) const {
+    const auto it = extra_.find(key);
+    return it != extra_.end() ? it->second : default_value;
+}
+
 std::optional<std::string> AppConfiguration::get_eco_env_optional(const std::string& postfix, bool instance_level_only) const {
     const std::string global_env_name    = "ECOENV_" + postfix;
     const std::string app_level_env_name = global_env_name + "_" + to_upper(application_name_);
@@ -119,6 +124,8 @@ void AppConfiguration::load_from_env() {
     logging_.file_logging.buffer_size       = std::stoi(get_eco_env("LOG_BUF_SIZE", "0"));
     logging_.file_logging.max_size_in_bytes = std::stoull(get_eco_env("LOG_MAX_SIZE", "10485760"));
     logging_.file_logging.max_files         = std::stoi(get_eco_env("LOG_MAX_FILES", "10"));
+
+    load_extra_from_env();
 
     // base_file_name/base_file_path are computed, not user-configurable --
     // mirrors Python's EcoLogger.setup(), which builds these from
@@ -179,4 +186,33 @@ void AppConfiguration::load_from_file(const std::string& path) {
         // same recompute load_from_env() already does after setting directory.
         logging_.file_logging.base_file_path = logging_.file_logging.directory + "/" + logging_.file_logging.base_file_name + ".log";
     }
+}
+
+void AppConfiguration::load_extra_from_env() {
+    // Mirrors ekosis/configuration/config_models.py's get_app_instance_extra().
+    // Three tiers, processed in ascending priority order so higher tiers win:
+    //   global:   ECOENV_EXTRA_<KEY>
+    //   app:      ECOENV_EXTRA_<APP>_<KEY>
+    //   instance: ECOENV_EXTRA_<APP>_<INSTANCE>_<KEY>
+    extern char** environ;
+
+    const std::string machine_prefix  = "ECOENV_EXTRA_";
+    const std::string app_prefix      = machine_prefix + to_upper(application_name_) + "_";
+    const std::string instance_prefix = app_prefix     + to_upper(instance_)         + "_";
+
+    auto scan = [&](const std::string& prefix, const std::string& exclude_prefix) {
+        for (char** env = environ; *env; ++env) {
+            const std::string_view kv(*env);
+            const auto             eq = kv.find('=');
+            if (eq == std::string_view::npos) continue;
+            const std::string k(kv.substr(0, eq));
+            if (!k.starts_with(prefix))         continue;
+            if (!exclude_prefix.empty() && k.starts_with(exclude_prefix)) continue;
+            extra_[k.substr(prefix.size())] = std::string(kv.substr(eq + 1));
+        }
+    };
+
+    scan(machine_prefix,  app_prefix);      // global tier
+    scan(app_prefix,      instance_prefix); // app tier overrides global
+    scan(instance_prefix, "");              // instance tier overrides app
 }

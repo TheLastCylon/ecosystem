@@ -22,4 +22,5 @@ struct ResponseDTO {
     static ResponseDTO from_json(const nlohmann::json& j) {
         return { SpanKey{}, j.at("status").get<int>(), j.at("data") };
     }
+    void validate() const {}
 };

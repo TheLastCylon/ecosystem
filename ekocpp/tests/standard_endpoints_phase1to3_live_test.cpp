@@ -16,8 +16,6 @@
 
 #include "../src/application_base.hpp"
 #include "../src/clients/transient_tcp_client.hpp"
-#include "../src/configuration/argument_parser.hpp"
-#include "../src/logs/eco_logger.hpp"
 #include "../src/state_keepers/error_state_list.hpp"
 
 namespace {
@@ -30,7 +28,10 @@ void check(bool condition, const char* what) {
     std::printf("ok: %s\n", what);
 }
 
-class TestApp : public ApplicationBase {};
+class TestApp : public ApplicationBase {
+public:
+    TestApp(int argc, char** argv) : ApplicationBase(argc, argv) {}
+};
 
 } // namespace
 
@@ -41,9 +42,6 @@ int main() {
     char arg1[] = "-i";
     char arg2[] = "live_test";
     char* argv[] = {argv0, arg1, arg2};
-    const CommandLineArgs args = parse_command_line_args(3, argv);
-    AppConfiguration::initialize(argv0, args);
-    EcoLogger::instance().setup(); // eco.log.level dereferences EcoLogger's logger_ -- must be set up first, same as a real main()
 
     // Seed an error state directly (mirrors what a real handler would do --
     // ErrorStateList::instance().increment(...) on some failure path).
@@ -51,7 +49,7 @@ int main() {
     ErrorStateList::instance().increment("DB_CONNECT", "Could not reach the database");
     ErrorStateList::instance().increment("DB_CONNECT", "Could not reach the database");
 
-    TestApp app;
+    TestApp app(3, argv);
     std::thread server_thread([&app]() { app.start(); });
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 

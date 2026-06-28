@@ -10,6 +10,8 @@
 #include <sys/file.h>
 #include <unistd.h>
 
+#include "configuration/argument_parser.hpp"
+#include "logs/eco_logger.hpp"
 #include "standard_endpoints/buffered_handler_manager.hpp"
 #include "standard_endpoints/buffered_sender_manager.hpp"
 #include "standard_endpoints/errors.hpp"
@@ -23,8 +25,21 @@ InstanceAlreadyRunningException::InstanceAlreadyRunningException(
         + std::to_string(process_id) + "]!"
     ) {}
 
-ApplicationBase::ApplicationBase()
-    : configuration_(AppConfiguration::instance()),
+namespace {
+// Parses argv, initialises AppConfiguration and EcoLogger, then returns the
+// config reference that ApplicationBase::configuration_ binds to. Called
+// from the initialiser list so everything is ready before the constructor
+// body -- and therefore before any derived class constructor body -- runs.
+AppConfiguration& initialise(int argc, char** argv) {
+    const CommandLineArgs args = parse_command_line_args(argc, argv);
+    AppConfiguration::initialize(argv[0], args);
+    EcoLogger::instance().setup();
+    return AppConfiguration::instance();
+}
+} // namespace
+
+ApplicationBase::ApplicationBase(int argc, char** argv)
+    : configuration_(initialise(argc, argv)),
       io_context_(1),
       signals_(io_context_, SIGTERM, SIGINT, SIGHUP) {
     lock_file_check();
@@ -39,13 +54,17 @@ ApplicationBase::ApplicationBase()
     register_buffered_sender_management_endpoints(router_, buffered_sender_registry_);
 
     if (configuration_.tcp()) {
+        spdlog::info("Starting TCP server: host={}, port={}", configuration_.tcp()->host, configuration_.tcp()->port);
         server_tcp_.emplace(io_context_, router_, configuration_.tcp()->host, configuration_.tcp()->port);
     }
     if (configuration_.udp()) {
+        spdlog::info("Starting UDP server: host={}, port={}", configuration_.udp()->host, configuration_.udp()->port);
         server_udp_.emplace(io_context_, router_, configuration_.udp()->host, configuration_.udp()->port);
     }
     if (configuration_.uds()) {
-        server_uds_.emplace(io_context_, router_, configuration_.uds()->directory + "/" + configuration_.uds()->socket_file_name);
+        std::string uds_path = configuration_.uds()->directory + "/" + configuration_.uds()->socket_file_name;
+        spdlog::info("Starting UDS server: path={}", uds_path);
+        server_uds_.emplace(io_context_, router_, uds_path);
     }
 }
 
@@ -128,9 +147,21 @@ void ApplicationBase::setup_signal_handlers() {
     });
 }
 
+asio::awaitable<void> ApplicationBase::run_statistics_gather() {
+    auto& keeper = StatisticsKeeper::instance();
+    keeper.start();
+    const std::chrono::seconds period{configuration_.stats_keeper().gather_period};
+    for (;;) {
+        asio::steady_timer timer(io_context_.get_executor(), period);
+        co_await timer.async_wait(asio::use_awaitable);
+        keeper.gather_now();
+    }
+}
+
 void ApplicationBase::start() {
     setup_signal_handlers();
 
+    asio::co_spawn(io_context_, run_statistics_gather(), asio::detached);
     if (server_tcp_) asio::co_spawn(io_context_, server_tcp_->serve(), asio::detached);
     if (server_udp_) asio::co_spawn(io_context_, server_udp_->serve(), asio::detached);
     if (server_uds_) asio::co_spawn(io_context_, server_uds_->serve(), asio::detached);
@@ -141,6 +172,7 @@ void ApplicationBase::start() {
 }
 
 void ApplicationBase::stop() {
+    StatisticsKeeper::instance().stop();
     if (server_tcp_) server_tcp_->stop();
     if (server_udp_) server_udp_->stop();
     if (server_uds_) server_uds_->stop();

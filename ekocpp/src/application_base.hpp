@@ -46,7 +46,7 @@ public:
 // instance() in its own constructor to decide which servers to build.
 class ApplicationBase {
 public:
-    ApplicationBase();
+    ApplicationBase(int argc, char** argv);
     virtual ~ApplicationBase();
 
     // Registers signal handlers, starts every configured server, calls the
@@ -64,6 +64,11 @@ protected:
         router_.register_endpoint(std::move(route_key), std::move(handler));
     }
 
+    template <typename ClassType, typename ReturnType, typename... Args>
+    void register_endpoint(std::string route_key, ClassType* instance, ReturnType (ClassType::*method)(Args...)) {
+        router_.register_endpoint(std::move(route_key), instance, method);
+    }
+
     // Mirrors ekosis/application_base.py's __setup_buffered_handlers (the
     // queue/directory setup half -- the actual setup() two-phase split
     // Python needs doesn't apply here, since this is called directly from
@@ -76,6 +81,13 @@ protected:
     // Handler contract: same SpanKey/RequestDTO& injectable parameters as
     // register_endpoint, but MUST return bool (success/retry) -- see
     // buffered_request_handler.hpp's class comment.
+    template <typename ClassType, typename ReturnType, typename... Args>
+    void register_buffered_endpoint(const std::string& route_key, ClassType* instance, ReturnType (ClassType::*method)(Args...), int page_size = 100, int max_retries = 0) {
+        register_buffered_endpoint(route_key, [instance, method](Args... args) -> ReturnType {
+            return (instance->*method)(std::forward<Args>(args)...);
+        }, page_size, max_retries);
+    }
+
     template <typename Handler>
     void register_buffered_endpoint(const std::string& route_key, Handler handler, int page_size = 100, int max_retries = 0) {
         if (!configuration_.buffer_directory()) {
@@ -145,6 +157,11 @@ protected:
 private:
     void lock_file_check();
     void setup_signal_handlers();
+
+    // Mirrors Python's __start_stats_keeper / StatisticsKeeper.gather_statistics():
+    // calls start() once, then loops: wait gather_period, call gather_now(), repeat.
+    // Spawned as detached coroutine in start() alongside the transport servers.
+    asio::awaitable<void> run_statistics_gather();
 
     // Drains every registered buffered handler's AND sender's queue
     // (co_await'd one at a time -- shutdown is a one-time event, not a hot

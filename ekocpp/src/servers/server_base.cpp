@@ -1,11 +1,14 @@
 #include "server_base.hpp"
 
+#include <chrono>
+
 #include <asio/awaitable.hpp>
 
 #include "../data_transfer_objects/request_dto.hpp"
 #include "../exceptions/exceptions.hpp"
 #include "../requests/request_context.hpp"
 #include "../requests/status.hpp"
+#include "../state_keepers/statistics_keeper.hpp"
 
 ServerBase::ServerBase(RequestRouter& router) : router_(router) {}
 
@@ -19,10 +22,14 @@ const std::string& ServerBase::get_transport_type() const {
 
 asio::awaitable<ResponseDTO> ServerBase::route_request(const SpanKey& span_key, const std::string& route_key, const nlohmann::json& data) {
     try {
-        RequestDTO     dto{data};
+        RequestDTO     dto{data, route_key};
         RequestContext request_context{span_key, dto};
 
+        const auto           start  = std::chrono::steady_clock::now();
         const nlohmann::json result = co_await router_.dispatch(route_key, request_context);
+        const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        StatisticsKeeper::instance().add_endpoint_stats(route_key, elapsed);
+
         co_return ResponseDTO{span_key, result.at("status").get<int>(), result.at("data")};
     } catch (const ResponseException& e) {
         co_return ResponseDTO{span_key, e.status(), e.what()};

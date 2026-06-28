@@ -5,17 +5,20 @@
 
 #include <nlohmann/json.hpp>
 
-// Body payload, MessagePack-encoded on the wire (Protocol v1). Schemaless,
-// same data model as the Python side's Pydantic DTOs -- no codegen step.
-// span_key and route_key live in RequestContext; this struct carries only the
-// data payload, consistent with the C++ split of framing metadata vs. payload.
+// Mirrors ekosis/data_transfer_objects/json_protocol.py's RequestDTO.
+// route_key comes from the binary frame header and is set by the server
+// after parsing -- it is NOT encoded in the MessagePack body (body carries
+// data only, consistent with the wire protocol's header/body split).
+// All internal response DTOs (standard_endpoints) leave route_key as ""
+// since to_json() only serialises data.
 struct RequestDTO {
     nlohmann::json data;
+    std::string    route_key;
 
     static RequestDTO from_msgpack(const uint8_t* data_ptr, size_t length) {
         RequestDTO dto;
         dto.data = nlohmann::json::from_msgpack(data_ptr, data_ptr + length);
-        return dto;
+        return dto; // route_key set separately from the frame header
     }
 
     std::vector<uint8_t> to_msgpack() const {
@@ -24,4 +27,5 @@ struct RequestDTO {
 
     nlohmann::json     to_json()                        const { return data; }
     static RequestDTO  from_json(const nlohmann::json& j)     { return {j}; }
+    void               validate()                       const {}
 };
