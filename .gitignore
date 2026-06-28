@@ -5,10 +5,23 @@ __pycache__/
 
 # C extensions
 *.so
+a.out
+*.cpp.o
+*.cpp.o.d
+
+# CMake build artifacts
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.a
+build.make
+*.check_cache
+*.cmake
 
 # Distribution / packaging
 .Python
 build/
+build_release/
 develop-eggs/
 dist/
 downloads/
