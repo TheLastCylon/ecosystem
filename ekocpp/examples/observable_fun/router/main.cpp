@@ -8,10 +8,14 @@
 #include <asio/awaitable.hpp>
 
 #include "application_base.hpp"
-#include "clients/udp_client.hpp"
+// #include "clients/udp_client.hpp"
+// #include "clients/transient_tcp_client.hpp"
+// #include "clients/persisted_tcp_client.hpp"
+// #include "clients/transient_uds_client.hpp"
+#include "clients/persisted_uds_client.hpp"
 #include "data_transfer_objects/span_key.hpp"
 #include "initiate_otlp_tracing.hpp"
-#include "logs/eco_logger.hpp"
+// #include "logs/eco_logger.hpp"
 #include "sending/buffered_sender.hpp"
 
 #include "fortunes_dto.hpp"
@@ -20,7 +24,7 @@
 #include "magic_eight_ball_dto.hpp"
 #include "router_dto.hpp"
 #include "time_reporter_dto.hpp"
-#include "tracker_dto.hpp"
+// #include "tracker_dto.hpp"
 
 namespace {
 
@@ -49,12 +53,19 @@ public:
     RouterServer(int argc, char** argv) : ApplicationBase(argc, argv) {
         auto exec = io_context().get_executor();
 
-        fortunes_client_      = std::make_shared<UDPClient>(exec, "127.0.0.1", 8100);
-        joker_client_         = std::make_shared<UDPClient>(exec, "127.0.0.1", 8200);
-        lottery_client_       = std::make_shared<UDPClient>(exec, "127.0.0.1", 8300);
-        magic8ball_client_    = std::make_shared<UDPClient>(exec, "127.0.0.1", 8400);
-        time_reporter_client_ = std::make_shared<UDPClient>(exec, "127.0.0.1", 8500);
-        tracker_client_       = std::make_shared<UDPClient>(exec, "127.0.0.1", 8700);
+        // fortunes_client_      = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8100);
+        // joker_client_         = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8200);
+        // lottery_client_       = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8300);
+        // magic8ball_client_    = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8400);
+        // time_reporter_client_ = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8500);
+        // tracker_client_       = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8700);
+
+        fortunes_client_      = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/fortunes_0.uds.sock");
+        joker_client_         = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/joker_0.uds.sock");
+        lottery_client_       = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/lottery_0.uds.sock");
+        magic8ball_client_    = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/magic_eight_ball_0.uds.sock");
+        time_reporter_client_ = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/time_reporter_0.uds.sock");
+        tracker_client_       = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/tracker_0.uds.sock");
 
         log_request_sender_  = register_buffered_sender("app.log_request",  tracker_client_, std::chrono::milliseconds{0}, 1000, 10);
         log_response_sender_ = register_buffered_sender("app.log_response", tracker_client_, std::chrono::milliseconds{0}, 1000, 10);
@@ -103,12 +114,12 @@ private:
         co_return RouterResponseDto{response};
     }
 
-    std::shared_ptr<UDPClient>      fortunes_client_;
-    std::shared_ptr<UDPClient>      joker_client_;
-    std::shared_ptr<UDPClient>      lottery_client_;
-    std::shared_ptr<UDPClient>      magic8ball_client_;
-    std::shared_ptr<UDPClient>      time_reporter_client_;
-    std::shared_ptr<UDPClient>      tracker_client_;
+    std::shared_ptr<PersistedUDSClient>      fortunes_client_;
+    std::shared_ptr<PersistedUDSClient>      joker_client_;
+    std::shared_ptr<PersistedUDSClient>      lottery_client_;
+    std::shared_ptr<PersistedUDSClient>      magic8ball_client_;
+    std::shared_ptr<PersistedUDSClient>      time_reporter_client_;
+    std::shared_ptr<PersistedUDSClient>      tracker_client_;
     std::shared_ptr<BufferedSender> log_request_sender_;
     std::shared_ptr<BufferedSender> log_response_sender_;
 };

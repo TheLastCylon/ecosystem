@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <unordered_set>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 extern char** environ;
 
@@ -71,7 +72,17 @@ std::vector<DiscoveredService> discover_local_services() {
             auto [name, instance] = parse_name_instance(raw_name);
 
             if (proto == "UDS_") {
-                services.push_back({name, instance, "uds", std::nullopt, std::nullopt, value});
+                std::string from    = "DEFAULT";
+                std::string uds_dir = value;
+                size_t      pos     = uds_dir.find(from);
+                std::string to      = name + "_" + instance + ".uds.sock";
+                if (pos != std::string::npos) {
+                    uds_dir.replace(pos, from.size(), to);
+                }
+
+                spdlog::info("Found UDS service: {}", uds_dir);
+
+                services.push_back({name, instance, "uds", std::nullopt, std::nullopt, uds_dir});
                 break;
             }
 
@@ -86,6 +97,7 @@ std::vector<DiscoveredService> discover_local_services() {
             try { port = std::stoi(port_str); } catch (...) { break; }
 
             const std::string protocol = proto == "TCP_" ? "tcp" : "udp";
+            spdlog::info("Found [{}] service: [{}:{}]", protocol, host, port);
             services.push_back({name, instance, protocol, host, port, std::nullopt});
             break;
         }

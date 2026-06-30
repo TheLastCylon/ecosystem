@@ -18,7 +18,10 @@ PersistentStreamClientBase<SocketType>::PersistentStreamClientBase(
     timeout_(timeout),
     heartbeat_period_(heartbeat_period),
     heartbeat_timer_(executor_),
-    heartbeat_done_(executor_, 1) {}
+    heartbeat_done_(executor_, 1),
+    send_permit_(executor_, 1) {
+    send_permit_.try_send(std::error_code{}); // one permit available immediately
+}
 
 template <typename SocketType>
 void PersistentStreamClientBase<SocketType>::start() {
@@ -45,10 +48,16 @@ asio::awaitable<void> PersistentStreamClientBase<SocketType>::ensure_connected()
 // never reaching its router.
 template <typename SocketType>
 asio::awaitable<void> PersistentStreamClientBase<SocketType>::do_heartbeat() {
+    co_await send_permit_.async_receive(asio::use_awaitable);
+    struct PermitGuard {
+        asio::experimental::concurrent_channel<void(std::error_code)>& permit;
+        ~PermitGuard() { permit.try_send(std::error_code{}); }
+    } guard{send_permit_};
+
     try {
         co_await ensure_connected();
     } catch (const std::system_error&) {
-        co_return; // connection refused -- same as Python's bare `return` on ConnectionRefusedError
+        co_return; // connection refused -- guard releases permit
     }
 
     try {
@@ -79,6 +88,12 @@ asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::se
     // co_await is not permitted inside a catch block -- the executor is
     // fetched once up front; see the matching comment in stream_client_base.cpp.
     auto executor = co_await asio::this_coro::executor;
+
+    co_await send_permit_.async_receive(asio::use_awaitable);
+    struct PermitGuard {
+        asio::experimental::concurrent_channel<void(std::error_code)>& permit;
+        ~PermitGuard() { permit.try_send(std::error_code{}); }
+    } guard{send_permit_};
 
     int retry_count = 0;
 

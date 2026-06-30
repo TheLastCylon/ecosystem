@@ -13,7 +13,11 @@
 #include <spdlog/spdlog.h>
 
 #include "application_base.hpp"
-#include "clients/udp_client.hpp"
+// #include "clients/udp_client.hpp"
+// #include "clients/transient_tcp_client.hpp"
+// #include "clients/persisted_tcp_client.hpp"
+// #include "clients/transient_uds_client.hpp"
+#include "clients/persisted_uds_client.hpp"
 #include "data_transfer_objects/span_key.hpp"
 
 #include "router_dto.hpp"
@@ -46,7 +50,8 @@ protected:
         spdlog::info("Starting {} worker(s)", worker_count_);
         auto exec = io_context().get_executor();
         for (int i = 0; i < worker_count_; ++i) {
-            auto client = std::make_shared<UDPClient>(exec, "127.0.0.1", 8600);
+            // auto client = std::make_shared<TransientUDSClient>(exec, "127.0.0.1", 8600);
+            auto client = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/router_0.uds.sock");
             clients_.push_back(client);
             asio::co_spawn(io_context(), worker(client), asio::detached);
         }
@@ -54,7 +59,7 @@ protected:
     }
 
 private:
-    asio::awaitable<void> worker(std::shared_ptr<UDPClient> client) {
+    asio::awaitable<void> worker(std::shared_ptr<PersistedUDSClient> client) {
         while (true) {
             try {
                 auto span_key = SpanKey::generate();
@@ -81,9 +86,9 @@ private:
         }
     }
 
-    int                                     worker_count_  = 1;
+    int                                     worker_count_  = 8;
     std::atomic<uint64_t>                   request_count_ = 0;
-    std::vector<std::shared_ptr<UDPClient>> clients_;
+    std::vector<std::shared_ptr<PersistedUDSClient>> clients_;
 };
 
 int main(int argc, char** argv) {

@@ -76,4 +76,9 @@ private:
     std::optional<SocketType> socket_;
     asio::steady_timer        heartbeat_timer_;
     asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
+
+    // Single-slot semaphore -- serialises concurrent send_message() calls and
+    // heartbeat pings onto the one shared socket. Acquire = async_receive,
+    // release = try_send. Mirrors UDPClient::send_permit_.
+    asio::experimental::concurrent_channel<void(std::error_code)> send_permit_;
 };
