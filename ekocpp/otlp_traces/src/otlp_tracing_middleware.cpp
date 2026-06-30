@@ -28,38 +28,50 @@ OtlpTracingMiddleware::OtlpTracingMiddleware(
 {}
 
 asio::awaitable<RequestDTO> OtlpTracingMiddleware::before_routing(SpanKey span_key, RequestDTO dto) {
-    active_spans_[span_key] = ActiveSpan{
-        now_unix_nano(),
-        SpanKey::generate().span_id,
-        dto.route_key,
-    };
+    {
+        std::scoped_lock lock(spans_mutex_);
+        active_spans_[span_key] = ActiveSpan{
+            now_unix_nano(),
+            SpanKey::generate().span_id,
+            dto.route_key,
+        };
+    }
     co_return dto;
 }
 
 asio::awaitable<nlohmann::json> OtlpTracingMiddleware::after_routing(SpanKey span_key, nlohmann::json response) {
-    const auto it = active_spans_.find(span_key);
-    if (it != active_spans_.end()) {
-        const ActiveSpan& active = it->second;
-        OtlpSpanRecord    record;
-        record.trace_id        = span_key.trace_id_hex();
-        record.span_id         = span_id_to_hex(active.span_id);
-        record.parent_span_id  = span_key.span_id_hex();
-        record.name            = active.route_key;
-        record.start_unix_nano = active.start_unix_nano;
-        record.end_unix_nano   = now_unix_nano();
-        record.success         = true;
-        record.attributes      = {
-            {"request.route_key", active.route_key},
-            {"request.trace_id",  span_key.trace_id_hex()},
-            {"request.span_id",   span_key.span_id_hex()},
-        };
-        exporter_.add_span(std::move(record));
-        active_spans_.erase(it);
+    std::optional<OtlpSpanRecord> record_to_emit;
+    {
+        std::scoped_lock lock(spans_mutex_);
+        const auto it = active_spans_.find(span_key);
+        if (it != active_spans_.end()) {
+            const ActiveSpan& active = it->second;
+            OtlpSpanRecord    record;
+            record.trace_id        = span_key.trace_id_hex();
+            record.span_id         = span_id_to_hex(active.span_id);
+            record.parent_span_id  = span_key.span_id_hex();
+            record.name            = active.route_key;
+            record.start_unix_nano = active.start_unix_nano;
+            record.end_unix_nano   = now_unix_nano();
+            record.success         = true;
+            record.attributes      = {
+                {"request.route_key", active.route_key},
+                {"request.trace_id",  span_key.trace_id_hex()},
+                {"request.span_id",   span_key.span_id_hex()},
+            };
+            record_to_emit = std::move(record);
+            active_spans_.erase(it);
+        }
+    }
+    // add_span acquires its own mutex -- called outside spans_mutex_ to avoid lock ordering dependency
+    if (record_to_emit) {
+        exporter_.add_span(std::move(*record_to_emit));
     }
     co_return response;
 }
 
 std::optional<OtlpTracingMiddleware::ActiveSpan> OtlpTracingMiddleware::get_active_span(const SpanKey& span_key) const {
+    std::scoped_lock lock(spans_mutex_);
     const auto it = active_spans_.find(span_key);
     if (it == active_spans_.end()) {
         return std::nullopt;

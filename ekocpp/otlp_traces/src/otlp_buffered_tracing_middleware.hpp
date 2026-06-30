@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -44,5 +45,6 @@ private:
     };
 
     std::shared_ptr<OtlpTracingMiddleware>   tracing_;
+    mutable std::mutex                       process_spans_mutex_;
     std::unordered_map<SpanKey, ProcessSpan> process_spans_;
 };

@@ -34,20 +34,33 @@ StatisticsKeeper& StatisticsKeeper::instance() {
 }
 
 // --------------------------------------------------------------------------------
-void StatisticsKeeper::increment(const std::string& key, double value) {
-    const auto pointer  = to_pointer(key);
+void StatisticsKeeper::do_increment(const std::string& key, double value) {
+    const auto   pointer = to_pointer(key);
     const double current = statistics_current_.contains(pointer) ? statistics_current_.at(pointer).get<double>() : 0.0;
     statistics_current_[pointer] = current + value;
 }
 
 // --------------------------------------------------------------------------------
+void StatisticsKeeper::do_set_statistic_value(const std::string& key, double value) {
+    statistics_current_[to_pointer(key)] = value;
+}
+
+// --------------------------------------------------------------------------------
+void StatisticsKeeper::increment(const std::string& key, double value) {
+    std::scoped_lock lock(stats_mutex_);
+    do_increment(key, value);
+}
+
+// --------------------------------------------------------------------------------
 void StatisticsKeeper::decrement(const std::string& key, double value) {
-    increment(key, -value);
+    std::scoped_lock lock(stats_mutex_);
+    do_increment(key, -value);
 }
 
 // --------------------------------------------------------------------------------
 void StatisticsKeeper::set_statistic_value(const std::string& key, double value) {
-    statistics_current_[to_pointer(key)] = value;
+    std::scoped_lock lock(stats_mutex_);
+    do_set_statistic_value(key, value);
 }
 
 // --------------------------------------------------------------------------------
@@ -57,13 +70,15 @@ void StatisticsKeeper::add_persisted_queue(const std::string& key, std::function
 
 // --------------------------------------------------------------------------------
 void StatisticsKeeper::track_endpoint_data(const std::string& key) {
-    increment("endpoint_data." + key + ".call_count", 0.0);
+    std::scoped_lock lock(stats_mutex_);
+    do_increment("endpoint_data." + key + ".call_count", 0.0);
     endpoint_durations_[key] = {};
 }
 
 // --------------------------------------------------------------------------------
 void StatisticsKeeper::add_endpoint_stats(const std::string& key, double duration_seconds) {
-    increment("endpoint_data." + key + ".call_count");
+    std::scoped_lock lock(stats_mutex_);
+    do_increment("endpoint_data." + key + ".call_count", 1.0);
     endpoint_durations_[key].push_back(duration_seconds);
 }
 
@@ -84,6 +99,7 @@ StatisticsKeeper::EndpointPercentiles StatisticsKeeper::percentiles_for(std::vec
 }
 
 // --------------------------------------------------------------------------------
+// Caller must hold stats_mutex_.
 void StatisticsKeeper::update_current_statistics() {
     const double current_time = now_seconds();
 
@@ -95,29 +111,31 @@ void StatisticsKeeper::update_current_statistics() {
 
     for (const auto& [key, durations] : endpoint_durations_) {
         const EndpointPercentiles percentiles = percentiles_for(durations);
-        set_statistic_value("endpoint_data." + key + ".p95", percentiles.p95);
-        set_statistic_value("endpoint_data." + key + ".p99", percentiles.p99);
+        do_set_statistic_value("endpoint_data." + key + ".p95", percentiles.p95);
+        do_set_statistic_value("endpoint_data." + key + ".p99", percentiles.p99);
     }
 
     for (const auto& [key, size_getter] : persisted_queues_) {
-        set_statistic_value(key, static_cast<double>(size_getter()));
+        do_set_statistic_value(key, static_cast<double>(size_getter()));
     }
 }
 
 // --------------------------------------------------------------------------------
 nlohmann::json StatisticsKeeper::get_current_statistics() {
+    std::scoped_lock lock(stats_mutex_);
     update_current_statistics();
     return statistics_current_;
 }
 
 // --------------------------------------------------------------------------------
-const nlohmann::json& StatisticsKeeper::get_last_gathered_statistics() const {
-    static const nlohmann::json empty = nlohmann::json::object();
-    return statistics_history_.empty() ? empty : statistics_history_.front();
+nlohmann::json StatisticsKeeper::get_last_gathered_statistics() const {
+    std::scoped_lock lock(stats_mutex_);
+    return statistics_history_.empty() ? nlohmann::json::object() : statistics_history_.front();
 }
 
 // --------------------------------------------------------------------------------
-const std::vector<nlohmann::json>& StatisticsKeeper::get_full_gathered_statistics() const {
+std::vector<nlohmann::json> StatisticsKeeper::get_full_gathered_statistics() const {
+    std::scoped_lock lock(stats_mutex_);
     return statistics_history_;
 }
 
@@ -140,6 +158,7 @@ void StatisticsKeeper::reset_stats(nlohmann::json& node) {
 // --------------------------------------------------------------------------------
 void StatisticsKeeper::gather_now() {
     spdlog::info("Gathering statistics");
+    std::scoped_lock lock(stats_mutex_);
     update_current_statistics();
 
     statistics_history_.insert(statistics_history_.begin(), statistics_current_);

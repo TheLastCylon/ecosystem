@@ -63,10 +63,11 @@ protected:
     // DatagramClientBase) -- never directly by a leaf class.
     virtual asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) = 0;
 
+    // retry_count and success are local to each send_message_retry_loop()
+    // call -- storing them as members is a data race when the thread pool
+    // runs concurrent send_message() calls on the same client.
     int                       max_retries_;
     std::chrono::milliseconds retry_delay_;
-    int                       retry_count_ = 0;
-    bool                      success_     = false;
 
 private:
     [[noreturn]] static void throw_response_exception(int status, const nlohmann::json& data);

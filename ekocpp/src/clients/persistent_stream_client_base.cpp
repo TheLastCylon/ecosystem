@@ -80,7 +80,9 @@ asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::se
     // fetched once up front; see the matching comment in stream_client_base.cpp.
     auto executor = co_await asio::this_coro::executor;
 
-    while (retry_count_ < max_retries_ && !success_) {
+    int retry_count = 0;
+
+    while (retry_count < max_retries_) {
         bool should_retry = false;
         try {
             co_await ensure_connected();
@@ -100,7 +102,6 @@ asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::se
             response_frame.insert(response_frame.end(), header.begin(), header.end());
             response_frame.insert(response_frame.end(), rest.begin(), rest.end());
 
-            success_ = true;
             co_return response_frame;
         } catch (const std::system_error&) {
             // Mirrors Python's reconnect-then-retry branch for
@@ -112,8 +113,8 @@ asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::se
         }
 
         if (should_retry) {
-            ++retry_count_;
-            if (retry_count_ >= max_retries_) {
+            ++retry_count;
+            if (retry_count >= max_retries_) {
                 throw CommunicationsMaxRetriesReached("Maximum retries exceeded in sending request.");
             }
             asio::steady_timer retry_timer(executor, retry_delay_);

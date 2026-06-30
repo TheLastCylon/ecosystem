@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -50,9 +51,9 @@ public:
 
     // Recomputes timestamp/uptime/application/percentiles/persisted-queue
     // sizes into the current snapshot, then returns it.
-    nlohmann::json get_current_statistics();
-    const nlohmann::json& get_last_gathered_statistics() const;
-    const std::vector<nlohmann::json>& get_full_gathered_statistics() const;
+    nlohmann::json              get_current_statistics();
+    nlohmann::json              get_last_gathered_statistics() const;
+    std::vector<nlohmann::json> get_full_gathered_statistics() const;
 
     // The synchronous half of Python's gather_statistics() periodic loop --
     // snapshot current statistics into history (trimmed to history_length_),
@@ -74,8 +75,18 @@ private:
     };
 
     static EndpointPercentiles percentiles_for(std::vector<double> durations);
+
+    // Private unlocked versions called from within already-locked methods
+    // (increment/set_statistic_value lock; update_current_statistics and
+    // gather_now call these directly to avoid recursive-lock deadlock).
+    void do_increment(const std::string& key, double value);
+    void do_set_statistic_value(const std::string& key, double value);
+
+    // Assumes stats_mutex_ is held by the caller.
     void update_current_statistics();
     static void reset_stats(nlohmann::json& node);
+
+    mutable std::mutex stats_mutex_;
 
     bool   running_        = false;
     int    gather_period_  = 300;

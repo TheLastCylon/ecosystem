@@ -65,7 +65,7 @@ public:
 
 private:
     asio::awaitable<RouterResponseDto> process_message(SpanKey span_key, RouterRequestDto dto) {
-        log_request_sender_->enqueue(TrackerLogRequestDto{dto.request, unix_now()}, span_key);
+        // log_request_sender_->enqueue(TrackerLogRequestDto{dto.request, unix_now()}, span_key);
 
         const std::string lower   = to_lower(dto.request);
         const std::string keyword = lower.substr(0, lower.find(' '));
@@ -99,7 +99,7 @@ private:
             response = r.prediction;
         }
 
-        log_response_sender_->enqueue(TrackerLogRequestDto{response, unix_now()}, span_key);
+        // log_response_sender_->enqueue(TrackerLogRequestDto{response, unix_now()}, span_key);
         co_return RouterResponseDto{response};
     }
 

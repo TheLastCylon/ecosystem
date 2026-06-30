@@ -50,6 +50,7 @@ asio::awaitable<void> OtlpBufferedTracingMiddleware::before_process(
     const nlohmann::json& /*metadata*/,
     int                   /*retries*/)
 {
+    std::scoped_lock lock(process_spans_mutex_);
     process_spans_[span_key] = ProcessSpan{now_unix_nano()};
     co_return;
 }
@@ -60,26 +61,33 @@ asio::awaitable<void> OtlpBufferedTracingMiddleware::after_process(
     const nlohmann::json& metadata,
     bool                  success)
 {
-    const auto it = process_spans_.find(span_key);
-    if (it == process_spans_.end()) {
-        co_return;
-    }
-    const std::string receive_span_id = metadata.value(RECEIVE_SPAN_ID_KEY, "");
-    const std::string route_key       = metadata.value(ROUTE_KEY_KEY, "buffered");
+    std::optional<OtlpSpanRecord> record_to_emit;
+    {
+        std::scoped_lock lock(process_spans_mutex_);
+        const auto it = process_spans_.find(span_key);
+        if (it == process_spans_.end()) {
+            co_return;
+        }
+        const std::string receive_span_id = metadata.value(RECEIVE_SPAN_ID_KEY, "");
+        const std::string route_key       = metadata.value(ROUTE_KEY_KEY, "buffered");
 
-    OtlpSpanRecord record;
-    record.trace_id        = span_key.trace_id_hex();
-    record.span_id         = span_id_to_hex(SpanKey::generate().span_id);
-    record.parent_span_id  = receive_span_id;
-    record.name            = route_key + ".process";
-    record.start_unix_nano = it->second.start_unix_nano;
-    record.end_unix_nano   = now_unix_nano();
-    record.success         = success;
-    record.attributes      = {
-        {"request.trace_id", span_key.trace_id_hex()},
-        {"request.span_id",  span_key.span_id_hex()},
-    };
-    tracing_->emit_span(std::move(record));
-    process_spans_.erase(it);
+        OtlpSpanRecord record;
+        record.trace_id        = span_key.trace_id_hex();
+        record.span_id         = span_id_to_hex(SpanKey::generate().span_id);
+        record.parent_span_id  = receive_span_id;
+        record.name            = route_key + ".process";
+        record.start_unix_nano = it->second.start_unix_nano;
+        record.end_unix_nano   = now_unix_nano();
+        record.success         = success;
+        record.attributes      = {
+            {"request.trace_id", span_key.trace_id_hex()},
+            {"request.span_id",  span_key.span_id_hex()},
+        };
+        record_to_emit = std::move(record);
+        process_spans_.erase(it);
+    }
+    if (record_to_emit) {
+        tracing_->emit_span(std::move(*record_to_emit));
+    }
     co_return;
 }

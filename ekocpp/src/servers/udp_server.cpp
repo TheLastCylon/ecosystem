@@ -6,7 +6,13 @@ namespace {
 
 constexpr size_t MAX_DATAGRAM_SIZE = 65536;
 
-asio::awaitable<void> handle_datagram(std::vector<uint8_t> bytes_read, asio::ip::udp::endpoint sender, asio::ip::udp::socket& socket, ServerBase& server) {
+asio::awaitable<void> handle_datagram(
+    std::vector<uint8_t>                                   bytes_read,
+    asio::ip::udp::endpoint                                sender,
+    asio::ip::udp::socket&                                 socket,
+    asio::experimental::concurrent_channel<void(std::error_code)>&   send_permit,
+    ServerBase&                                            server
+) {
     if (bytes_read.size() < HEADER_LENGTH) {
         co_return; // Too short to even hold a header -- not a valid frame, drop it.
     }
@@ -16,7 +22,9 @@ asio::awaitable<void> handle_datagram(std::vector<uint8_t> bytes_read, asio::ip:
 
     if (parsed.flags & PING_FLAG) {
         const auto pong = pack_ping_frame(parsed.span_key);
+        co_await send_permit.async_receive(asio::use_awaitable);
         co_await socket.async_send_to(asio::buffer(pong), sender, asio::use_awaitable);
+        send_permit.try_send(std::error_code{});
         co_return;
     }
 
@@ -31,7 +39,9 @@ asio::awaitable<void> handle_datagram(std::vector<uint8_t> bytes_read, asio::ip:
     std::vector<uint8_t> rest(bytes_read.begin() + HEADER_LENGTH, bytes_read.begin() + HEADER_LENGTH + parsed.total_len);
 
     const auto response_frame = co_await server.process_request(parsed, rest);
+    co_await send_permit.async_receive(asio::use_awaitable);
     co_await socket.async_send_to(asio::buffer(response_frame), sender, asio::use_awaitable);
+    send_permit.try_send(std::error_code{});
 }
 
 } // namespace
@@ -41,7 +51,9 @@ UDPServer::UDPServer(asio::io_context& io_context, RequestRouter& router, std::s
       io_context_(io_context),
       host_(std::move(host)),
       port_(port),
-      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::make_address(host_), port_)) {
+      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::make_address(host_), port_)),
+      send_permit_(io_context_.get_executor(), 1) {
+    send_permit_.try_send(std::error_code{}); // one permit available immediately
     set_transport_type("UDP");
 }
 
@@ -57,7 +69,7 @@ asio::awaitable<void> UDPServer::receive_loop() {
         const size_t length = co_await socket_.async_receive_from(asio::buffer(buffer), sender, asio::use_awaitable);
         buffer.resize(length);
 
-        asio::co_spawn(io_context_, handle_datagram(std::move(buffer), sender, socket_, *this), asio::detached);
+        asio::co_spawn(io_context_, handle_datagram(std::move(buffer), sender, socket_, send_permit_, *this), asio::detached);
     }
 }
 

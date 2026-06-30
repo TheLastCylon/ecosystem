@@ -10,7 +10,7 @@
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
-#include <asio/experimental/channel.hpp>
+#include <asio/experimental/concurrent_channel.hpp>
 #include <asio/this_coro.hpp>
 #include <nlohmann/json.hpp>
 
@@ -172,7 +172,7 @@ private:
     std::atomic<bool> processing_paused_{true};
     std::atomic<bool> running_{false};
     std::atomic<bool> shutdown_requested_{false};
-    asio::experimental::channel<void(std::error_code)> shutdown_done_;
+    asio::experimental::concurrent_channel<void(std::error_code)> shutdown_done_;
 };
 
 // Free function, not a member -- see the friend declaration's comment above
@@ -232,5 +232,14 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
     if (self->shutdown_requested_.load()) {
         self->queue_.shut_down();
         self->shutdown_done_.try_send(std::error_code{});
+        co_return;
+    }
+    // Re-arm only if items arrived while we were setting running_ to false.
+    // A push() that raced our empty check would have seen running_=true and
+    // skipped spawning -- those items need a new loop. If the queue is still
+    // empty, check_process_queue()'s atomic exchange prevents double-spawning
+    // even in the window between has_pending() and check_process_queue().
+    if (!self->processing_paused_.load() && self->queue_.has_pending()) {
+        self->check_process_queue();
     }
 }

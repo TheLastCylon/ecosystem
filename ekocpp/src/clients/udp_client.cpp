@@ -57,17 +57,17 @@ asio::awaitable<std::vector<uint8_t>> UDPClient::send_message_retry_loop(std::ve
     // asyncio.Lock plays in DatagramProtocolClient.
     co_await send_permit_.async_receive(asio::use_awaitable);
     struct PermitGuard {
-        asio::experimental::channel<void(std::error_code)>& permit;
+        asio::experimental::concurrent_channel<void(std::error_code)>& permit;
         ~PermitGuard() { permit.try_send(std::error_code{}); }
     } guard{send_permit_};
 
-    auto executor = co_await asio::this_coro::executor;
+    auto executor  = co_await asio::this_coro::executor;
+    int retry_count = 0;
 
-    while (retry_count_ < max_retries_) {
+    while (retry_count < max_retries_) {
         bool should_retry = false;
         try {
             auto response = co_await send_once(request);
-            success_ = true;
             co_return response;
         } catch (const std::system_error&) {
             should_retry = true;
@@ -76,8 +76,8 @@ asio::awaitable<std::vector<uint8_t>> UDPClient::send_message_retry_loop(std::ve
         }
 
         if (should_retry) {
-            ++retry_count_;
-            if (retry_count_ >= max_retries_) {
+            ++retry_count;
+            if (retry_count >= max_retries_) {
                 throw CommunicationsMaxRetriesReached("Maximum retries exceeded in sending request.");
             }
             asio::steady_timer retry_timer(executor, retry_delay_);

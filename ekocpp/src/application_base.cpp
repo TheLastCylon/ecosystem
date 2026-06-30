@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <sys/file.h>
+#include <thread>
 #include <unistd.h>
 
 #include "configuration/argument_parser.hpp"
@@ -40,7 +41,7 @@ AppConfiguration& initialise(int argc, char** argv) {
 
 ApplicationBase::ApplicationBase(int argc, char** argv)
     : configuration_(initialise(argc, argv)),
-      io_context_(1),
+      io_context_(),
       signals_(io_context_, SIGTERM, SIGINT, SIGHUP) {
     lock_file_check();
 
@@ -168,7 +169,17 @@ void ApplicationBase::start() {
 
     setup_tasks();
 
+    // Spawn N-1 additional threads onto the same io_context; main thread is
+    // the Nth. When io_context_.stop() fires (inside shut_down_buffered_
+    // subsystems()), every run() call returns and the joins complete.
+    const auto n = std::max(1u, std::thread::hardware_concurrency());
+    std::vector<std::thread> pool;
+    pool.reserve(n - 1);
+    for (auto i = 1u; i < n; ++i) {
+        pool.emplace_back([this] { io_context_.run(); });
+    }
     io_context_.run();
+    for (auto& t : pool) { t.join(); }
 }
 
 void ApplicationBase::stop() {

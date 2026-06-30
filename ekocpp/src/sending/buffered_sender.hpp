@@ -11,7 +11,7 @@
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
-#include <asio/experimental/channel.hpp>
+#include <asio/experimental/concurrent_channel.hpp>
 #include <asio/steady_timer.hpp>
 #include <asio/use_awaitable.hpp>
 #include <nlohmann/json.hpp>
@@ -161,7 +161,7 @@ private:
     std::atomic<bool> sending_paused_{true};
     std::atomic<bool> running_{false};
     std::atomic<bool> shutdown_requested_{false};
-    asio::experimental::channel<void(std::error_code)> shutdown_done_;
+    asio::experimental::concurrent_channel<void(std::error_code)> shutdown_done_;
 };
 
 // Free function -- see the forward declaration's comment for why. `self` is
@@ -204,5 +204,12 @@ inline asio::awaitable<void> run_send_processing_loop(std::weak_ptr<BufferedSend
     if (self->shutdown_requested_.load()) {
         self->queue_.shut_down();
         self->shutdown_done_.try_send(std::error_code{});
+        co_return;
+    }
+    // Re-arm only if items arrived while we were setting running_ to false.
+    // Same reasoning as buffered_request_handler.hpp: unconditional re-arm
+    // creates an infinite spawn loop when the queue is empty.
+    if (!self->sending_paused_.load() && self->queue_.get_pending_size() > 0) {
+        self->check_process_send_queue();
     }
 }

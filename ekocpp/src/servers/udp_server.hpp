@@ -1,6 +1,7 @@
 #pragma once
 
 #include <asio.hpp>
+#include <asio/experimental/concurrent_channel.hpp>
 #include <array>
 #include <string>
 
@@ -24,4 +25,10 @@ private:
     std::string          host_;
     uint16_t             port_;
     asio::ip::udp::socket socket_;
+
+    // Single-slot semaphore -- serializes async_send_to calls from concurrent
+    // handle_datagram coroutines. async_receive_from is safe to overlap with
+    // async_send_to (different directions), but two simultaneous async_send_to
+    // calls on the same socket are UB. Same pattern as UDPClient::send_permit_.
+    asio::experimental::concurrent_channel<void(std::error_code)> send_permit_;
 };

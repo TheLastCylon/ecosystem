@@ -63,11 +63,12 @@ asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message
     // happens after the catch, once the handler has already exited.
     auto executor = co_await asio::this_coro::executor;
 
-    while (retry_count_ < max_retries_ && !success_) {
+    int retry_count = 0;
+
+    while (retry_count < max_retries_) {
         bool should_retry = false;
         try {
             auto response = co_await send_message_once(request);
-            success_ = true;
             co_return response;
         } catch (const std::system_error&) {
             // Connection refused/reset/timeout -- retryable, same family Python
@@ -78,8 +79,8 @@ asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message
         }
 
         if (should_retry) {
-            ++retry_count_;
-            if (retry_count_ >= max_retries_) {
+            ++retry_count;
+            if (retry_count >= max_retries_) {
                 throw CommunicationsMaxRetriesReached("Maximum retries exceeded in sending request.");
             }
             asio::steady_timer retry_timer(executor, retry_delay_);

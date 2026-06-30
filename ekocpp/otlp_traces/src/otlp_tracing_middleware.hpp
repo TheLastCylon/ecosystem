@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -38,6 +39,7 @@ public:
     void emit_span(OtlpSpanRecord record);
 
 private:
-    std::unordered_map<SpanKey, ActiveSpan> active_spans_;
-    OtlpSpanExporter                        exporter_;
+    mutable std::mutex                       spans_mutex_;
+    std::unordered_map<SpanKey, ActiveSpan>  active_spans_;
+    OtlpSpanExporter                         exporter_;
 };

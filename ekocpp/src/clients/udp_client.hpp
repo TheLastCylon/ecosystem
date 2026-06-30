@@ -5,7 +5,7 @@
 #include <string>
 
 #include <asio.hpp>
-#include <asio/experimental/channel.hpp>
+#include <asio/experimental/concurrent_channel.hpp>
 
 #include "client_base.hpp"
 
@@ -44,5 +44,5 @@ private:
     // Single-slot semaphore (acquire = receive, release = send into it) --
     // serializes concurrent send_message() calls onto the one shared socket,
     // same role Python's asyncio.Lock plays in DatagramProtocolClient.
-    asio::experimental::channel<void(std::error_code)> send_permit_;
+    asio::experimental::concurrent_channel<void(std::error_code)> send_permit_;
 };

@@ -8,9 +8,6 @@ ClientBase::ClientBase(int max_retries, std::chrono::milliseconds retry_delay)
     : max_retries_(max_retries), retry_delay_(retry_delay) {}
 
 asio::awaitable<nlohmann::json> ClientBase::send_message(const std::string& route_key, const nlohmann::json& data, SpanKey span_key) {
-    success_     = false;
-    retry_count_ = 0;
-
     const auto request_body  = nlohmann::json::to_msgpack(data);
     const auto request_frame = pack_frame(span_key, route_key, request_body);
 

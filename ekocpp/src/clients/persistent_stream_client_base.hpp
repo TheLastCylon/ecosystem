@@ -5,7 +5,7 @@
 #include <memory>
 #include <optional>
 
-#include <asio/experimental/channel.hpp>
+#include <asio/experimental/concurrent_channel.hpp>
 
 #include "client_base.hpp"
 
@@ -75,5 +75,5 @@ private:
     bool                      connected_ = false;
     std::optional<SocketType> socket_;
     asio::steady_timer        heartbeat_timer_;
-    asio::experimental::channel<void(std::error_code)> heartbeat_done_;
+    asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <optional>
 #include <string>
 #include <vector>
@@ -75,76 +76,96 @@ struct ErrorEntry {
 class PendingQueue {
 public:
     PendingQueue(const std::string& directory, const std::string& file_basename, int page_size = 100)
-        : pending_q(directory + "/" + file_basename + "-pending.sqlite", page_size),
-          error_q(directory + "/" + file_basename + "-error.sqlite", page_size) {}
+        : pending_q_(directory + "/" + file_basename + "-pending.sqlite", page_size),
+          error_q_(directory + "/" + file_basename + "-error.sqlite", page_size) {}
 
     void shut_down() {
-        pending_q.shut_down();
-        error_q.shut_down();
+        std::scoped_lock lock(mutex_);
+        pending_q_.shut_down();
+        error_q_.shut_down();
     }
 
-    bool has_pending() const { return !pending_q.is_empty(); }
-    size_t get_pending_size() const { return pending_q.size(); }
-    size_t get_error_size() const { return error_q.size(); }
+    bool   has_pending()      const { std::scoped_lock lock(mutex_); return !pending_q_.is_empty(); }
+    size_t get_pending_size() const { std::scoped_lock lock(mutex_); return pending_q_.size(); }
+    size_t get_error_size()   const { std::scoped_lock lock(mutex_); return error_q_.size(); }
 
     nlohmann::json get_sizes() const {
+        std::scoped_lock lock(mutex_);
         return {
-            {"pending", get_pending_size()},
-            {"error", get_error_size()},
+            {"pending", pending_q_.size()},
+            {"error",   error_q_.size()},
         };
     }
 
     void move_all_error_to_pending() {
-        while (error_q.size() > 0) {
-            auto popped = error_q.pop();
-            push_pending(popped->span_key, popped->data, 0, popped->metadata);
+        std::scoped_lock lock(mutex_);
+        while (error_q_.size() > 0) {
+            auto popped = error_q_.pop();
+            push_pending_unlocked(popped->span_key, popped->data, 0, popped->metadata);
         }
     }
 
     std::optional<nlohmann::json> move_one_error_to_pending(const SpanKey& span_key) {
-        auto popped = error_q.pop_span_key(span_key);
+        std::scoped_lock lock(mutex_);
+        auto popped = error_q_.pop_span_key(span_key);
         if (!popped) return std::nullopt;
-        push_pending(span_key, popped->data, 0, popped->metadata);
+        push_pending_unlocked(span_key, popped->data, 0, popped->metadata);
         return popped->data;
     }
 
-    void clear_error_queue() { error_q.clear(); }
+    void clear_error_queue() { std::scoped_lock lock(mutex_); error_q_.clear(); }
 
     std::vector<std::string> get_first_x_error_span_keys(size_t how_many = 1) const {
-        return error_q.get_first_x_span_keys(how_many);
+        std::scoped_lock lock(mutex_);
+        return error_q_.get_first_x_span_keys(how_many);
     }
 
     std::optional<nlohmann::json> pop_error_q_span_key(const SpanKey& span_key) {
-        auto popped = error_q.pop_span_key(span_key);
+        std::scoped_lock lock(mutex_);
+        auto popped = error_q_.pop_span_key(span_key);
         return popped ? std::optional<nlohmann::json>(popped->data) : std::nullopt;
     }
 
     std::optional<nlohmann::json> pop_pending_q_span_key(const SpanKey& span_key) {
-        auto popped = pending_q.pop_span_key(span_key);
+        std::scoped_lock lock(mutex_);
+        auto popped = pending_q_.pop_span_key(span_key);
         return popped ? std::optional<nlohmann::json>(popped->data) : std::nullopt;
     }
 
     std::optional<nlohmann::json> inspect_error_q_span_key(const SpanKey& span_key) const {
-        auto found = error_q.inspect_span_key(span_key);
+        std::scoped_lock lock(mutex_);
+        auto found = error_q_.inspect_span_key(span_key);
         return found ? std::optional<nlohmann::json>(found->data) : std::nullopt;
     }
 
     std::optional<nlohmann::json> inspect_pending_q_span_key(const SpanKey& span_key) const {
-        auto found = pending_q.inspect_span_key(span_key);
+        std::scoped_lock lock(mutex_);
+        auto found = pending_q_.inspect_span_key(span_key);
         return found ? std::optional<nlohmann::json>(found->data) : std::nullopt;
     }
 
     void push_pending(const SpanKey& span_key, const nlohmann::json& item_data, int retries = 0, const nlohmann::json& metadata = nlohmann::json::object()) {
-        pending_q.push(PendingEntry{span_key, retries, item_data, metadata}, span_key);
+        std::scoped_lock lock(mutex_);
+        push_pending_unlocked(span_key, item_data, retries, metadata);
     }
 
     void push_error(const SpanKey& span_key, const nlohmann::json& item_data, const std::string& reason, const nlohmann::json& metadata = nlohmann::json::object()) {
         spdlog::warn("Pushing message to error queue [{}] {}]", span_key.to_string(), reason);
-        error_q.push(ErrorEntry{span_key, item_data, reason, metadata}, span_key);
+        std::scoped_lock lock(mutex_);
+        error_q_.push(ErrorEntry{span_key, item_data, reason, metadata}, span_key);
     }
 
-    std::optional<PendingEntry> pop() { return pending_q.pop(); }
+    std::optional<PendingEntry> pop() {
+        std::scoped_lock lock(mutex_);
+        return pending_q_.pop();
+    }
 
-    PaginatedQueue<PendingEntry> pending_q;
-    PaginatedQueue<ErrorEntry>   error_q;
+private:
+    void push_pending_unlocked(const SpanKey& span_key, const nlohmann::json& item_data, int retries, const nlohmann::json& metadata) {
+        pending_q_.push(PendingEntry{span_key, retries, item_data, metadata}, span_key);
+    }
+
+    mutable std::mutex           mutex_;
+    PaginatedQueue<PendingEntry> pending_q_;
+    PaginatedQueue<ErrorEntry>   error_q_;
 };

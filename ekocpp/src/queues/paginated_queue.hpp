@@ -42,6 +42,7 @@ public:
         : file_path_(std::move(file_path)),
           page_size_(page_size),
           db_(file_path_, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE) {
+        db_.exec("PRAGMA journal_mode=WAL");
         db_.exec(
             "CREATE TABLE IF NOT EXISTS queued_objects ("
             "  record_id     INTEGER PRIMARY KEY,"
@@ -236,6 +237,7 @@ private:
     // Newest-of-front-page first (closest to zero), decreasing -- mirrors
     // Python's `reversed(front_page.get_page_list())` walk.
     void write_front_page() {
+        SQLite::Transaction tx(db_);
         int64_t next_id = min_record_id() - 1;
         SQLite::Statement stmt(db_, "INSERT INTO queued_objects (record_id, span_key, object_string) VALUES (?, ?, ?)");
         const auto& entries = front_page_->entries();
@@ -248,12 +250,14 @@ private:
             stmt.reset();
             --next_id;
         }
+        tx.commit();
         front_page_ = std::make_shared<QueuePage<QueuedType>>();
     }
 
     // Oldest-of-back-page first, increasing -- arrival order stays
     // chronological.
     void write_back_page() {
+        SQLite::Transaction tx(db_);
         int64_t next_id = max_record_id() + 1;
         SQLite::Statement stmt(db_, "INSERT INTO queued_objects (record_id, span_key, object_string) VALUES (?, ?, ?)");
         for (const auto& entry : back_page_->entries()) {
@@ -265,6 +269,7 @@ private:
             stmt.reset();
             ++next_id;
         }
+        tx.commit();
         back_page_ = std::make_shared<QueuePage<QueuedType>>();
     }
 
