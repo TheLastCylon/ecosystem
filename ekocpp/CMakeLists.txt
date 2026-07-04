@@ -32,6 +32,9 @@ add_library(ekocpp
     src/clients/transient_uds_client.cpp
     src/clients/persisted_tcp_client.cpp
     src/clients/persisted_uds_client.cpp
+    src/clients/multiplexed_stream_client_base.cpp
+    src/clients/multiplexed_tcp_client.cpp
+    src/clients/multiplexed_uds_client.cpp
     src/configuration/argument_parser.cpp
     src/configuration/config_models.cpp
     src/coroutines/ambient_span_context.cpp

@@ -26,6 +26,12 @@ void check(bool condition, const char* what) {
 // parsing run for real; only the "go over the network" part is faked.
 class FakeClient : public ClientBase {
 public:
+    // Explicit opt-in into BufferedSender's MultiplexedClient constraint --
+    // see that concept's comment in multiplexed_stream_client_base.hpp. This
+    // fake has no real transport to be reliable or not; the declaration just
+    // says "trust me for this test."
+    static constexpr bool is_reliable_transport_test_double = true;
+
     std::function<asio::awaitable<std::vector<uint8_t>>(std::vector<uint8_t>)> behavior;
     int call_count = 0;
 

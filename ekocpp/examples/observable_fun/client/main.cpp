@@ -86,7 +86,7 @@ private:
         }
     }
 
-    int                                     worker_count_  = 8;
+    int                                     worker_count_  = 2;
     std::atomic<uint64_t>                   request_count_ = 0;
     std::vector<std::shared_ptr<PersistedUDSClient>> clients_;
 };

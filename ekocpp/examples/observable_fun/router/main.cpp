@@ -24,7 +24,7 @@
 #include "magic_eight_ball_dto.hpp"
 #include "router_dto.hpp"
 #include "time_reporter_dto.hpp"
-// #include "tracker_dto.hpp"
+#include "tracker_dto.hpp"
 
 namespace {
 
@@ -65,10 +65,19 @@ public:
         lottery_client_       = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/lottery_0.uds.sock");
         magic8ball_client_    = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/magic_eight_ball_0.uds.sock");
         time_reporter_client_ = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/time_reporter_0.uds.sock");
-        tracker_client_       = std::make_shared<PersistedUDSClient>(exec, "/tmp/observable_fun_cpp/tracker_0.uds.sock");
-
-        log_request_sender_  = register_buffered_sender("app.log_request",  tracker_client_, std::chrono::milliseconds{0}, 1000, 10);
-        log_response_sender_ = register_buffered_sender("app.log_response", tracker_client_, std::chrono::milliseconds{0}, 1000, 10);
+        // register_buffered_sender now takes connection parameters, not a
+        // client -- each call builds its own fresh MultiplexedUDSClient
+        // internally, so log_request_sender_ and log_response_sender_ can no
+        // longer end up sharing one (which is exactly what caused
+        // app.log_request to silently stop draining earlier: both senders
+        // deliberately enqueue using the ORIGINAL request's span_key, not a
+        // fresh one, to keep tracker's log entries correlated with the
+        // originating request's trace in Jaeger -- and two senders sharing
+        // one client's demux map meant that identical key collided between
+        // them. See multiplexed_stream_client.md's "Two BufferedSenders must
+        // never share one MultiplexedClient" section for the full incident).
+        log_request_sender_  = register_buffered_sender("app.log_request",  std::string{"/tmp/observable_fun_cpp/tracker_0.uds.sock"}, std::chrono::milliseconds{0}, 1000, 10);
+        log_response_sender_ = register_buffered_sender("app.log_response", std::string{"/tmp/observable_fun_cpp/tracker_0.uds.sock"}, std::chrono::milliseconds{0}, 1000, 10);
 
         initiate_otlp_tracing();
         register_endpoint("app.process_message", this, &RouterServer::process_message);
@@ -76,7 +85,7 @@ public:
 
 private:
     asio::awaitable<RouterResponseDto> process_message(SpanKey span_key, RouterRequestDto dto) {
-        // log_request_sender_->enqueue(TrackerLogRequestDto{dto.request, unix_now()}, span_key);
+        log_request_sender_->enqueue(TrackerLogRequestDto{dto.request, unix_now()}, span_key);
 
         const std::string lower   = to_lower(dto.request);
         const std::string keyword = lower.substr(0, lower.find(' '));
@@ -110,7 +119,7 @@ private:
             response = r.prediction;
         }
 
-        // log_response_sender_->enqueue(TrackerLogRequestDto{response, unix_now()}, span_key);
+        log_response_sender_->enqueue(TrackerLogRequestDto{response, unix_now()}, span_key);
         co_return RouterResponseDto{response};
     }
 
@@ -119,7 +128,6 @@ private:
     std::shared_ptr<PersistedUDSClient>      lottery_client_;
     std::shared_ptr<PersistedUDSClient>      magic8ball_client_;
     std::shared_ptr<PersistedUDSClient>      time_reporter_client_;
-    std::shared_ptr<PersistedUDSClient>      tracker_client_;
     std::shared_ptr<BufferedSender> log_request_sender_;
     std::shared_ptr<BufferedSender> log_response_sender_;
 };

@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "clients/multiplexed_tcp_client.hpp"
+#include "clients/multiplexed_uds_client.hpp"
 #include "configuration/config_models.hpp"
 #include "exceptions/exceptions.hpp"
 #include "requests/buffered_handler_interface.hpp"
@@ -114,17 +116,68 @@ protected:
     // setup() (queue/directory configuration). Unlike register_buffered_endpoint,
     // this returns the constructed sender directly -- a sender has no inbound
     // route to dispatch through; the derived app calls ->enqueue(...) on the
-    // returned shared_ptr itself whenever it has something to send. `client`
-    // is caller-constructed and caller-owned (e.g. a TransientTCPClient) --
-    // BufferedSender only ever calls the non-virtual ClientBase::send_message,
-    // so any concrete client type works polymorphically through the same
-    // shared_ptr<ClientBase>.
+    // returned shared_ptr itself whenever it has something to send.
+    //
+    // Takes connection parameters, NOT a client -- deliberately. An earlier
+    // version of this method accepted a caller-constructed shared_ptr<ClientT>,
+    // which is exactly what let observable_fun's router pass the SAME
+    // MultiplexedUDSClient to two different senders (app.log_request and
+    // app.log_response), silently colliding in that client's demux map (see
+    // multiplexed_stream_client.md's "Two BufferedSenders must never share
+    // one MultiplexedClient" section for the full incident). Removing the
+    // client parameter removes the shape that made the mistake possible --
+    // each call here always builds its own fresh client internally, so
+    // sharing one across two senders is no longer something a caller can
+    // even express. Direct construction of BufferedSender with an explicit
+    // client is still possible (and still MultiplexedClient-constrained) for
+    // unit tests that need to inject controlled failure behaviour without a
+    // real socket -- see buffered_sender_smoke_test.cpp's FakeClient -- but
+    // that path is not, and was never meant to be, something application
+    // code reaches for.
     std::shared_ptr<BufferedSender> register_buffered_sender(
-        const std::string&         route_key,
-        std::shared_ptr<ClientBase> client,
-        std::chrono::milliseconds  wait_period = std::chrono::milliseconds{0},
-        int                        page_size   = 100,
-        int                        max_retries = 0
+        const std::string&        route_key,
+        std::string               socket_path,
+        std::chrono::milliseconds wait_period = std::chrono::milliseconds{0},
+        int                       page_size   = 100,
+        int                       max_retries = 0
+    ) {
+        auto client = std::make_shared<MultiplexedUDSClient>(io_context_.get_executor(), std::move(socket_path));
+        client->start();
+        return register_buffered_sender_with_client(route_key, std::move(client), wait_period, page_size, max_retries);
+    }
+
+    std::shared_ptr<BufferedSender> register_buffered_sender(
+        const std::string&        route_key,
+        std::string               host,
+        uint16_t                  port,
+        std::chrono::milliseconds wait_period = std::chrono::milliseconds{0},
+        int                       page_size   = 100,
+        int                       max_retries = 0
+    ) {
+        auto client = std::make_shared<MultiplexedTCPClient>(io_context_.get_executor(), std::move(host), port);
+        client->start();
+        return register_buffered_sender_with_client(route_key, std::move(client), wait_period, page_size, max_retries);
+    }
+
+protected:
+    // Shared tail of both register_buffered_sender overloads above -- queue
+    // setup, statistics registration, shutdown wiring. Templated (rather than
+    // taking shared_ptr<ClientBase>) so BufferedSender's own MultiplexedClient
+    // constraint applies here too, not just at its constructor. protected,
+    // not private -- an ApplicationBase subclass (a test app that needs to
+    // inject a deliberately-failing client, e.g. standard_endpoints_buffered_
+    // management_live_test.cpp's TestApp/AlwaysFailClient) can still reach it
+    // directly. That's a different thing from the public register_buffered_
+    // sender overloads accepting an arbitrary caller-supplied client -- this
+    // is a deliberate, subclass-authored escape hatch, not something any
+    // external caller holding an ApplicationBase can trigger.
+    template <MultiplexedClient ClientT>
+    std::shared_ptr<BufferedSender> register_buffered_sender_with_client(
+        const std::string&        route_key,
+        std::shared_ptr<ClientT>  client,
+        std::chrono::milliseconds wait_period,
+        int                       page_size,
+        int                       max_retries
     ) {
         if (!configuration_.buffer_directory()) {
             throw ExceptionBase("Cannot register buffered sender '" + route_key + "': no buffer_directory configured (set ECOENV_BUFFER_DIR).");
@@ -144,6 +197,8 @@ protected:
 
         return sender;
     }
+
+public:
 
     // Hook for a derived application to co_spawn extra background
     // coroutines onto the same io_context, called from start() just before

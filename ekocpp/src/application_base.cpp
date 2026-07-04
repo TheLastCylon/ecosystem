@@ -169,6 +169,13 @@ void ApplicationBase::start() {
 
     setup_tasks();
 
+    // Kick all registered buffered senders -- ensures items persisted from a
+    // previous run start draining immediately, without waiting for a new
+    // enqueue() call to re-arm the processing loop.
+    for (auto& [key, sender] : buffered_sender_registry_) {
+        sender->unpause_send_process();
+    }
+
     // Spawn N-1 additional threads onto the same io_context; main thread is
     // the Nth. When io_context_.stop() fires (inside shut_down_buffered_
     // subsystems()), every run() call returns and the joins complete.

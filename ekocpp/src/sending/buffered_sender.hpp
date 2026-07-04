@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../clients/client_base.hpp"
+#include "../clients/multiplexed_stream_client_base.hpp"
 #include "../data_transfer_objects/json_dto.hpp"
 #include "../data_transfer_objects/span_key.hpp"
 #include "../exceptions/exceptions.hpp"
@@ -51,11 +52,23 @@ asio::awaitable<void> run_send_processing_loop(std::weak_ptr<BufferedSender> wea
 // Must be constructed via std::make_shared and held by shared_ptr
 // (enable_shared_from_this) -- same weak_ptr/channel-based lifecycle as
 // BufferedRequestHandler, reused unchanged.
+//
+// Client type is constrained to MultiplexedClient (multiplexed_stream_client_
+// base.hpp) -- not a suggestion, a contract mismatch otherwise: BufferedSender
+// promises retried, eventually-delivered, individually-acknowledged sends, a
+// promise UDP cannot back at any concurrency level (no ordering, no delivery
+// guarantee, no congestion control -- see sending_patterns.md's "UDP:
+// excluded, not just deprioritised"). A plain UDPClient (or any future
+// MultiplexedUDPClient) fails to compile here, not just fails at runtime
+// under load. client_ stores the type-erased ClientBase& regardless --
+// the constraint lives only on the public constructor, not on how the
+// object is used afterward.
 class BufferedSender : public std::enable_shared_from_this<BufferedSender> {
 public:
+    template <MultiplexedClient ClientT>
     BufferedSender(
         asio::any_io_executor        executor,
-        std::shared_ptr<ClientBase>  client,
+        std::shared_ptr<ClientT>     client,
         std::string                  route_key,
         const std::string&           directory,
         const std::string&           file_basename,
@@ -174,7 +187,7 @@ inline asio::awaitable<void> run_send_processing_loop(std::weak_ptr<BufferedSend
         auto self = weak_self.lock();
         if (!self) co_return; // owner is gone -- nothing left to send for.
 
-        if (self->sending_paused_.load() || self->queue_.get_pending_size() == 0) {
+        if (self->sending_paused_.load()) {
             break;
         }
 

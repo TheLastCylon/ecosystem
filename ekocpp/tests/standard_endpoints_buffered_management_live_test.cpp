@@ -34,6 +34,11 @@ bool always_fails_handler(SpanKey, RequestDTO&) { return false; }
 // the "go over the network" part is faked, send_message's real status
 // interpretation still runs.
 class AlwaysFailClient : public ClientBase {
+public:
+    // Explicit opt-in into BufferedSender's MultiplexedClient constraint --
+    // see that concept's comment in multiplexed_stream_client_base.hpp.
+    static constexpr bool is_reliable_transport_test_double = true;
+
 protected:
     asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t>) override {
         throw std::runtime_error("simulated send failure");
@@ -47,7 +52,7 @@ public:
 
     TestApp(int argc, char** argv) : ApplicationBase(argc, argv) {
         register_buffered_endpoint("managed_handler", always_fails_handler, /*page_size=*/100, /*max_retries=*/0);
-        sender = register_buffered_sender("managed_sender", std::make_shared<AlwaysFailClient>(), std::chrono::milliseconds{0}, 100, 0);
+        sender = register_buffered_sender_with_client("managed_sender", std::make_shared<AlwaysFailClient>(), std::chrono::milliseconds{0}, 100, 0);
     }
 };
 
