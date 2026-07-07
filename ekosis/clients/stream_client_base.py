@@ -52,10 +52,9 @@ class StreamClientBase(ClientBase, ABC):
     # --------------------------------------------------------------------------------
     async def _send_message_retry_loop(self, request: bytes) -> bytes:
         retry_count = 0
-        while retry_count < self.max_retries and not self.success:
+        while retry_count < self.max_retries:
             try:
                 response = await self._send_message(request)
-                self.success = True
                 return response
             except (
                 TimeoutError,           # Timeouts mean the connection is fine

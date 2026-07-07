@@ -9,7 +9,7 @@ from ..magic_eight_ball.dtos import Magic8BallRequestDto, Magic8BallResponseDto
 from ..time_reporter.dtos import CurrentTimeResponseDto
 from ..tracker.dtos import TrackerLogRequestDto
 
-from .clients import (fortunes_client, joker_client, lottery_client, magic8ball_client, time_reporter_client, tracker_client)
+from .clients import (fortunes_client, joker_client, lottery_client, magic8ball_client, time_reporter_client)
 
 # --------------------------------------------------------------------------------
 @sender(fortunes_client, "app.get_fortune", FortuneResponseDto)
@@ -37,11 +37,29 @@ async def get_time(*args, **kwargs):
     return EmptyDto()
 
 # --------------------------------------------------------------------------------
-@buffered_sender(tracker_client, "app.log_request", TrackerLogRequestDto, BufferedEndpointResponseDTO, 0, 1000, 10)
+@buffered_sender(
+    "app.log_request",
+    TrackerLogRequestDto,
+    BufferedEndpointResponseDTO,
+    host        = "127.0.0.1",
+    port        = 8700,
+    wait_period = 0,
+    page_size   = 1000,
+    max_retries = 10
+)
 async def log_request(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(request = data, timestamp = timestamp)
 
 # --------------------------------------------------------------------------------
-@buffered_sender(tracker_client, "app.log_response", TrackerLogRequestDto, BufferedEndpointResponseDTO, 0, 1000, 10)
+@buffered_sender(
+    "app.log_response",
+    TrackerLogRequestDto,
+    BufferedEndpointResponseDTO,
+    host        = "127.0.0.1",
+    port        = 8700,
+    wait_period = 0,
+    page_size   = 1000,
+    max_retries = 10
+)
 async def log_response(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(request = data, timestamp = timestamp)

@@ -3,12 +3,12 @@ import asyncio
 import random
 
 from ekosis.sending.sender import sender
-from ekosis.clients import UDPClient
+from ekosis.clients import PersistedTCPClient
 from ekosis.data_transfer_objects import SpanKey
 
 from .dtos import RouterRequestDto, RouterResponseDto
 
-router_client = UDPClient(server_host='127.0.0.1', server_port=8600)
+router_client = PersistedTCPClient(server_host='127.0.0.1', server_port=8600)
 
 MESSAGE_OPTIONS = ["fortune", "joke", "lotto", "time", "question"]
 

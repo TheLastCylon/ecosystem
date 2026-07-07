@@ -147,10 +147,9 @@ class PersistentStreamClientBase(ClientBase, ABC):
         await self.__check_heartbeat_task()
 
         retry_count = 0
-        while retry_count < self.max_retries and not self.success:
+        while retry_count < self.max_retries:
             try:
-                response     = await self._send_message(request)
-                self.success = True
+                response = await self._send_message(request)
                 return response
             except (TimeoutError, asyncio.TimeoutError):
                 retry_count = await self.__do_retry_logic(retry_count)

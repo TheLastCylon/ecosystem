@@ -30,8 +30,6 @@ class ClientBase(ABC):
     ):
         self.max_retries: int   = max_retries
         self.retry_delay: float = retry_delay
-        self.retry_count: int   = 0
-        self.success    : bool  = False
 
     # --------------------------------------------------------------------------------
     @abstractmethod
@@ -73,8 +71,6 @@ class ClientBase(ABC):
         span_key         : SpanKey                 = None,
     ) -> PydanticBaseModel:
         span_key_to_use  = span_key if span_key else SpanKey.generate()
-        self.success     = False
-        self.retry_count = 0
         request_dto      = RequestDTO(span_key = span_key_to_use, route_key = route_key, data = data)
         request_body     = msgpack.packb(request_dto.model_dump(mode="json")["data"])
         request_frame    = pack_frame(request_dto.span_key, request_dto.route_key, request_body)

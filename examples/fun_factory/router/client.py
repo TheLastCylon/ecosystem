@@ -1,5 +1,4 @@
 import sys
-import uuid
 import asyncio
 import random
 

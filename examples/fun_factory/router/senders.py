@@ -15,7 +15,6 @@ from .clients import (
     lottery_client,
     magic8ball_client,
     time_reporter_client,
-    tracker_client
 )
 
 
@@ -51,13 +50,14 @@ async def get_time(*args, **kwargs):
 
 # --------------------------------------------------------------------------------
 @buffered_sender(
-    tracker_client,
     "app.log_request",
     TrackerLogRequestDto,
     BufferedEndpointResponseDTO,
-    0,
-    100,
-    10
+    host        = "127.0.0.1",
+    port        = 8700,
+    wait_period = 0,
+    page_size   = 100,
+    max_retries = 10,
 )
 async def log_request(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(
@@ -68,13 +68,14 @@ async def log_request(data: str, timestamp: float, *args, **kwargs):
 
 # --------------------------------------------------------------------------------
 @buffered_sender(
-    tracker_client,
     "app.log_response",
     TrackerLogRequestDto,
     BufferedEndpointResponseDTO,
-    0,
-    100,
-    10
+    host        = "127.0.0.1",
+    port        = 8700,
+    wait_period = 0,
+    page_size   = 100,
+    max_retries = 10,
 )
 async def log_response(data: str, timestamp: float, *args, **kwargs):
     return TrackerLogRequestDto(

@@ -3,4 +3,7 @@ from .udp import UDPClient
 from .transient_uds import TransientUDSClient
 from .persisted_tcp import PersistedTCPClient
 from .persisted_uds import PersistedUDSClient
+from .multiplexed_stream_client_base import MultiplexedStreamClientBase
+from .multiplexed_tcp_client import MultiplexedTCPClient
+from .multiplexed_uds_client import MultiplexedUDSClient
 from .client_base import ClientBase

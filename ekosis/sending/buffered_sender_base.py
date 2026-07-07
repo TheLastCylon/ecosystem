@@ -7,6 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from .sender_base import SenderBase
 
 from ..clients import ClientBase
+from ..clients.multiplexed_stream_client_base import MultiplexedStreamClientBase
 from ..data_transfer_objects import EmptyDto, SpanKey
 from ..queues.pending_queue import PendingQueue
 from ..state_keepers.statistics_keeper import StatisticsKeeper
@@ -28,6 +29,18 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
         page_size        : int                    = 100,
         max_retries      : int                    = 0,
     ):
+        # UDP/transient/plain-persisted clients can't back the retried,
+        # eventually-delivered, individually-acknowledged contract this class
+        # promises -- mirrors ekocpp's MultiplexedClient concept constraint on
+        # BufferedSender's constructor. A plain PersistedTCPClient/PersistedUDSClient
+        # would technically still work here (persisted connection), but is
+        # deliberately excluded too: it serialises the whole round trip behind
+        # one permit, defeating the point of holding a Multiplexed*Client.
+        if not isinstance(client, MultiplexedStreamClientBase):
+            raise TypeError(
+                f"BufferedSender requires a multiplexed stream client (Multiplexed{{TCP,UDS}}Client), got {type(client).__name__}."
+            )
+
         super().__init__(
             client,
             route_key,
@@ -195,6 +208,12 @@ class BufferedSenderBase(Generic[_RequestDTOType, _ResponseDTOType], SenderBase[
     ):
         route_key = self.get_route_key()
         self.log.info(f"Buffered sender [{route_key}] setup.")
+        # Started here, not at decoration time -- the client is built at module-
+        # import time (buffered_sender()'s decorator runs before the event loop
+        # exists), but start() needs a running loop for its background tasks.
+        # setup() is the first point in the client's life where the loop is
+        # guaranteed to be running (called from ApplicationBase.__setup_buffered_senders).
+        self._client.start()
         self.__configure_queue(directory, application_name, instance_id)
         self.unpause_send_process()
 
