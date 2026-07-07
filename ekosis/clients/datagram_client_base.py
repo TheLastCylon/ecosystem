@@ -58,15 +58,15 @@ class DatagramClientBase(ClientBase, asyncio.DatagramProtocol):
 
     # --------------------------------------------------------------------------------
     async def _send_message(self, message: bytes) -> bytes:
-        if not self.initialised:
-            self.loop            = asyncio.get_running_loop()
-            self.transport, self.protocol = await self.loop.create_datagram_endpoint(
-                lambda: DatagramProtocolClient(self.timeout),
-                remote_addr=(self.server_host, self.server_port)
-            )
-            self.initialised = True
-
         async with self.send_lock:
+            if not self.initialised:
+                self.loop                     = asyncio.get_running_loop()
+                self.transport, self.protocol = await self.loop.create_datagram_endpoint(
+                    lambda: DatagramProtocolClient(self.timeout),
+                    remote_addr=(self.server_host, self.server_port)
+                )
+                self.initialised = True
+
             return await self.protocol.send_message(message)
 
     # --------------------------------------------------------------------------------

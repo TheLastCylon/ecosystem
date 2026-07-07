@@ -6,8 +6,14 @@ from .server_base import ServerBase
 
 from ..configuration.config_models import ConfigUDP
 from ..data_transfer_objects import (
-    SpanKey, HEADER_LENGTH, PING_FLAG, parse_header, split_route_key_and_body,
-    pack_response_frame, pack_ping_frame,
+    SpanKey,
+    HEADER_LENGTH,
+    PING_FLAG,
+    MAX_FRAME_SIZE,
+    parse_header,
+    split_route_key_and_body,
+    pack_response_frame,
+    pack_ping_frame
 )
 
 log = logging.getLogger()
@@ -19,28 +25,38 @@ class DatagramProtocolServer(asyncio.DatagramProtocol):
 
         self.transport     : asyncio.DatagramTransport = None
         self.loop          : asyncio.AbstractEventLoop = None
-        self.__write_lock  : asyncio.Lock              = asyncio.Lock()
 
     def connection_made(self, transport):
         self.transport = transport
         self.loop      = asyncio.get_running_loop()
 
+    # sendto() is synchronous with no internal await, so it can't be interrupted
+    # mid-call on a single event-loop thread (no lock needed to protect it). A
+    # lock spanning the whole method (as this used to) would serialise every
+    # concurrent datagram's handler execution behind one mutex, defeating the
+    # per-datagram task fan-out in datagram_received below.
     async def do_response(self, span_key: SpanKey, route_key: str, body: bytes, addr):
-        async with self.__write_lock:
-            response = await self.build_response_function(span_key, route_key, body)
-            self.transport.sendto(response, addr)
+        response = await self.build_response_function(span_key, route_key, body)
+        self.transport.sendto(response, addr)
 
     # A UDP packet is already datagram-bounded, so the whole frame is in memory up
-    # front -- no incremental reads needed, just slice the fixed header off the front.
+    # front (no incremental reads needed), just slice the fixed header off the front.
     def datagram_received(self, bytes_read, addr):
         if len(bytes_read) < HEADER_LENGTH:
-            return # Too short to even hold a header -- not a valid frame, drop it.
+            return # Too short to even hold a header (not a valid frame), drop it.
 
         span_key, route_key_len, total_len, flags = parse_header(bytes_read[:HEADER_LENGTH])
 
-        if flags & PING_FLAG: # A liveness probe -- answer it directly, never reaching __process_received_data.
+        if flags & PING_FLAG: # A liveness probe. Answer it directly, never reaching __process_received_data.
             self.transport.sendto(pack_ping_frame(span_key), addr)
             return
+
+        # total_len is attacker/bug-controlled and not yet checked against what
+        # actually arrived. Without this guard, a claim bigger than the real
+        # datagram slices straight past the end of bytes_read instead of just
+        # producing an oversized allocation.
+        if total_len > MAX_FRAME_SIZE or HEADER_LENGTH + total_len > len(bytes_read):
+            return # Can't trust this datagram's framing. Drop it, no response (sender may be spoofed).
 
         rest            = bytes_read[HEADER_LENGTH:HEADER_LENGTH + total_len]
         route_key, body = split_route_key_and_body(rest, route_key_len)

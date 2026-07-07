@@ -1,4 +1,5 @@
 import os
+import fcntl
 import asyncio
 import signal
 import argparse
@@ -81,6 +82,8 @@ class ApplicationBase(metaclass=SingletonType):
     __server_tcp          : TCPServer               = None
     __server_udp          : UDPServer               = None
     __server_uds          : UDSServer               = None
+    __lock_fd             : int                     = None
+    __lock_file_path      : str                     = None
 
     # --------------------------------------------------------------------------------
     def __init__(self):
@@ -124,36 +127,60 @@ class ApplicationBase(metaclass=SingletonType):
         self.__stop_servers()
         self.__shut_down_buffered_handlers()
         self.__shut_down_buffered_senders()
+        self.__release_lock_file()
         self.logger.info(f"Instance [{self._configuration.instance}] of application [{self._configuration.name}] shutdown.")
         self.__eco_logger.flush()
 
     # --------------------------------------------------------------------------------
-    @staticmethod
-    def __process_id_check(process_id: int) -> bool:
-        try:
-            os.kill(process_id, 0)
-        except OSError:
-            return False
-        return True
+    # Closing the fd releases the flock() automatically, but doing it explicitly
+    # here (rather than just letting process exit handle it) keeps the unlink
+    # ordered after the unlock, and makes both steps visible in one place.
+    def __release_lock_file(self):
+        if self.__lock_fd is not None:
+            fcntl.flock(self.__lock_fd, fcntl.LOCK_UN)
+            os.close(self.__lock_fd)
+            os.remove(self.__lock_file_path)
+            self.__lock_fd = None
 
     # --------------------------------------------------------------------------------
-    @staticmethod
-    def __create_lock_file(lock_file_path: str):
-        process_id = os.getpid()
-        with open(lock_file_path, "w") as lock_file:
-            lock_file.write(f"{process_id}\n")
-
-    # --------------------------------------------------------------------------------
+    # A previous PID-read-then-kill(pid, 0) check here had two bugs:
+    # 1. A TOCTOU (time-of-check-time-of-use) race condition:
+    #    Two processes starting concurrently could both read the file, both see the PID
+    #    as dead, and both proceed to remove/recreate the lock;
+    # 2. kill(pid, 0) raising OSError doesn't distinguish ESRCH (process-gone, lock stale)
+    #    from EPERM (process-alive, just owned by another user):
+    #    Both were being treated as "stale, delete it," so a live process owned by another
+    #    user would get its lock silently stolen.
+    # flock() fixes both issues: it's atomic at  the kernel level (no race window), and
+    #    it doesn't care who owns the other process, only whether a lock is actually held.
     def __lock_file_check(self):
-        lock_file_name  = f"{self._configuration.name}-{self._configuration.instance}.lock"
-        lock_file_path  = f"{self._configuration.lock_directory}/{lock_file_name}"
-        if os.path.exists(lock_file_path):
-            with open(lock_file_path, "r") as lock_file:
-                process_id = int(lock_file.readline())
-            if self.__process_id_check(process_id):
-                raise InstanceAlreadyRunningException(self._configuration.name, self._configuration.instance, process_id)
-            os.remove(lock_file_path)
-        self.__create_lock_file(lock_file_path)
+        lock_file_name = f"{self._configuration.name}-{self._configuration.instance}.lock"
+        lock_file_path = f"{self._configuration.lock_directory}/{lock_file_name}"
+
+        # O_CREAT here does NOT race with another instance doing the same flock(), below is
+        # the actual exclusion mechanism, atomic at the kernel level. Two processes can both
+        # open() the same path successfully; only one can hold LOCK_EX at a time.
+        fd = os.open(lock_file_path, os.O_CREAT | os.O_RDWR, 0o644)
+
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            # Another live process holds the lock. Read whatever PID it last wrote purely for
+            # the error message, the lock itself, not this PID read, is what proved it's alive.
+            try:
+                process_id = int(os.read(fd, 64).decode().strip() or 0)
+            except ValueError:
+                process_id = 0
+            os.close(fd)
+            raise InstanceAlreadyRunningException(self._configuration.name, self._configuration.instance, process_id)
+
+        # We hold the lock. A previous run's stale PID (if the file already existed from a crash) is irrelevant.
+        # flock() above already proved no live holder exists. Truncate and overwrite with our own PID.
+        os.ftruncate(fd, 0)
+        os.write(fd, f"{os.getpid()}\n".encode())
+
+        self.__lock_fd        = fd # kept open for the process lifetime. Closing it releases the flock
+        self.__lock_file_path = lock_file_path
 
     # --------------------------------------------------------------------------------
     def __configure_basics(self) -> None:

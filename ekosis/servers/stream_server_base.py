@@ -4,7 +4,13 @@ import msgpack
 from .server_base import ServerBase
 
 from ..data_transfer_objects import (
-    HEADER_LENGTH, PING_FLAG, parse_header, split_route_key_and_body, pack_response_frame, pack_ping_frame,
+    HEADER_LENGTH,
+    PING_FLAG,
+    MAX_FRAME_SIZE,
+    parse_header,
+    split_route_key_and_body,
+    pack_response_frame,
+    pack_ping_frame,
 )
 
 # --------------------------------------------------------------------------------
@@ -18,7 +24,6 @@ class StreamServerBase(ServerBase):
         writer.write(data)
         await writer.drain()
 
-    # TODO: Check client against white-list!
     # --------------------------------------------------------------------------------
     async def _handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         if not self._running:
@@ -31,9 +36,17 @@ class StreamServerBase(ServerBase):
 
             span_key, route_key_len, total_len, flags = parse_header(header)
 
-            if flags & PING_FLAG: # A liveness probe -- answer it directly, never reaching _route_request.
+            if flags & PING_FLAG: # A liveness probe: answer it directly, never reaching _route_request.
                 await self.__write_data(writer, pack_ping_frame(span_key))
                 continue
+
+            # total_len is attacker/bug-controlled (4 bytes straight off the wire, max
+            # ~4GB) -- reject before allocating rather than let readexactly() itself
+            # block trying to fill an oversized buffer.
+            if total_len > MAX_FRAME_SIZE:
+                response = self._build_parsing_error_response(span_key, ValueError("total_len exceeds MAX_FRAME_SIZE"))
+                await self.__write_data(writer, pack_response_frame(response))
+                break # Can't trust this stream's framing beyond this point, close it.
 
             try:
                 rest = await reader.readexactly(total_len)

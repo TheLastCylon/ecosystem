@@ -1,4 +1,5 @@
 import json
+import itertools
 import sqlalchemy
 
 from typing import cast, Dict, List, Type, TypeVar, Generic
@@ -28,13 +29,15 @@ class PageEntry(PydanticBaseModel):
 
 # --------------------------------------------------------------------------------
 class QueuePage:
+    # A plain dict is both the lookup AND the ordered structure here.
+    # Python's # dict has preserved insertion order since 3.7 (language guarantee, not a CPython detail),
+    # so there's no need for a parallel list just to remember FIFO order.
+    # Same ordering guarantee, O(1) erase-by-key instead of an O(n) scan.
     def __init__(self, queued_type: Type[_QueuedType]):
         self.__page_data_dict: Dict[SpanKey, PageEntry] = {}
-        self.__page_data_list: List[PageEntry]          = []
         self.__queued_type   : Type[_QueuedType]        = queued_type
 
     def __append_entry(self, entry: PageEntry):
-        self.__page_data_list.append(entry)
         self.__page_data_dict[entry.span_key] = entry
 
     @staticmethod
@@ -70,48 +73,35 @@ class QueuePage:
     def pop_front(self):
         if self.size() < 1:
             return None
-        entry = self.__page_data_list.pop(0)
-        self.__page_data_dict.pop(entry.span_key)
+        span_key, entry = next(iter(self.__page_data_dict.items()))
+        self.__page_data_dict.pop(span_key)
         return self.__entry_to_queueable_object(entry)
 
     def size(self):
-        return len(self.__page_data_list)
+        return len(self.__page_data_dict)
 
     def get_page_list(self):
-        return self.__page_data_list
+        return list(self.__page_data_dict.values())
 
     def has_entry(self, span_key: SpanKey):
-        return span_key in self.__page_data_dict.keys()
+        return span_key in self.__page_data_dict
 
     def inspect_entry(self, span_key: SpanKey):
-        if span_key not in self.__page_data_dict.keys():
+        entry = self.__page_data_dict.get(span_key)
+        if entry is None:
             return None
 
-        return self.__entry_to_queueable_object(self.__page_data_dict[span_key])
+        return self.__entry_to_queueable_object(entry)
 
     def pop_entry(self, span_key: SpanKey):
-        if span_key not in self.__page_data_dict.keys():
+        entry = self.__page_data_dict.pop(span_key, None)
+        if entry is None:
             return None
 
-        entry           = self.__page_data_dict.pop(span_key)
-        index_to_remove = -1
-        for i in range(len(self.__page_data_list)):
-            if entry.span_key == self.__page_data_list[i].span_key:
-                index_to_remove = i
-        self.__page_data_list.pop(index_to_remove)
         return self.__entry_to_queueable_object(entry)
 
     def get_first_x_span_keys(self, how_many: int):
-        retval: List[str] = []
-        this_page_size = self.size()
-        if this_page_size > 0:
-            if this_page_size < how_many:
-                for x in range(this_page_size):
-                    retval.append(str(self.__page_data_list[x].span_key))
-            else:
-                for x in range(how_many):
-                    retval.append(str(self.__page_data_list[x].span_key))
-        return retval
+        return [str(span_key) for span_key in itertools.islice(self.__page_data_dict.keys(), how_many)]
 
 # --------------------------------------------------------------------------------
 class PaginatedQueue(Generic[_QueuedType]):

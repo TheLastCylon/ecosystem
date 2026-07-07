@@ -10,43 +10,36 @@ class ResponseException(ExceptionBase):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# PROTOCOL_PARSING_ERROR
 class ProtocolParsingException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# CLIENT_DENIED
 class ClientDeniedException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# VALIDATION_ERROR
 class ValidationException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# ROUTE_KEY_UNKNOWN
 class RouteKeyUnknownException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# APPLICATION_BUSY
 class ServerBusyException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# PROCESSING_FAILURE
 class ProcessingException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)
 
 # --------------------------------------------------------------------------------
-# UNHANDLED
 class UnhandledException(ResponseException):
     def __init__(self, message: str):
         super().__init__(message)

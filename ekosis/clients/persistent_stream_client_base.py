@@ -31,8 +31,7 @@ class PersistentStreamClientBase(ClientBase, ABC):
         self.__heartbeat_time: float                = heartbeat_period
         self.__connected     : bool                 = False
         self.__last_send     : float                = 0
-        self.__read_lock     : asyncio.Lock         = asyncio.Lock()
-        self.__write_lock    : asyncio.Lock         = asyncio.Lock()
+        self.__lock          : asyncio.Lock         = asyncio.Lock()
         self.__reader        : asyncio.StreamReader = None
         self.__writer        : asyncio.StreamWriter = None
         self.__heartbeat_task: asyncio.Task         = None
@@ -54,46 +53,49 @@ class PersistentStreamClientBase(ClientBase, ABC):
             self.__connected = True
 
     # --------------------------------------------------------------------------------
+    # Callers must hold __lock for the entire write+read round trip, these two
+    # methods are the raw operations, not independent critical sections. Locking
+    # them separately let a second caller's read interleave between this call's
+    # header read and body read, matching frames to the wrong requester.
     async def __do_write(self, data: bytes):
-        async with self.__write_lock:
-            self.__writer.write(data)
+        self.__writer.write(data)
 
     # --------------------------------------------------------------------------------
     async def __do_read(self, length: int) -> bytes:
-        async with self.__read_lock:
-            return await asyncio.wait_for(self.__reader.readexactly(length), self.__timeout)
+        return await asyncio.wait_for(self.__reader.readexactly(length), self.__timeout)
 
     # --------------------------------------------------------------------------------
     # A ping is a bare 32-byte frame (no route_key, no body, PING_FLAG set), answered
-    # by the transport layer alone on the server side -- never reaching RequestRouter
+    # by the transport layer alone on the server side, never reaching RequestRouter
     # or StatisticsKeeper. Cheap by construction: no msgpack, no routing, just a
     # header round trip. This is the stale-connection detector this class used to do
     # with raw ENQ/ACK bytes, rebuilt on the binary protocol instead.
     async def __do_heartbeat(self):
-        try:
-            await self.__check_connected() # check if we did connect in the past
-        except ConnectionRefusedError:
-            return
+        async with self.__lock:
+            try:
+                await self.__check_connected() # check if we did connect in the past
+            except ConnectionRefusedError:
+                return
 
-        try:
-            await self.__do_write(pack_ping_frame(SpanKey.generate()))
-            pong_header = await self.__do_read(HEADER_LENGTH)
-        except (
-            asyncio.IncompleteReadError,
-            TimeoutError,
-            asyncio.TimeoutError,
-            ConnectionResetError,
-            ConnectionAbortedError,
-            BrokenPipeError,
-        ):
-            self.__connected = False
-            return
+            try:
+                await self.__do_write(pack_ping_frame(SpanKey.generate()))
+                pong_header = await self.__do_read(HEADER_LENGTH)
+            except (
+                asyncio.IncompleteReadError,
+                TimeoutError,
+                asyncio.TimeoutError,
+                ConnectionResetError,
+                ConnectionAbortedError,
+                BrokenPipeError,
+            ):
+                self.__connected = False
+                return
 
-        _, _, _, flags = parse_header(pong_header)
-        if flags & PING_FLAG:
-            self.__last_send = time.time()
-        else:
-            self.__connected = False
+            _, _, _, flags = parse_header(pong_header)
+            if flags & PING_FLAG:
+                self.__last_send = time.time()
+            else:
+                self.__connected = False
 
     # --------------------------------------------------------------------------------
     async def __heartbeat_check(self):
@@ -111,24 +113,25 @@ class PersistentStreamClientBase(ClientBase, ABC):
 
     # --------------------------------------------------------------------------------
     async def _send_message(self, request: bytes) -> bytes:
-        try:
-            await self.__check_connected()
-        except ConnectionRefusedError as e:
-            raise e
+        async with self.__lock:
+            try:
+                await self.__check_connected()
+            except ConnectionRefusedError as e:
+                raise e
 
-        await self.__do_write(request)
+            await self.__do_write(request)
 
-        try:
-            header = await self.__do_read(HEADER_LENGTH)
-        except asyncio.IncompleteReadError:
-            self.__connected = False
-            raise CommunicationsEmptyResponse()
+            try:
+                header = await self.__do_read(HEADER_LENGTH)
+            except asyncio.IncompleteReadError:
+                self.__connected = False
+                raise CommunicationsEmptyResponse()
 
-        _, _, total_len, _ = parse_header(header)
-        rest                = await self.__do_read(total_len)
+            _, _, total_len, _ = parse_header(header)
+            rest               = await self.__do_read(total_len)
 
-        self.__last_send = time.time()
-        return header + rest
+            self.__last_send = time.time()
+            return header + rest
 
     # --------------------------------------------------------------------------------
     async def __do_retry_logic(self, retry_count: int):
@@ -146,7 +149,7 @@ class PersistentStreamClientBase(ClientBase, ABC):
         retry_count = 0
         while retry_count < self.max_retries and not self.success:
             try:
-                response = await self._send_message(request)
+                response     = await self._send_message(request)
                 self.success = True
                 return response
             except (TimeoutError, asyncio.TimeoutError):
