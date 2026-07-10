@@ -13,6 +13,6 @@
 // directly. Simpler than the handler side: BufferedSender is already
 // concrete (no template), so no type-erasure interface is needed either.
 void register_buffered_sender_management_endpoints(
-    RequestRouter& router,
+    RequestRouter&                                                    router,
     std::unordered_map<std::string, std::shared_ptr<BufferedSender>>& registry
 );

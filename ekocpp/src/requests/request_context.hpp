@@ -8,6 +8,6 @@
 // resolve-by-type mechanism is expected to extend to buffered/queued
 // handlers later, not just standard endpoints.
 struct RequestContext {
-    SpanKey      span_key;
-    RequestDTO&  dto;
+    SpanKey     span_key;
+    RequestDTO& dto;
 };

@@ -33,12 +33,12 @@ class StatisticsKeeper {
 public:
     static StatisticsKeeper& instance();
 
-    void set_gather_period(int seconds) { gather_period_ = seconds; }
+    void set_gather_period (int seconds)   { gather_period_ = seconds; }
     void set_history_length(size_t length) { history_length_ = length; }
-    int gather_period() const { return gather_period_; }
+    int  gather_period     () const        { return gather_period_; }
 
-    void increment(const std::string& key, double value = 1.0);
-    void decrement(const std::string& key, double value = 1.0);
+    void increment          (const std::string& key, double value = 1.0);
+    void decrement          (const std::string& key, double value = 1.0);
     void set_statistic_value(const std::string& key, double value);
 
     void add_persisted_queue(const std::string& key, std::function<size_t()> size_getter);
@@ -47,7 +47,7 @@ public:
     // key (so it shows up in stats even before the first call completes);
     // add_endpoint_stats records one completed call's duration.
     void track_endpoint_data(const std::string& key);
-    void add_endpoint_stats(const std::string& key, double duration_seconds = 0.0);
+    void add_endpoint_stats (const std::string& key, double duration_seconds = 0.0);
 
     // Recomputes timestamp/uptime/application/percentiles/persisted-queue
     // sizes into the current snapshot, then returns it.
@@ -79,11 +79,11 @@ private:
     // Private unlocked versions called from within already-locked methods
     // (increment/set_statistic_value lock; update_current_statistics and
     // gather_now call these directly to avoid recursive-lock deadlock).
-    void do_increment(const std::string& key, double value);
+    void do_increment          (const std::string& key, double value);
     void do_set_statistic_value(const std::string& key, double value);
 
     // Assumes stats_mutex_ is held by the caller.
-    void update_current_statistics();
+    void        update_current_statistics();
     static void reset_stats(nlohmann::json& node);
 
     mutable std::mutex stats_mutex_;
@@ -93,8 +93,8 @@ private:
     size_t history_length_ = 12;
     double start_time_     = 0.0;
 
-    nlohmann::json               statistics_current_ = nlohmann::json::object();
-    std::vector<nlohmann::json>  statistics_history_;
+    nlohmann::json              statistics_current_ = nlohmann::json::object();
+    std::vector<nlohmann::json> statistics_history_;
 
     std::unordered_map<std::string, std::function<size_t()>> persisted_queues_;
     std::unordered_map<std::string, std::vector<double>>     endpoint_durations_;

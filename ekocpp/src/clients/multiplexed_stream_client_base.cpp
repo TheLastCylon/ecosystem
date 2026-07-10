@@ -10,11 +10,16 @@
 
 using namespace asio::experimental::awaitable_operators;
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 MultiplexedStreamClientBase<SocketType>::MultiplexedStreamClientBase(
-    asio::any_io_executor executor, std::chrono::milliseconds timeout, std::chrono::milliseconds heartbeat_period,
-    int max_retries, std::chrono::milliseconds retry_delay,
-    std::chrono::milliseconds staleness_sweep_period, std::chrono::milliseconds staleness_warning_threshold
+    asio::any_io_executor     executor,
+    std::chrono::milliseconds timeout,
+    std::chrono::milliseconds heartbeat_period,
+    int                       max_retries,
+    std::chrono::milliseconds retry_delay,
+    std::chrono::milliseconds staleness_sweep_period,
+    std::chrono::milliseconds staleness_warning_threshold
 ) : ClientBase(max_retries, retry_delay),
     executor_(executor),
     timeout_(timeout),
@@ -26,19 +31,24 @@ MultiplexedStreamClientBase<SocketType>::MultiplexedStreamClientBase(
     heartbeat_done_(executor_, 1),
     staleness_sweep_done_(executor_, 1),
     write_permit_(executor_, 1),
-    connect_permit_(executor_, 1) {
+    connect_permit_(executor_, 1)
+{
     write_permit_.try_send(std::error_code{});   // one permit available immediately
     connect_permit_.try_send(std::error_code{}); // one permit available immediately
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-void MultiplexedStreamClientBase<SocketType>::start() {
+void MultiplexedStreamClientBase<SocketType>::start()
+{
     asio::co_spawn(executor_, run_heartbeat_loop<SocketType>(this->weak_from_this()), asio::detached);
     asio::co_spawn(executor_, run_staleness_sweep_loop<SocketType>(this->weak_from_this()), asio::detached);
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::stop() {
+asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::stop()
+{
     stopping_.store(true);
     heartbeat_timer_.cancel();       // wakes both loops immediately instead of waiting out their periods
     staleness_sweep_timer_.cancel();
@@ -46,8 +56,10 @@ asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::stop() {
     co_await staleness_sweep_done_.async_receive(asio::use_awaitable);
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::ensure_connected() {
+asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::ensure_connected()
+{
     co_await connect_permit_.async_receive(asio::use_awaitable);
     struct PermitGuard {
         asio::experimental::concurrent_channel<void(std::error_code)>& permit;
@@ -61,8 +73,10 @@ asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::ensure_connected(
     }
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-void MultiplexedStreamClientBase<SocketType>::fail_all_outstanding(std::error_code ec) {
+void MultiplexedStreamClientBase<SocketType>::fail_all_outstanding(std::error_code ec)
+{
     std::lock_guard<std::mutex> lock(demux_mutex_);
     for (auto& [key, entry] : demux_map_) {
         entry.channel->try_send(ec, std::vector<uint8_t>{});
@@ -78,15 +92,17 @@ void MultiplexedStreamClientBase<SocketType>::fail_all_outstanding(std::error_co
 // multiplexed_stream_client.md's "Reconnection" section for why this is
 // forced correctness, not a style choice.
 template <typename SocketType>
-asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::do_heartbeat() {
+asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::do_heartbeat()
+{
     try {
         co_await ensure_connected();
     } catch (const std::system_error&) {
         co_return; // connection refused
     }
 
-    const SpanKey                 ping_key = SpanKey::generate();
-    auto                          channel  = std::make_shared<DemuxChannel>(executor_, 1);
+    const SpanKey ping_key = SpanKey::generate();
+    auto          channel  = std::make_shared<DemuxChannel>(executor_, 1);
+
     {
         std::lock_guard<std::mutex> lock(demux_mutex_);
         demux_map_[ping_key] = DemuxEntry{channel, std::chrono::steady_clock::now(), false};
@@ -136,6 +152,7 @@ asio::awaitable<void> MultiplexedStreamClientBase<SocketType>::do_heartbeat() {
     }
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 asio::awaitable<std::vector<uint8_t>> MultiplexedStreamClientBase<SocketType>::send_message_retry_loop(std::vector<uint8_t> request) {
     // co_await is not permitted inside a catch block -- the executor is
@@ -148,7 +165,8 @@ asio::awaitable<std::vector<uint8_t>> MultiplexedStreamClientBase<SocketType>::s
 
     while (retry_count < max_retries_) {
         bool should_retry = false;
-        auto channel       = std::make_shared<DemuxChannel>(executor, 1);
+        auto channel      = std::make_shared<DemuxChannel>(executor, 1);
+
         try {
             co_await ensure_connected();
 
@@ -212,7 +230,8 @@ asio::awaitable<std::vector<uint8_t>> MultiplexedStreamClientBase<SocketType>::s
 // "Reconnection" section for why one long-lived loop surviving reconnects
 // was rejected in favour of this).
 template <typename SocketType>
-asio::awaitable<void> run_reader_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self) {
+asio::awaitable<void> run_reader_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self)
+{
     for (;;) {
         auto self = weak_self.lock();
         if (!self) co_return; // owner is gone -- nothing left to read for.
@@ -256,7 +275,8 @@ asio::awaitable<void> run_reader_loop(std::weak_ptr<MultiplexedStreamClientBase<
 // Free function -- same lifetime discipline as PersistentStreamClientBase's
 // run_heartbeat_loop.
 template <typename SocketType>
-asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self) {
+asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self)
+{
     for (;;) {
         auto self = weak_self.lock();
         if (!self) co_return;
@@ -283,7 +303,8 @@ asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<MultiplexedStreamClientBa
 // purely operational visibility. See multiplexed_stream_client.md's
 // "Per-request timeout" section.
 template <typename SocketType>
-asio::awaitable<void> run_staleness_sweep_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self) {
+asio::awaitable<void> run_staleness_sweep_loop(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self)
+{
     for (;;) {
         auto self = weak_self.lock();
         if (!self) co_return;
@@ -319,19 +340,23 @@ asio::awaitable<void> run_staleness_sweep_loop(std::weak_ptr<MultiplexedStreamCl
     }
 }
 
+// --------------------------------------------------------------------------------
 template class MultiplexedStreamClientBase<asio::ip::tcp::socket>;
 template class MultiplexedStreamClientBase<asio::local::stream_protocol::socket>;
 
+// --------------------------------------------------------------------------------
 template asio::awaitable<void> run_heartbeat_loop<asio::ip::tcp::socket>(
     std::weak_ptr<MultiplexedStreamClientBase<asio::ip::tcp::socket>>);
 template asio::awaitable<void> run_heartbeat_loop<asio::local::stream_protocol::socket>(
     std::weak_ptr<MultiplexedStreamClientBase<asio::local::stream_protocol::socket>>);
 
+// --------------------------------------------------------------------------------
 template asio::awaitable<void> run_reader_loop<asio::ip::tcp::socket>(
     std::weak_ptr<MultiplexedStreamClientBase<asio::ip::tcp::socket>>);
 template asio::awaitable<void> run_reader_loop<asio::local::stream_protocol::socket>(
     std::weak_ptr<MultiplexedStreamClientBase<asio::local::stream_protocol::socket>>);
 
+// --------------------------------------------------------------------------------
 template asio::awaitable<void> run_staleness_sweep_loop<asio::ip::tcp::socket>(
     std::weak_ptr<MultiplexedStreamClientBase<asio::ip::tcp::socket>>);
 template asio::awaitable<void> run_staleness_sweep_loop<asio::local::stream_protocol::socket>(

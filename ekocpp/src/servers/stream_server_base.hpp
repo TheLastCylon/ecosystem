@@ -19,4 +19,7 @@
 // frame, msgpack-unpack the body, route, write the response frame, repeat
 // until the connection drops.
 template <typename SocketType>
-asio::awaitable<void> handle_stream_connection(SocketType socket, ServerBase& server);
+asio::awaitable<void> handle_stream_connection(
+    SocketType  socket,
+    ServerBase& server
+);

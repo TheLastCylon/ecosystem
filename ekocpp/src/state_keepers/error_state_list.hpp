@@ -16,9 +16,9 @@ public:
     static ErrorStateList& instance();
 
     bool has_error_id(const std::string& error_id) const;
-    void increment(const std::string& error_id, const std::string& description);
-    void clear_some(const std::string& error_id, int how_many);
-    void clear_all(const std::string& error_id);
+    void increment   (const std::string& error_id, const std::string& description);
+    void clear_some  (const std::string& error_id, int how_many);
+    void clear_all   (const std::string& error_id);
 
     // Only the error_ids currently is_set() (count > 0) -- matches Python's
     // get_error_states() filtering.

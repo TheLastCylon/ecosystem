@@ -14,14 +14,18 @@
 // no runtime "not supported on this platform" branch needed for the
 // Linux-only targets ekocpp currently builds for.
 class UDSServer : public ServerBase {
-public:
-    UDSServer(asio::io_context& io_context, RequestRouter& router, std::string socket_path);
+    public:
+        UDSServer(
+            asio::io_context& io_context,
+            RequestRouter&    router,
+            std::string       socket_path
+        );
 
-    asio::awaitable<void> serve();
-    void                  stop();
+        asio::awaitable<void> serve();
+        void                  stop();
 
-private:
-    asio::io_context&                  io_context_;
-    std::string                        socket_path_;
-    asio::local::stream_protocol::acceptor acceptor_;
+    private:
+        asio::io_context&                      io_context_;
+        std::string                            socket_path_;
+        asio::local::stream_protocol::acceptor acceptor_;
 };

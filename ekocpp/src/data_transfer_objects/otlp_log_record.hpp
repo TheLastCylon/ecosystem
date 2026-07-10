@@ -21,19 +21,19 @@ struct OtlpLogRecord {
     int                        severity_number;
     std::string                severity_text;
     std::string                body;
-    nlohmann::json              attributes = nlohmann::json::object();
+    nlohmann::json             attributes = nlohmann::json::object();
     std::optional<std::string> trace_id;
     std::optional<std::string> span_id;
 
     nlohmann::json to_json() const {
         return {
-            {"timestamp", timestamp},
+            {"timestamp"      , timestamp},
             {"severity_number", severity_number},
-            {"severity_text", severity_text},
-            {"body", body},
-            {"attributes", attributes},
-            {"trace_id", trace_id ? nlohmann::json(*trace_id) : nlohmann::json(nullptr)},
-            {"span_id", span_id ? nlohmann::json(*span_id) : nlohmann::json(nullptr)},
+            {"severity_text"  , severity_text},
+            {"body", body}    ,
+            {"attributes"     , attributes},
+            {"trace_id"       , trace_id ? nlohmann::json(*trace_id) : nlohmann::json(nullptr)},
+            {"span_id"        , span_id  ? nlohmann::json(*span_id)  : nlohmann::json(nullptr)},
         };
     }
 };

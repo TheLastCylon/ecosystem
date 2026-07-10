@@ -10,9 +10,10 @@
 // exists so callers can catch a specific failure category rather than a
 // bare std::exception.
 
+// --------------------------------------------------------------------------------
 class ExceptionBase : public std::runtime_error {
-public:
-    explicit ExceptionBase(const std::string& message) : std::runtime_error(message) {}
+    public:
+        explicit ExceptionBase(const std::string& message) : std::runtime_error(message) {}
 };
 
 // --------------------------------------------------------------------------------
@@ -27,8 +28,8 @@ public:
 // between ApplicationProcessingException (handler-thrown) and
 // RouterProcessingException (router-attached status).
 class ApplicationProcessingException : public ExceptionBase {
-public:
-    using ExceptionBase::ExceptionBase;
+    public:
+        using ExceptionBase::ExceptionBase;
 };
 
 // --------------------------------------------------------------------------------
@@ -41,50 +42,75 @@ public:
 // server-side consumer, and ServerBase::route_request's catch-all needs the
 // actual status to map to instead of always falling back to UNHANDLED.
 class ResponseException : public ExceptionBase {
-public:
-    ResponseException(int status, const std::string& message) : ExceptionBase(message), status_(status) {}
-    int status() const { return status_; }
-private:
-    int status_;
+    public:
+        ResponseException(
+            int                status,
+            const std::string& message
+        ) : ExceptionBase(message),
+            status_(status)
+        {}
+        int status() const { return status_; }
+    private:
+        int status_;
 };
 
+// --------------------------------------------------------------------------------
 class ProtocolParsingException : public ResponseException {
-public:
-    explicit ProtocolParsingException(const std::string& message) : ResponseException(static_cast<int>(Status::PROTOCOL_PARSING_ERROR), message) {}
+    public:
+        explicit ProtocolParsingException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::PROTOCOL_PARSING_ERROR), message) {}
 };
+
+// --------------------------------------------------------------------------------
 class ClientDeniedException : public ResponseException {
-public:
-    explicit ClientDeniedException(const std::string& message) : ResponseException(static_cast<int>(Status::CLIENT_DENIED), message) {}
+    public:
+        explicit ClientDeniedException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::CLIENT_DENIED), message) {}
 };
+
+// --------------------------------------------------------------------------------
 class ValidationException : public ResponseException {
-public:
-    explicit ValidationException(const std::string& message) : ResponseException(static_cast<int>(Status::VALIDATION_ERROR), message) {}
+    public:
+        explicit ValidationException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::VALIDATION_ERROR), message) {}
 };
+
+// --------------------------------------------------------------------------------
 class RouteKeyUnknownException : public ResponseException {
-public:
-    explicit RouteKeyUnknownException(const std::string& message) : ResponseException(static_cast<int>(Status::ROUTE_KEY_UNKNOWN), message) {}
+    public:
+        explicit RouteKeyUnknownException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::ROUTE_KEY_UNKNOWN), message) {}
 };
+
+// --------------------------------------------------------------------------------
 class ServerBusyException : public ResponseException {
-public:
-    explicit ServerBusyException(const std::string& message) : ResponseException(static_cast<int>(Status::APPLICATION_BUSY), message) {}
+    public:
+        explicit ServerBusyException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::APPLICATION_BUSY), message) {}
 };
+// --------------------------------------------------------------------------------
 class ProcessingException : public ResponseException {
-public:
-    explicit ProcessingException(const std::string& message) : ResponseException(static_cast<int>(Status::PROCESSING_FAILURE), message) {}
+    public:
+        explicit ProcessingException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::PROCESSING_FAILURE), message) {}
 };
+// --------------------------------------------------------------------------------
 class UnhandledException : public ResponseException {
-public:
-    explicit UnhandledException(const std::string& message) : ResponseException(static_cast<int>(Status::UNHANDLED), message) {}
+    public:
+        explicit UnhandledException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::UNHANDLED), message) {}
 };
+// --------------------------------------------------------------------------------
 class UnknownStatusCodeException : public ResponseException {
-public:
-    explicit UnknownStatusCodeException(const std::string& message) : ResponseException(static_cast<int>(Status::UNHANDLED), message) {}
+    public:
+        explicit UnknownStatusCodeException(const std::string& message) :
+            ResponseException(static_cast<int>(Status::UNHANDLED), message) {}
 };
 
 // --------------------------------------------------------------------------------
 // Raised by the transport layer itself (not a server response at all).
-class CommunicationExceptionBase    : public ExceptionBase { using ExceptionBase::ExceptionBase; };
-class ClientDisconnectedException   : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
-class CommunicationsNonRetryable    : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
+class CommunicationExceptionBase      : public ExceptionBase              { using ExceptionBase::ExceptionBase; };
+class ClientDisconnectedException     : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
+class CommunicationsNonRetryable      : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
 class CommunicationsMaxRetriesReached : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
-class CommunicationsEmptyResponse   : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };
+class CommunicationsEmptyResponse     : public CommunicationExceptionBase { using CommunicationExceptionBase::CommunicationExceptionBase; };

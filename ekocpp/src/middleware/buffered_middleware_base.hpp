@@ -18,32 +18,33 @@
 //
 // after_process: called after the buffered handler returns. success=true means
 //   the handler returned true; false means it returned false or threw.
-class BufferedMiddlewareBase {
-public:
-    virtual ~BufferedMiddlewareBase() = default;
+class BufferedMiddlewareBase
+{
+    public:
+        virtual ~BufferedMiddlewareBase() = default;
 
-    virtual asio::awaitable<nlohmann::json> before_push(
-        SpanKey           /*span_key*/,
-        const RequestDTO& /*dto*/)
-    {
-        co_return nlohmann::json::object();
-    }
+        virtual asio::awaitable<nlohmann::json> before_push(
+            SpanKey           /*span_key*/,
+            const RequestDTO& /*dto*/)
+        {
+            co_return nlohmann::json::object();
+        }
 
-    virtual asio::awaitable<void> before_process(
-        SpanKey                /*span_key*/,
-        const RequestDTO&      /*dto*/,
-        const nlohmann::json&  /*metadata*/,
-        int                    /*retries*/)
-    {
-        co_return;
-    }
+        virtual asio::awaitable<void> before_process(
+            SpanKey               /*span_key*/,
+            const RequestDTO&     /*dto*/,
+            const nlohmann::json& /*metadata*/,
+            int                   /*retries*/)
+        {
+            co_return;
+        }
 
-    virtual asio::awaitable<void> after_process(
-        SpanKey                /*span_key*/,
-        const RequestDTO&      /*dto*/,
-        const nlohmann::json&  /*metadata*/,
-        bool                   /*success*/)
-    {
-        co_return;
-    }
+        virtual asio::awaitable<void> after_process(
+            SpanKey               /*span_key*/,
+            const RequestDTO&     /*dto*/,
+            const nlohmann::json& /*metadata*/,
+            bool                  /*success*/)
+        {
+            co_return;
+        }
 };

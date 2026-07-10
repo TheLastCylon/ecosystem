@@ -9,25 +9,32 @@
 
 using namespace asio::experimental::awaitable_operators;
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 PersistentStreamClientBase<SocketType>::PersistentStreamClientBase(
-    asio::any_io_executor executor, std::chrono::milliseconds timeout, std::chrono::milliseconds heartbeat_period,
-    int max_retries, std::chrono::milliseconds retry_delay
+    asio::any_io_executor     executor,
+    std::chrono::milliseconds timeout,
+    std::chrono::milliseconds heartbeat_period,
+    int                       max_retries,
+    std::chrono::milliseconds retry_delay
 ) : ClientBase(max_retries, retry_delay),
     executor_(executor),
     timeout_(timeout),
     heartbeat_period_(heartbeat_period),
     heartbeat_timer_(executor_),
     heartbeat_done_(executor_, 1),
-    send_permit_(executor_, 1) {
+    send_permit_(executor_, 1)
+{
     send_permit_.try_send(std::error_code{}); // one permit available immediately
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 void PersistentStreamClientBase<SocketType>::start() {
     asio::co_spawn(executor_, run_heartbeat_loop<SocketType>(this->weak_from_this()), asio::detached);
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 asio::awaitable<void> PersistentStreamClientBase<SocketType>::stop() {
     stopping_.store(true);
@@ -35,6 +42,7 @@ asio::awaitable<void> PersistentStreamClientBase<SocketType>::stop() {
     co_await heartbeat_done_.async_receive(asio::use_awaitable);
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
 asio::awaitable<void> PersistentStreamClientBase<SocketType>::ensure_connected() {
     if (!connected_) {
@@ -47,7 +55,8 @@ asio::awaitable<void> PersistentStreamClientBase<SocketType>::ensure_connected()
 // ping/pong round trip, answered by the server's transport layer alone,
 // never reaching its router.
 template <typename SocketType>
-asio::awaitable<void> PersistentStreamClientBase<SocketType>::do_heartbeat() {
+asio::awaitable<void> PersistentStreamClientBase<SocketType>::do_heartbeat()
+{
     co_await send_permit_.async_receive(asio::use_awaitable);
     struct PermitGuard {
         asio::experimental::concurrent_channel<void(std::error_code)>& permit;
@@ -83,8 +92,10 @@ asio::awaitable<void> PersistentStreamClientBase<SocketType>::do_heartbeat() {
     }
 }
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::send_message_retry_loop(std::vector<uint8_t> request) {
+asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::send_message_retry_loop(std::vector<uint8_t> request)
+{
     // co_await is not permitted inside a catch block -- the executor is
     // fetched once up front; see the matching comment in stream_client_base.cpp.
     auto executor = co_await asio::this_coro::executor;
@@ -146,7 +157,8 @@ asio::awaitable<std::vector<uint8_t>> PersistentStreamClientBase<SocketType>::se
 // time, never indefinitely, and the lock() at the top of the next iteration
 // is the checkpoint where a dropped owner is actually noticed.
 template <typename SocketType>
-asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<PersistentStreamClientBase<SocketType>> weak_self) {
+asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<PersistentStreamClientBase<SocketType>> weak_self)
+{
     for (;;) {
         auto self = weak_self.lock();
         if (!self) co_return; // owner is gone -- nothing left to heartbeat for.
@@ -168,10 +180,18 @@ asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<PersistentStreamClientBas
     }
 }
 
+// --------------------------------------------------------------------------------
 template class PersistentStreamClientBase<asio::ip::tcp::socket>;
 template class PersistentStreamClientBase<asio::local::stream_protocol::socket>;
 
-template asio::awaitable<void> run_heartbeat_loop<asio::ip::tcp::socket>(
-    std::weak_ptr<PersistentStreamClientBase<asio::ip::tcp::socket>>);
-template asio::awaitable<void> run_heartbeat_loop<asio::local::stream_protocol::socket>(
-    std::weak_ptr<PersistentStreamClientBase<asio::local::stream_protocol::socket>>);
+// --------------------------------------------------------------------------------
+template asio::awaitable<void>
+run_heartbeat_loop<asio::ip::tcp::socket> (
+    std::weak_ptr<PersistentStreamClientBase<asio::ip::tcp::socket>>
+);
+
+// --------------------------------------------------------------------------------
+template asio::awaitable<void>
+run_heartbeat_loop<asio::local::stream_protocol::socket>(
+    std::weak_ptr<PersistentStreamClientBase<asio::local::stream_protocol::socket>>
+);

@@ -11,29 +11,34 @@
 
 namespace {
 
-// Mirrors ekosis/logs/logger.py's EcoLogger.set_level -- string level name
-// to spdlog's level_enum. Unrecognised values fall through to info, same
-// permissiveness as Python's chain of plain `if` statements (no else/raise
-// on an unmatched string there either).
-spdlog::level::level_enum level_from_string(const std::string& level) {
-    if (level == "debug")    return spdlog::level::debug;
-    if (level == "info")     return spdlog::level::info;
-    if (level == "warn")     return spdlog::level::warn;
-    if (level == "error")    return spdlog::level::err;
-    if (level == "critical") return spdlog::level::critical;
-    return spdlog::level::info;
-}
+    // Mirrors ekosis/logs/logger.py's EcoLogger.set_level -- string level name
+    // to spdlog's level_enum. Unrecognised values fall through to info, same
+    // permissiveness as Python's chain of plain `if` statements (no else/raise
+    // on an unmatched string there either).
+    spdlog::level::level_enum level_from_string(const std::string& level)
+    {
+        if (level == "debug")    return spdlog::level::debug;
+        if (level == "info")     return spdlog::level::info;
+        if (level == "warn")     return spdlog::level::warn;
+        if (level == "error")    return spdlog::level::err;
+        if (level == "critical") return spdlog::level::critical;
+        return spdlog::level::info;
+    }
 
 } // namespace
 
-EcoLogger& EcoLogger::instance() {
+// --------------------------------------------------------------------------------
+EcoLogger& EcoLogger::instance()
+{
     static EcoLogger logger;
     return logger;
 }
 
-void EcoLogger::setup() {
+// --------------------------------------------------------------------------------
+void EcoLogger::setup()
+{
     const ConfigLogging& log_config = AppConfiguration::instance().logging();
-    const auto            level      = level_from_string(log_config.level);
+    const auto           level      = level_from_string(log_config.level);
 
     std::vector<spdlog::sink_ptr> sinks;
 
@@ -66,6 +71,8 @@ void EcoLogger::setup() {
     spdlog::flush_every(std::chrono::seconds(1));
 }
 
-void EcoLogger::set_level(const std::string& level) {
+// --------------------------------------------------------------------------------
+void EcoLogger::set_level(const std::string& level)
+{
     logger_->set_level(level_from_string(level));
 }

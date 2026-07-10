@@ -9,7 +9,8 @@
 // justify a new dependency, and getopt_long is already linked via glibc on
 // every target this project runs on (Linux-only, same call already made for
 // UDSServer/UDSClient).
-struct CommandLineArgs {
+struct CommandLineArgs
+{
     std::string                instance;          // -i / --instance, required
     std::optional<std::string> config_file;       // -c / --config_file, optional
 

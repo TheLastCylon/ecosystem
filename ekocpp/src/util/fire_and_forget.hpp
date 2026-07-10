@@ -30,7 +30,10 @@
 // Direct equivalent of fire_and_forget_task -- spawn an already-constructed
 // awaitable, don't wait for it, return immediately.
 template <typename Awaitable>
-void fire_and_forget(asio::any_io_executor executor, Awaitable awaitable) {
+void fire_and_forget(
+    asio::any_io_executor executor,
+    Awaitable             awaitable
+) {
     asio::co_spawn(executor, std::move(awaitable), asio::detached);
 }
 
@@ -46,8 +49,14 @@ void fire_and_forget(asio::any_io_executor executor, Awaitable awaitable) {
 // (asio::awaitable<T>(...) signature) -- make_fire_and_forget only changes
 // how its CALLER experiences calling it.
 template <typename CoroutineFactory>
-auto make_fire_and_forget(asio::any_io_executor executor, CoroutineFactory coroutine_factory) {
+auto make_fire_and_forget(
+    asio::any_io_executor executor,
+    CoroutineFactory      coroutine_factory
+) {
     return [executor, coroutine_factory](auto&&... args) {
-        fire_and_forget(executor, coroutine_factory(std::forward<decltype(args)>(args)...));
+        fire_and_forget(
+            executor,
+            coroutine_factory(std::forward<decltype(args)>(args)...)
+        );
     };
 }

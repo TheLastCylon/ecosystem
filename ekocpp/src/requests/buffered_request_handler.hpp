@@ -63,116 +63,120 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
 // needs a handler that itself co_awaits mid-processing; extend if that ever
 // becomes a real need rather than building it speculatively now.
 template <typename Handler>
-class BufferedRequestHandler : public BufferedHandlerInterface,
-                                public std::enable_shared_from_this<BufferedRequestHandler<Handler>> {
-public:
-    BufferedRequestHandler(
-        asio::any_io_executor executor,
-        std::string           route_key,
-        Handler                handler,
-        const std::string&    directory,
-        const std::string&    file_basename,
-        int                    page_size   = 100,
-        int                    max_retries = 0
-    ) : route_key_(std::move(route_key)),
-        handler_(std::move(handler)),
-        max_retries_(max_retries),
-        executor_(executor),
-        queue_(directory, file_basename, page_size),
-        shutdown_done_(executor_, 1) {}
+class BufferedRequestHandler :
+    public BufferedHandlerInterface,
+    public std::enable_shared_from_this<BufferedRequestHandler<Handler>>
+{
+    public:
+        BufferedRequestHandler(
+            asio::any_io_executor executor,
+            std::string           route_key,
+            Handler                handler,
+            const std::string&    directory,
+            const std::string&    file_basename,
+            int                    page_size   = 100,
+            int                    max_retries = 0
+        ) : route_key_(std::move(route_key)),
+            handler_(std::move(handler)),
+            max_retries_(max_retries),
+            executor_(executor),
+            queue_(directory, file_basename, page_size),
+            shutdown_done_(executor_, 1) {}
 
-    const std::string& route_key() const override { return route_key_; }
+        const std::string& route_key() const override { return route_key_; }
 
-    void pause_receiving() override { receiving_paused_.store(true); }
-    void unpause_receiving() override { receiving_paused_.store(false); check_process_queue(); }
-    void pause_processing() override { processing_paused_.store(true); }
-    void unpause_processing() override { processing_paused_.store(false); check_process_queue(); }
-    bool is_receiving_paused() const override { return receiving_paused_.load(); }
-    bool is_processing_paused() const override { return processing_paused_.load(); }
+        void pause_receiving     () override       { receiving_paused_.store(true); }
+        void unpause_receiving   () override       { receiving_paused_.store(false); check_process_queue(); }
+        void pause_processing    () override       { processing_paused_.store(true); }
+        void unpause_processing  () override       { processing_paused_.store(false); check_process_queue(); }
+        bool is_receiving_paused () const override { return receiving_paused_.load(); }
+        bool is_processing_paused() const override { return processing_paused_.load(); }
 
-    size_t pending_queue_size() const override { return queue_.get_pending_size(); }
-    size_t error_queue_size() const override { return queue_.get_error_size(); }
-    void error_queue_clear() override { queue_.clear_error_queue(); }
+        size_t pending_queue_size() const override { return queue_.get_pending_size(); }
+        size_t error_queue_size  () const override { return queue_.get_error_size(); }
+        void   error_queue_clear () override       { queue_.clear_error_queue(); }
 
-    std::vector<std::string> get_first_x_error_span_keys(size_t how_many) const override {
-        return queue_.get_first_x_error_span_keys(how_many);
-    }
+        std::vector<std::string> get_first_x_error_span_keys(size_t how_many) const override {
+            return queue_.get_first_x_error_span_keys(how_many);
+        }
 
-    std::optional<nlohmann::json> pop_request_from_error_queue(const SpanKey& span_key) override {
-        return queue_.pop_error_q_span_key(span_key);
-    }
+        std::optional<nlohmann::json> pop_request_from_error_queue(const SpanKey& span_key) override {
+            return queue_.pop_error_q_span_key(span_key);
+        }
 
-    std::optional<nlohmann::json> inspect_request_in_error_queue(const SpanKey& span_key) const override {
-        return queue_.inspect_error_q_span_key(span_key);
-    }
+        std::optional<nlohmann::json> inspect_request_in_error_queue(const SpanKey& span_key) const override {
+            return queue_.inspect_error_q_span_key(span_key);
+        }
 
-    void reprocess_error_queue() override {
-        queue_.move_all_error_to_pending();
-        check_process_queue();
-    }
-
-    std::optional<nlohmann::json> reprocess_error_queue_span_key(const SpanKey& span_key) override {
-        auto moved = queue_.move_one_error_to_pending(span_key);
-        if (moved) {
+        void reprocess_error_queue() override {
+            queue_.move_all_error_to_pending();
             check_process_queue();
         }
-        return moved;
-    }
 
-    // Matches RequestRouter's HandlerWrapper shape exactly
-    // (RequestContext& -> asio::awaitable<json>) -- register_buffered_endpoint
-    // registers this straight into RequestRouter's existing route table, no
-    // second dispatch path needed.
-    asio::awaitable<nlohmann::json> push(RequestContext& request_context) {
-        if (receiving_paused_.load()) {
-            throw ServerBusyException("Receiving on '" + route_key_ + "' has been paused.");
+        std::optional<nlohmann::json> reprocess_error_queue_span_key(const SpanKey& span_key) override {
+            auto moved = queue_.move_one_error_to_pending(span_key);
+            if (moved) {
+                check_process_queue();
+            }
+            return moved;
         }
-        nlohmann::json metadata = co_await BufferedMiddlewareManager::instance().collect_push_metadata(
-            request_context.span_key, request_context.dto
-        );
-        queue_.push_pending(request_context.span_key, request_context.dto.data, 0, metadata);
-        check_process_queue();
-        co_return nlohmann::json{{"span_key", request_context.span_key.to_string()}};
-    }
 
-    // Pauses both flags, then waits for any in-flight processing loop
-    // iteration to actually exit before flushing the queue to disk --
-    // mirrors Python's shutdown()/__shut_down_check() pairing (wait for
-    // `running` to go false, then queue.shut_down()), via the same
-    // channel-based confirmed-exit pattern PersistentStreamClientBase uses
-    // for stop().
-    asio::awaitable<void> shut_down() override {
-        pause_receiving();
-        pause_processing();
-        shutdown_requested_.store(true);
-
-        if (!running_.load()) {
-            queue_.shut_down();
-            co_return;
+        // Matches RequestRouter's HandlerWrapper shape exactly
+        // (RequestContext& -> asio::awaitable<json>) -- register_buffered_endpoint
+        // registers this straight into RequestRouter's existing route table, no
+        // second dispatch path needed.
+        asio::awaitable<nlohmann::json> push(RequestContext& request_context) {
+            if (receiving_paused_.load()) {
+                throw ServerBusyException("Receiving on '" + route_key_ + "' has been paused.");
+            }
+            nlohmann::json metadata = co_await BufferedMiddlewareManager::instance().collect_push_metadata(
+                request_context.span_key, request_context.dto
+            );
+            queue_.push_pending(request_context.span_key, request_context.dto.data, 0, metadata);
+            check_process_queue();
+            co_return nlohmann::json{{"span_key", request_context.span_key.to_string()}};
         }
-        co_await shutdown_done_.async_receive(asio::use_awaitable);
-    }
 
-private:
-    friend asio::awaitable<void> run_pending_queue_processing_loop<Handler>(std::weak_ptr<BufferedRequestHandler<Handler>> weak_self);
+        // Pauses both flags, then waits for any in-flight processing loop
+        // iteration to actually exit before flushing the queue to disk --
+        // mirrors Python's shutdown()/__shut_down_check() pairing (wait for
+        // `running` to go false, then queue.shut_down()), via the same
+        // channel-based confirmed-exit pattern PersistentStreamClientBase uses
+        // for stop().
+        asio::awaitable<void> shut_down() override {
+            pause_receiving();
+            pause_processing();
+            shutdown_requested_.store(true);
 
-    void check_process_queue() {
-        if (!running_.exchange(true)) {
-            asio::co_spawn(executor_, run_pending_queue_processing_loop<Handler>(this->weak_from_this()), asio::detached);
+            if (!running_.load()) {
+                queue_.shut_down();
+                co_return;
+            }
+
+            co_await shutdown_done_.async_receive(asio::use_awaitable);
         }
-    }
 
-    std::string           route_key_;
-    Handler                handler_;
-    int                    max_retries_;
-    asio::any_io_executor  executor_;
-    PendingQueue           queue_;
+    private:
+        friend asio::awaitable<void> run_pending_queue_processing_loop<Handler>(std::weak_ptr<BufferedRequestHandler<Handler>> weak_self);
 
-    std::atomic<bool> receiving_paused_{true};
-    std::atomic<bool> processing_paused_{true};
-    std::atomic<bool> running_{false};
-    std::atomic<bool> shutdown_requested_{false};
-    asio::experimental::concurrent_channel<void(std::error_code)> shutdown_done_;
+        void check_process_queue() {
+            if (!running_.exchange(true)) {
+                asio::co_spawn(executor_, run_pending_queue_processing_loop<Handler>(this->weak_from_this()), asio::detached);
+            }
+        }
+
+        std::string           route_key_;
+        Handler               handler_;
+        int                   max_retries_;
+        asio::any_io_executor executor_;
+        PendingQueue          queue_;
+
+        std::atomic<bool> receiving_paused_  {true};
+        std::atomic<bool> processing_paused_ {true};
+        std::atomic<bool> running_           {false};
+        std::atomic<bool> shutdown_requested_{false};
+
+        asio::experimental::concurrent_channel<void(std::error_code)> shutdown_done_;
 };
 
 // Free function, not a member -- see the friend declaration's comment above
@@ -187,7 +191,9 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
 
     for (;;) {
         auto self = weak_self.lock();
-        if (!self) co_return; // owner is gone -- nothing left to process for.
+        if (!self) {
+            co_return; // owner is gone -- nothing left to process for.
+        }
 
         if (self->processing_paused_.load() || !self->queue_.has_pending()) {
             break;
@@ -201,8 +207,8 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
         RequestDTO     local_dto{popped->data};
         RequestContext context{popped->span_key, local_dto};
         auto&          bmm     = BufferedMiddlewareManager::instance();
+        bool           success = false;
 
-        bool success = false;
         try {
             co_await bmm.run_before_process(popped->span_key, local_dto, popped->metadata, popped->retries);
             if constexpr (is_awaitable<typename traits::return_type>::value) {
@@ -226,7 +232,9 @@ asio::awaitable<void> run_pending_queue_processing_loop(std::weak_ptr<BufferedRe
     }
 
     auto self = weak_self.lock();
-    if (!self) co_return;
+    if (!self) {
+        co_return;
+    }
 
     self->running_.store(false);
     if (self->shutdown_requested_.load()) {

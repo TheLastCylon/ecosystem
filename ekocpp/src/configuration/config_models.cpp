@@ -8,40 +8,49 @@
 
 #include <nlohmann/json.hpp>
 
+// --------------------------------------------------------------------------------
 namespace {
 
-std::unique_ptr<AppConfiguration> g_instance;
+    std::unique_ptr<AppConfiguration> g_instance;
 
-std::string basename_of(const char* path) {
-    const std::string s = path;
-    const auto         slash = s.find_last_of('/');
-    return slash == std::string::npos ? s : s.substr(slash + 1);
-}
+    std::string basename_of(const char* path) {
+        const std::string s     = path;
+        const auto        slash = s.find_last_of('/');
+        return slash == std::string::npos ? s : s.substr(slash + 1);
+    }
 
-std::string to_upper(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
-    return s;
-}
+    std::string to_upper(std::string s) {
+        std::transform(
+            s.begin(),
+            s.end(),
+            s.begin(),
+            [](unsigned char c) { return std::toupper(c); }
+        );
+        return s;
+    }
 
-std::optional<std::pair<std::string, uint16_t>> parse_host_port_string(const std::string& value) {
-    const auto colon = value.find(':');
-    if (colon == std::string::npos) return std::nullopt;
-    const std::string host = value.substr(0, colon);
-    const std::string port = value.substr(colon + 1);
-    if (host.empty() || port.empty()) return std::nullopt;
-    return std::make_pair(host, static_cast<uint16_t>(std::stoi(port)));
-}
+    std::optional<std::pair<std::string, uint16_t>> parse_host_port_string(const std::string& value) {
+        const auto colon = value.find(':');
+        if (colon == std::string::npos) return std::nullopt;
+        const std::string host = value.substr(0, colon);
+        const std::string port = value.substr(colon + 1);
+        if (host.empty() || port.empty()) return std::nullopt;
+        return std::make_pair(host, static_cast<uint16_t>(std::stoi(port)));
+    }
 
 } // namespace
 
+// --------------------------------------------------------------------------------
 void AppConfiguration::initialize(const char* argv0, const CommandLineArgs& args) {
     g_instance.reset(new AppConfiguration(argv0, args));
 }
 
+// --------------------------------------------------------------------------------
 AppConfiguration& AppConfiguration::instance() {
     return *g_instance; // calling before initialize() is a programmer error, not a recoverable condition
 }
 
+// --------------------------------------------------------------------------------
 AppConfiguration::AppConfiguration(const char* argv0, const CommandLineArgs& args)
     : application_name_(basename_of(argv0)), instance_(args.instance) {
     // console_only/file_only are CLI-only on the Python side too (no env
@@ -55,23 +64,33 @@ AppConfiguration::AppConfiguration(const char* argv0, const CommandLineArgs& arg
     }
 }
 
-const std::string& AppConfiguration::name() const { return application_name_; }
-const std::string& AppConfiguration::instance_id() const { return instance_; }
-const std::string& AppConfiguration::lock_directory() const { return lock_directory_; }
+// --------------------------------------------------------------------------------
+const std::string& AppConfiguration::name()                            const { return application_name_; }
+const std::string& AppConfiguration::instance_id()                     const { return instance_; }
+const std::string& AppConfiguration::lock_directory()                  const { return lock_directory_; }
 const std::optional<std::string>& AppConfiguration::buffer_directory() const { return buffer_directory_; }
 
-const std::optional<ConfigTCP>& AppConfiguration::tcp() const { return tcp_; }
-const std::optional<ConfigUDP>& AppConfiguration::udp() const { return udp_; }
-const std::optional<ConfigUDS>& AppConfiguration::uds() const { return uds_; }
-const ConfigLogging&            AppConfiguration::logging() const { return logging_; }
+// --------------------------------------------------------------------------------
+const std::optional<ConfigTCP>& AppConfiguration::tcp()          const { return tcp_; }
+const std::optional<ConfigUDP>& AppConfiguration::udp()          const { return udp_; }
+const std::optional<ConfigUDS>& AppConfiguration::uds()          const { return uds_; }
+const ConfigLogging&            AppConfiguration::logging()      const { return logging_; }
 const ConfigStatisticsKeeper&   AppConfiguration::stats_keeper() const { return stats_keeper_; }
 
-std::string AppConfiguration::extra(const std::string& key, const std::string& default_value) const {
+// --------------------------------------------------------------------------------
+std::string AppConfiguration::extra(
+    const std::string& key,
+    const std::string& default_value
+) const {
     const auto it = extra_.find(key);
     return it != extra_.end() ? it->second : default_value;
 }
 
-std::optional<std::string> AppConfiguration::get_eco_env_optional(const std::string& postfix, bool instance_level_only) const {
+// --------------------------------------------------------------------------------
+std::optional<std::string> AppConfiguration::get_eco_env_optional(
+    const std::string& postfix,
+    bool               instance_level_only
+) const {
     const std::string global_env_name    = "ECOENV_" + postfix;
     const std::string app_level_env_name = global_env_name + "_" + to_upper(application_name_);
     const std::string instance_env_name  = app_level_env_name + "_" + to_upper(instance_);
@@ -83,13 +102,20 @@ std::optional<std::string> AppConfiguration::get_eco_env_optional(const std::str
     return std::nullopt;
 }
 
-std::string AppConfiguration::get_eco_env(const std::string& postfix, const std::string& default_value, bool instance_level_only) const {
+// --------------------------------------------------------------------------------
+std::string AppConfiguration::get_eco_env(
+    const std::string& postfix,
+    const std::string& default_value,
+    bool               instance_level_only
+) const {
     return get_eco_env_optional(postfix, instance_level_only).value_or(default_value);
 }
 
-void AppConfiguration::load_from_env() {
-    lock_directory_   = get_eco_env("LOCK_DIR", "/tmp");
-    buffer_directory_ = get_eco_env_optional("BUFFER_DIR"); // deliberately no default -- see the comment on buffer_directory_'s declaration
+// --------------------------------------------------------------------------------
+void AppConfiguration::load_from_env()
+{
+    lock_directory_              = get_eco_env("LOCK_DIR", "/tmp");
+    buffer_directory_            = get_eco_env_optional("BUFFER_DIR"); // deliberately no default -- see the comment on buffer_directory_'s declaration
 
     stats_keeper_.gather_period  = std::stoi(get_eco_env("STAT_GP", "300"));
     stats_keeper_.history_length = std::stoi(get_eco_env("STAT_HL", "12"));
@@ -134,7 +160,9 @@ void AppConfiguration::load_from_env() {
     logging_.file_logging.base_file_path = logging_.file_logging.directory + "/" + logging_.file_logging.base_file_name + ".log";
 }
 
-void AppConfiguration::load_from_file(const std::string& path) {
+// --------------------------------------------------------------------------------
+void AppConfiguration::load_from_file(const std::string& path)
+{
     std::ifstream file(path);
     if (!file.is_open()) {
         throw std::runtime_error("The specified configuration file [" + path + "] does NOT exist or could not be opened.");
@@ -188,7 +216,9 @@ void AppConfiguration::load_from_file(const std::string& path) {
     }
 }
 
-void AppConfiguration::load_extra_from_env() {
+// --------------------------------------------------------------------------------
+void AppConfiguration::load_extra_from_env()
+{
     // Mirrors ekosis/configuration/config_models.py's get_app_instance_extra().
     // Three tiers, processed in ascending priority order so higher tiers win:
     //   global:   ECOENV_EXTRA_<KEY>

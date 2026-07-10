@@ -4,11 +4,16 @@
 
 #include "stream_server_base.hpp"
 
-UDSServer::UDSServer(asio::io_context& io_context, RequestRouter& router, std::string socket_path)
-    : ServerBase(router),
-      io_context_(io_context),
-      socket_path_(std::move(socket_path)),
-      acceptor_(io_context_) {
+// --------------------------------------------------------------------------------
+UDSServer::UDSServer(
+    asio::io_context& io_context,
+    RequestRouter&    router,
+    std::string       socket_path
+) : ServerBase(router),
+    io_context_(io_context),
+    socket_path_(std::move(socket_path)),
+    acceptor_(io_context_)
+{
     set_transport_type("UDS");
 
     // A stale socket file left behind by a previous crashed run blocks bind()
@@ -21,6 +26,7 @@ UDSServer::UDSServer(asio::io_context& io_context, RequestRouter& router, std::s
     acceptor_.listen();
 }
 
+// --------------------------------------------------------------------------------
 asio::awaitable<void> UDSServer::serve() {
     running_ = true;
     for (;;) {
@@ -29,6 +35,7 @@ asio::awaitable<void> UDSServer::serve() {
     }
 }
 
+// --------------------------------------------------------------------------------
 void UDSServer::stop() {
     running_ = false;
     acceptor_.close();

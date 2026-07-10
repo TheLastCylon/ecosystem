@@ -28,18 +28,31 @@ std::string format_iso8601_utc(spdlog::log_clock::time_point time) {
     gmtime_r(&epoch_seconds, &tm);
 
     char buffer[64];
-    std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02dT%02d:%02d:%02d.%06lld+00:00",
-        tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec,
-        static_cast<long long>(microsecond_fraction));
+    std::snprintf(
+        buffer,
+        sizeof(buffer),
+        "%04d-%02d-%02dT%02d:%02d:%02d.%06lld+00:00",
+        tm.tm_year + 1900,
+        tm.tm_mon + 1,
+        tm.tm_mday,
+        tm.tm_hour,
+        tm.tm_min,
+        tm.tm_sec,
+        static_cast<long long>(microsecond_fraction)
+    );
     return buffer;
 }
 
 } // namespace
 
-void OtlpFormatter::format(const spdlog::details::log_msg& msg, spdlog::memory_buf_t& dest) {
-    const OtelSeverity     severity    = severity_for_level(msg.level);
-    const SpanKey          ambient     = thread_local_span_key();
-    const bool             has_span    = !(ambient == SpanKey{}); // all-zero == "never seeded", not a real span
+// --------------------------------------------------------------------------------
+void OtlpFormatter::format(
+    const spdlog::details::log_msg& msg,
+    spdlog::memory_buf_t&           dest
+) {
+    const OtelSeverity      severity   = severity_for_level(msg.level);
+    const SpanKey           ambient    = thread_local_span_key();
+    const bool              has_span   = !(ambient == SpanKey{}); // all-zero == "never seeded", not a real span
     const AppConfiguration& app_config = AppConfiguration::instance();
 
     OtlpLogRecord record;
@@ -53,7 +66,7 @@ void OtlpFormatter::format(const spdlog::details::log_msg& msg, spdlog::memory_b
         // included here anyway, on purpose, same reasoning as Python: a
         // user with no observability stack tailing the raw file directly
         // has no other way to know which app/instance a line came from.
-        {"application_name", app_config.name()},
+        {"application_name"    , app_config.name()},
         {"application_instance", app_config.instance_id()},
     };
     if (!msg.source.empty()) {
@@ -69,6 +82,7 @@ void OtlpFormatter::format(const spdlog::details::log_msg& msg, spdlog::memory_b
     dest.push_back('\n');
 }
 
+// --------------------------------------------------------------------------------
 std::unique_ptr<spdlog::formatter> OtlpFormatter::clone() const {
     return std::make_unique<OtlpFormatter>();
 }

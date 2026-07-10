@@ -12,23 +12,24 @@
 // types -- TCP and UDS share this body, each as its own instantiation
 // overriding ClientBase::send_message_retry_loop in its own right.
 template <typename SocketType>
-class StreamClientBase : public ClientBase {
-public:
-    explicit StreamClientBase(
-        std::chrono::milliseconds timeout     = std::chrono::seconds{5},
-        int                       max_retries = 3,
-        std::chrono::milliseconds retry_delay = std::chrono::milliseconds{100}
-    );
+class StreamClientBase : public ClientBase
+{
+    public:
+        explicit StreamClientBase(
+            std::chrono::milliseconds timeout     = std::chrono::seconds{5},
+            int                       max_retries = 3,
+            std::chrono::milliseconds retry_delay = std::chrono::milliseconds{100}
+        );
 
-protected:
-    // The remaining abstract hook -- how to obtain a connected socket.
-    // Concrete per leaf class (TransientTCPClient/TransientUDSClient).
-    virtual asio::awaitable<SocketType> open_connection() = 0;
+    protected:
+        // The remaining abstract hook -- how to obtain a connected socket.
+        // Concrete per leaf class (TransientTCPClient/TransientUDSClient).
+        virtual asio::awaitable<SocketType> open_connection() = 0;
 
-    asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
+        asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
 
-private:
-    asio::awaitable<std::vector<uint8_t>> send_message_once(const std::vector<uint8_t>& request);
+    private:
+        asio::awaitable<std::vector<uint8_t>> send_message_once(const std::vector<uint8_t>& request);
 
-    std::chrono::milliseconds timeout_;
+        std::chrono::milliseconds timeout_;
 };

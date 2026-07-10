@@ -15,7 +15,10 @@ struct RequestDTO {
     nlohmann::json data;
     std::string    route_key;
 
-    static RequestDTO from_msgpack(const uint8_t* data_ptr, size_t length) {
+    static RequestDTO from_msgpack(
+        const uint8_t* data_ptr,
+        size_t         length
+    ) {
         RequestDTO dto;
         dto.data = nlohmann::json::from_msgpack(data_ptr, data_ptr + length);
         return dto; // route_key set separately from the frame header

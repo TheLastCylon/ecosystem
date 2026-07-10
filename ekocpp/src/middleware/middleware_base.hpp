@@ -16,15 +16,16 @@
 // after_routing: receives the (span_key, response data) pair and returns the
 //   (possibly modified) response data that will be wrapped in the
 //   {status, data} envelope. Called after the handler, before the envelope.
-class MiddlewareBase {
-public:
-    virtual ~MiddlewareBase() = default;
+class MiddlewareBase
+{
+    public:
+        virtual ~MiddlewareBase() = default;
 
-    virtual asio::awaitable<RequestDTO> before_routing(SpanKey /*span_key*/, RequestDTO dto) {
-        co_return dto;
-    }
+        virtual asio::awaitable<RequestDTO> before_routing(SpanKey /*span_key*/, RequestDTO dto) {
+            co_return dto;
+        }
 
-    virtual asio::awaitable<nlohmann::json> after_routing(SpanKey /*span_key*/, nlohmann::json response) {
-        co_return response;
-    }
+        virtual asio::awaitable<nlohmann::json> after_routing(SpanKey /*span_key*/, nlohmann::json response) {
+            co_return response;
+        }
 };

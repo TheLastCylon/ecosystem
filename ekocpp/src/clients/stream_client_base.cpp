@@ -9,12 +9,19 @@
 
 using namespace asio::experimental::awaitable_operators;
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-StreamClientBase<SocketType>::StreamClientBase(std::chrono::milliseconds timeout, int max_retries, std::chrono::milliseconds retry_delay)
-    : ClientBase(max_retries, retry_delay), timeout_(timeout) {}
+StreamClientBase<SocketType>::StreamClientBase(
+    std::chrono::milliseconds timeout,
+    int                       max_retries,
+    std::chrono::milliseconds retry_delay
+) : ClientBase(max_retries, retry_delay), timeout_(timeout)
+{}
 
+// --------------------------------------------------------------------------------
 template <typename SocketType>
-asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message_once(const std::vector<uint8_t>& request) {
+asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message_once(const std::vector<uint8_t>& request)
+{
     SocketType socket = co_await open_connection();
     co_await asio::async_write(socket, asio::buffer(request), asio::use_awaitable);
 
@@ -25,6 +32,7 @@ asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message
     auto header_result = co_await (
         asio::async_read(socket, asio::buffer(header), asio::use_awaitable) || timer.async_wait(asio::use_awaitable)
     );
+
     if (header_result.index() == 1) {
         throw CommunicationsEmptyResponse("Timed out waiting for response header.");
     }
@@ -55,7 +63,8 @@ asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message
 // clients open a fresh connection every call -- there's no stale connection
 // state to recover from, just a failed attempt to retry).
 template <typename SocketType>
-asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message_retry_loop(std::vector<uint8_t> request) {
+asio::awaitable<std::vector<uint8_t>> StreamClientBase<SocketType>::send_message_retry_loop(std::vector<uint8_t> request)
+{
     // co_await is not permitted inside a catch block (a genuine C++20
     // coroutine restriction -- suspending while exception-handling machinery
     // is active isn't well-defined) -- the executor is fetched once up front,

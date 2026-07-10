@@ -46,96 +46,99 @@ asio::awaitable<void> run_staleness_sweep_loop(std::weak_ptr<MultiplexedStreamCl
 // Must be held via std::shared_ptr (enable_shared_from_this) -- same
 // weak_ptr/start()/stop() lifecycle discipline as PersistentStreamClientBase.
 template <typename SocketType>
-class MultiplexedStreamClientBase : public ClientBase,
-                                     public std::enable_shared_from_this<MultiplexedStreamClientBase<SocketType>> {
-public:
-    explicit MultiplexedStreamClientBase(
-        asio::any_io_executor     executor,
-        std::chrono::milliseconds timeout                   = std::chrono::seconds{5},
-        std::chrono::milliseconds heartbeat_period           = std::chrono::seconds{60},
-        int                       max_retries                = 3,
-        std::chrono::milliseconds retry_delay                = std::chrono::milliseconds{100},
-        std::chrono::milliseconds staleness_sweep_period      = std::chrono::seconds{30},
-        std::chrono::milliseconds staleness_warning_threshold = std::chrono::seconds{60}
-    );
+class MultiplexedStreamClientBase :
+    public ClientBase,
+    public std::enable_shared_from_this<MultiplexedStreamClientBase<SocketType>>
+{
+    public:
+        explicit MultiplexedStreamClientBase(
+            asio::any_io_executor     executor,
+            std::chrono::milliseconds timeout                     = std::chrono::seconds{5},
+            std::chrono::milliseconds heartbeat_period            = std::chrono::seconds{60},
+            int                       max_retries                 = 3,
+            std::chrono::milliseconds retry_delay                 = std::chrono::milliseconds{100},
+            std::chrono::milliseconds staleness_sweep_period      = std::chrono::seconds{30},
+            std::chrono::milliseconds staleness_warning_threshold = std::chrono::seconds{60}
+        );
 
-    // Call once, after construction, to start the background heartbeat and
-    // staleness-sweep loops. Not done in the constructor -- shared_from_this()/
-    // weak_from_this() are unsafe to call before the object is fully owned
-    // by a shared_ptr.
-    void start();
+        // Call once, after construction, to start the background heartbeat and
+        // staleness-sweep loops. Not done in the constructor -- shared_from_this()/
+        // weak_from_this() are unsafe to call before the object is fully owned
+        // by a shared_ptr.
+        void start();
 
-    // Co_await before releasing the last shared_ptr to this client, to
-    // confirm both background loops have actually exited before teardown.
-    asio::awaitable<void> stop();
+        // Co_await before releasing the last shared_ptr to this client, to
+        // confirm both background loops have actually exited before teardown.
+        asio::awaitable<void> stop();
 
-protected:
-    virtual asio::awaitable<SocketType> open_connection() = 0;
+    protected:
+        virtual asio::awaitable<SocketType> open_connection() = 0;
 
-    asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
+        asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
 
-private:
-    // Completion signature: (error_code, response_frame). An empty error_code
-    // with a non-empty frame is success; a set error_code means the reader
-    // loop failed this entry out because the connection died before a real
-    // response arrived (see fail_all_outstanding below).
-    using DemuxChannel = asio::experimental::concurrent_channel<void(std::error_code, std::vector<uint8_t>)>;
+    private:
+        // Completion signature: (error_code, response_frame). An empty error_code
+        // with a non-empty frame is success; a set error_code means the reader
+        // loop failed this entry out because the connection died before a real
+        // response arrived (see fail_all_outstanding below).
+        using DemuxChannel = asio::experimental::concurrent_channel<void(std::error_code, std::vector<uint8_t>)>;
 
-    friend asio::awaitable<void> run_heartbeat_loop<SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
-    friend asio::awaitable<void> run_reader_loop<SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
-    friend asio::awaitable<void> run_staleness_sweep_loop<SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
+        friend asio::awaitable<void> run_heartbeat_loop      <SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
+        friend asio::awaitable<void> run_reader_loop         <SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
+        friend asio::awaitable<void> run_staleness_sweep_loop<SocketType>(std::weak_ptr<MultiplexedStreamClientBase<SocketType>> weak_self);
 
-    asio::awaitable<void> do_heartbeat();
+        asio::awaitable<void> do_heartbeat();
 
-    // Guarded by connect_permit_ (an async mutex, same single-slot-channel
-    // shape as write_permit_/send_permit_ elsewhere) -- NOT optional here the
-    // way it might look at a glance. PersistentStreamClientBase's
-    // send_permit_ guards the whole round trip, which serialises
-    // ensure_connected() as a free side effect; write_permit_ below guards
-    // only the write, so multiple callers can now race into
-    // ensure_connected() concurrently on a fresh disconnect. Without its own
-    // guard, that race can open two connections and spawn two reader loops
-    // for what should be one. See multiplexed_stream_client.md.
-    asio::awaitable<void> ensure_connected();
+        // Guarded by connect_permit_ (an async mutex, same single-slot-channel
+        // shape as write_permit_/send_permit_ elsewhere) -- NOT optional here the
+        // way it might look at a glance. PersistentStreamClientBase's
+        // send_permit_ guards the whole round trip, which serialises
+        // ensure_connected() as a free side effect; write_permit_ below guards
+        // only the write, so multiple callers can now race into
+        // ensure_connected() concurrently on a fresh disconnect. Without its own
+        // guard, that race can open two connections and spawn two reader loops
+        // for what should be one. See multiplexed_stream_client.md.
+        asio::awaitable<void> ensure_connected();
 
-    // Fails every outstanding demux entry at once (a dead connection takes
-    // out everything in flight on it, not just whichever caller happened to
-    // notice first) and clears the map. Plain synchronous function -- no
-    // co_await, callable from a catch block.
-    void fail_all_outstanding(std::error_code ec);
+        // Fails every outstanding demux entry at once (a dead connection takes
+        // out everything in flight on it, not just whichever caller happened to
+        // notice first) and clears the map. Plain synchronous function -- no
+        // co_await, callable from a catch block.
+        void fail_all_outstanding(std::error_code ec);
 
-    asio::any_io_executor      executor_;
-    std::chrono::milliseconds  timeout_;
-    std::chrono::milliseconds  heartbeat_period_;
-    std::chrono::milliseconds  staleness_sweep_period_;
-    std::chrono::milliseconds  staleness_warning_threshold_;
+        asio::any_io_executor      executor_;
+        std::chrono::milliseconds  timeout_;
+        std::chrono::milliseconds  heartbeat_period_;
+        std::chrono::milliseconds  staleness_sweep_period_;
+        std::chrono::milliseconds  staleness_warning_threshold_;
 
-    std::atomic<bool>          stopping_{false};
-    bool                       connected_ = false;
-    std::optional<SocketType>  socket_;
+        std::atomic<bool>          stopping_{false};
+        bool                       connected_ = false;
+        std::optional<SocketType>  socket_;
 
-    asio::steady_timer heartbeat_timer_;
-    asio::steady_timer staleness_sweep_timer_;
-    asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
-    asio::experimental::concurrent_channel<void(std::error_code)> staleness_sweep_done_;
+        asio::steady_timer heartbeat_timer_;
+        asio::steady_timer staleness_sweep_timer_;
 
-    // Guards only the write itself -- the one real semantic change from
-    // PersistentStreamClientBase's send_permit_, which guards the entire
-    // round trip. Acquire = async_receive, release = try_send.
-    asio::experimental::concurrent_channel<void(std::error_code)> write_permit_;
+        asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
+        asio::experimental::concurrent_channel<void(std::error_code)> staleness_sweep_done_;
 
-    // Async mutex around ensure_connected()'s body -- see that method's
-    // comment above.
-    asio::experimental::concurrent_channel<void(std::error_code)> connect_permit_;
+        // Guards only the write itself -- the one real semantic change from
+        // PersistentStreamClientBase's send_permit_, which guards the entire
+        // round trip. Acquire = async_receive, release = try_send.
+        asio::experimental::concurrent_channel<void(std::error_code)> write_permit_;
 
-    struct DemuxEntry {
-        std::shared_ptr<DemuxChannel> channel;
-        std::chrono::steady_clock::time_point registered_at;
-        bool warned = false; // staleness sweep logs once per entry, not every sweep
-    };
+        // Async mutex around ensure_connected()'s body -- see that method's
+        // comment above.
+        asio::experimental::concurrent_channel<void(std::error_code)> connect_permit_;
 
-    std::mutex                                    demux_mutex_;
-    std::unordered_map<SpanKey, DemuxEntry>        demux_map_;
+        struct DemuxEntry {
+            std::shared_ptr<DemuxChannel>         channel;
+            std::chrono::steady_clock::time_point registered_at;
+            bool                                  warned = false; // staleness sweep logs once per entry, not every sweep
+        };
+
+        std::mutex                              demux_mutex_;
+        std::unordered_map<SpanKey, DemuxEntry> demux_map_;
 };
 
 // Detection idiom -- true for a type derived from MultiplexedStreamClientBase<SocketType>
@@ -149,7 +152,7 @@ private:
 // someone has to remember. See sending_patterns.md's "UDP: excluded, not just
 // deprioritised" section.
 template <typename SocketType>
-std::true_type is_multiplexed_stream_client(const MultiplexedStreamClientBase<SocketType>*);
+std::true_type  is_multiplexed_stream_client(const MultiplexedStreamClientBase<SocketType>*);
 std::false_type is_multiplexed_stream_client(...);
 
 // A type satisfies MultiplexedClient either by genuinely deriving from

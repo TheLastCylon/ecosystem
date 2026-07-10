@@ -7,49 +7,61 @@
 
 namespace {
 
-// --------------------------------------------------------------------------------
-void fill_random(uint8_t* buffer, size_t length) {
-    static std::random_device random_device;
-    std::uniform_int_distribution<int> byte_distribution(0, 255);
-    for (size_t i = 0; i < length; ++i) {
-        buffer[i] = static_cast<uint8_t>(byte_distribution(random_device));
+    // --------------------------------------------------------------------------------
+    void fill_random(
+        uint8_t* buffer,
+        size_t   length
+    ) {
+        static std::random_device random_device;
+        std::uniform_int_distribution<int> byte_distribution(0, 255);
+        for (size_t i = 0; i < length; ++i) {
+            buffer[i] = static_cast<uint8_t>(byte_distribution(random_device));
+        }
     }
-}
 
-// --------------------------------------------------------------------------------
-uint64_t load_big_endian_u64(const uint8_t* data) {
-    uint64_t value = 0;
-    for (int i = 0; i < 8; ++i) {
-        value = (value << 8) | data[i];
+    // --------------------------------------------------------------------------------
+    uint64_t load_big_endian_u64(const uint8_t* data) {
+        uint64_t value = 0;
+        for (int i = 0; i < 8; ++i) {
+            value = (value << 8) | data[i];
+        }
+        return value;
     }
-    return value;
-}
 
-// --------------------------------------------------------------------------------
-void store_big_endian_u64(uint64_t value, uint8_t* out) {
-    for (int i = 7; i >= 0; --i) {
-        out[i] = static_cast<uint8_t>(value & 0xFF);
-        value >>= 8;
+    // --------------------------------------------------------------------------------
+    void store_big_endian_u64(
+        uint64_t value,
+        uint8_t* out
+    ) {
+        for (int i = 7; i >= 0; --i) {
+            out[i] = static_cast<uint8_t>(value & 0xFF);
+            value >>= 8;
+        }
     }
-}
 
-// --------------------------------------------------------------------------------
-std::string bytes_to_hex(const uint8_t* data, size_t length) {
-    static const char hex_digits[] = "0123456789abcdef";
-    std::string result(length * 2, '0');
-    for (size_t i = 0; i < length; ++i) {
-        result[i * 2]     = hex_digits[(data[i] >> 4) & 0x0F];
-        result[i * 2 + 1] = hex_digits[data[i] & 0x0F];
+    // --------------------------------------------------------------------------------
+    std::string bytes_to_hex(
+        const uint8_t* data,
+        size_t         length
+    ) {
+        static const char hex_digits[] = "0123456789abcdef";
+        std::string result(length * 2, '0');
+        for (size_t i = 0; i < length; ++i) {
+            result[i * 2]     = hex_digits[(data[i] >> 4) & 0x0F];
+            result[i * 2 + 1] = hex_digits[data[i] & 0x0F];
+        }
+        return result;
     }
-    return result;
-}
 
-// --------------------------------------------------------------------------------
-void hex_to_bytes(const std::string& hex, uint8_t* out) {
-    for (size_t i = 0; i < hex.size() / 2; ++i) {
-        out[i] = static_cast<uint8_t>(std::stoul(hex.substr(i * 2, 2), nullptr, 16));
+    // --------------------------------------------------------------------------------
+    void hex_to_bytes(
+        const std::string& hex,
+        uint8_t*           out
+    ) {
+        for (size_t i = 0; i < hex.size() / 2; ++i) {
+            out[i] = static_cast<uint8_t>(std::stoul(hex.substr(i * 2, 2), nullptr, 16));
+        }
     }
-}
 
 } // namespace
 

@@ -4,21 +4,21 @@
 
 namespace {
 
-// --------------------------------------------------------------------------------
-void store_big_endian_u32(uint32_t value, uint8_t* out) {
-    out[0] = static_cast<uint8_t>((value >> 24) & 0xFF);
-    out[1] = static_cast<uint8_t>((value >> 16) & 0xFF);
-    out[2] = static_cast<uint8_t>((value >> 8)  & 0xFF);
-    out[3] = static_cast<uint8_t>(value         & 0xFF);
-}
+    // --------------------------------------------------------------------------------
+    void store_big_endian_u32(uint32_t value, uint8_t* out) {
+        out[0] = static_cast<uint8_t>((value >> 24) & 0xFF);
+        out[1] = static_cast<uint8_t>((value >> 16) & 0xFF);
+        out[2] = static_cast<uint8_t>((value >> 8)  & 0xFF);
+        out[3] = static_cast<uint8_t>(value         & 0xFF);
+    }
 
-// --------------------------------------------------------------------------------
-uint32_t load_big_endian_u32(const uint8_t* data) {
-    return (static_cast<uint32_t>(data[0]) << 24) |
-           (static_cast<uint32_t>(data[1]) << 16) |
-           (static_cast<uint32_t>(data[2]) << 8)  |
-            static_cast<uint32_t>(data[3]);
-}
+    // --------------------------------------------------------------------------------
+    uint32_t load_big_endian_u32(const uint8_t* data) {
+        return (static_cast<uint32_t>(data[0]) << 24) |
+               (static_cast<uint32_t>(data[1]) << 16) |
+               (static_cast<uint32_t>(data[2]) << 8)  |
+                static_cast<uint32_t>(data[3]);
+    }
 
 } // namespace
 

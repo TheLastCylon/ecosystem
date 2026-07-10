@@ -31,54 +31,55 @@ asio::awaitable<void> run_heartbeat_loop(std::weak_ptr<PersistentStreamClientBas
 // heartbeat_done_ below.
 template <typename SocketType>
 class PersistentStreamClientBase : public ClientBase,
-                                    public std::enable_shared_from_this<PersistentStreamClientBase<SocketType>> {
-public:
-    explicit PersistentStreamClientBase(
-        asio::any_io_executor     executor,
-        std::chrono::milliseconds timeout          = std::chrono::seconds{5},
-        std::chrono::milliseconds heartbeat_period = std::chrono::seconds{60},
-        int                       max_retries      = 3,
-        std::chrono::milliseconds retry_delay      = std::chrono::milliseconds{100}
-    );
+                                   public std::enable_shared_from_this<PersistentStreamClientBase<SocketType>>
+{
+    public:
+        explicit PersistentStreamClientBase(
+            asio::any_io_executor     executor,
+            std::chrono::milliseconds timeout          = std::chrono::seconds{5},
+            std::chrono::milliseconds heartbeat_period = std::chrono::seconds{60},
+            int                       max_retries      = 3,
+            std::chrono::milliseconds retry_delay      = std::chrono::milliseconds{100}
+        );
 
-    // Call once, after construction, to start the background heartbeat.
-    // Not done in the constructor -- shared_from_this()/weak_from_this()
-    // are unsafe to call before the object is fully owned by a shared_ptr.
-    void start();
+        // Call once, after construction, to start the background heartbeat.
+        // Not done in the constructor -- shared_from_this()/weak_from_this()
+        // are unsafe to call before the object is fully owned by a shared_ptr.
+        void start();
 
-    // Co_await before releasing the last shared_ptr to this client, to
-    // confirm the heartbeat loop has actually exited before teardown.
-    asio::awaitable<void> stop();
+        // Co_await before releasing the last shared_ptr to this client, to
+        // confirm the heartbeat loop has actually exited before teardown.
+        asio::awaitable<void> stop();
 
-protected:
-    virtual asio::awaitable<SocketType> open_connection() = 0;
+    protected:
+        virtual asio::awaitable<SocketType> open_connection() = 0;
 
-    asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
+        asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) override;
 
-private:
-    // Deliberately NOT member functions invoked as part of the long-lived
-    // heartbeat loop -- a member-function coroutine's frame always stores an
-    // implicit `this`, which would dangle the moment this object is
-    // destroyed, regardless of any weak_ptr discipline used inside the body.
-    // The free function in persistent_stream_client_base.cpp takes a
-    // std::weak_ptr by value instead, and only ever calls into this object
-    // through a freshly re-locked shared_ptr, one loop iteration at a time.
-    friend asio::awaitable<void> run_heartbeat_loop<SocketType>(std::weak_ptr<PersistentStreamClientBase<SocketType>> weak_self);
+    private:
+        // Deliberately NOT member functions invoked as part of the long-lived
+        // heartbeat loop -- a member-function coroutine's frame always stores an
+        // implicit `this`, which would dangle the moment this object is
+        // destroyed, regardless of any weak_ptr discipline used inside the body.
+        // The free function in persistent_stream_client_base.cpp takes a
+        // std::weak_ptr by value instead, and only ever calls into this object
+        // through a freshly re-locked shared_ptr, one loop iteration at a time.
+        friend asio::awaitable<void> run_heartbeat_loop<SocketType>(std::weak_ptr<PersistentStreamClientBase<SocketType>> weak_self);
 
-    asio::awaitable<void> do_heartbeat();
-    asio::awaitable<void> ensure_connected();
+        asio::awaitable<void> do_heartbeat();
+        asio::awaitable<void> ensure_connected();
 
-    asio::any_io_executor     executor_;
-    std::chrono::milliseconds timeout_;
-    std::chrono::milliseconds heartbeat_period_;
-    std::atomic<bool>         stopping_{false};
-    bool                      connected_ = false;
-    std::optional<SocketType> socket_;
-    asio::steady_timer        heartbeat_timer_;
-    asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
+        asio::any_io_executor                                         executor_;
+        std::chrono::milliseconds                                     timeout_;
+        std::chrono::milliseconds                                     heartbeat_period_;
+        std::atomic<bool>                                             stopping_{false};
+        bool                                                          connected_ = false;
+        std::optional<SocketType>                                     socket_;
+        asio::steady_timer                                            heartbeat_timer_;
+        asio::experimental::concurrent_channel<void(std::error_code)> heartbeat_done_;
 
-    // Single-slot semaphore -- serialises concurrent send_message() calls and
-    // heartbeat pings onto the one shared socket. Acquire = async_receive,
-    // release = try_send. Mirrors UDPClient::send_permit_.
-    asio::experimental::concurrent_channel<void(std::error_code)> send_permit_;
+        // Single-slot semaphore -- serialises concurrent send_message() calls and
+        // heartbeat pings onto the one shared socket. Acquire = async_receive,
+        // release = try_send. Mirrors UDPClient::send_permit_.
+        asio::experimental::concurrent_channel<void(std::error_code)> send_permit_;
 };

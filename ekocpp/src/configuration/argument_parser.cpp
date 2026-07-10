@@ -11,19 +11,20 @@ constexpr const char* USAGE =
 
 } // namespace
 
-CommandLineArgs parse_command_line_args(int argc, char** argv) {
+CommandLineArgs parse_command_line_args(int argc, char** argv)
+{
     // "lco"/"lfo" are listed as their own long-option names (not single
     // chars) so getopt_long_only below matches Python's actual `-lco`/`-lfo`
     // spelling on a single dash -- getopt_long's short-option mechanism
     // can't parse a multi-character short flag like "-lco" at all.
     static const option long_options[] = {
-        {"instance",         required_argument, nullptr, 'i'},
-        {"config_file",      required_argument, nullptr, 'c'},
-        {"lco",              no_argument,       nullptr, 'o'},
+        {"instance"        , required_argument, nullptr, 'i'},
+        {"config_file"     , required_argument, nullptr, 'c'},
+        {"lco"             , no_argument,       nullptr, 'o'},
         {"log_console_only", no_argument,       nullptr, 'o'},
-        {"lfo",              no_argument,       nullptr, 'f'},
-        {"log_file_only",    no_argument,       nullptr, 'f'},
-        {nullptr,            0,                 nullptr, 0},
+        {"lfo"             , no_argument,       nullptr, 'f'},
+        {"log_file_only"   , no_argument,       nullptr, 'f'},
+        {nullptr           , 0,                 nullptr, 0},
     };
 
     CommandLineArgs args;

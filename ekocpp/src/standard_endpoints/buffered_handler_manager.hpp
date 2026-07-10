@@ -16,6 +16,6 @@
 // haven't run yet), but that's fine -- these lambdas capture the registry
 // by reference and only read it later, at actual request time.
 void register_buffered_handler_management_endpoints(
-    RequestRouter& router,
+    RequestRouter&                                                              router,
     std::unordered_map<std::string, std::shared_ptr<BufferedHandlerInterface>>& registry
 );

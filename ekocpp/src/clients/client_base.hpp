@@ -17,58 +17,59 @@
 // on a non-SUCCESS status. This is the one place in the client/server split
 // where real runtime polymorphism is earned -- code holding a ClientBase&
 // can call send_message generically without knowing which transport it is.
-class ClientBase {
-public:
-    explicit ClientBase(int max_retries = 3, std::chrono::milliseconds retry_delay = std::chrono::milliseconds{100});
-    virtual ~ClientBase() = default;
+class ClientBase
+{
+    public:
+        explicit ClientBase(int max_retries = 3, std::chrono::milliseconds retry_delay = std::chrono::milliseconds{100});
+        virtual ~ClientBase() = default;
 
-    // Raw JSON overload -- internal implementation; also available directly when
-    // a typed DTO is not appropriate (e.g. fire-and-forget, dynamic payloads).
-    asio::awaitable<nlohmann::json> send_message(
-        const std::string&    route_key,
-        const nlohmann::json& data,
-        SpanKey               span_key = SpanKey::generate()
-    );
+        // Raw JSON overload -- internal implementation; also available directly when
+        // a typed DTO is not appropriate (e.g. fire-and-forget, dynamic payloads).
+        asio::awaitable<nlohmann::json> send_message(
+            const std::string&    route_key,
+            const nlohmann::json& data,
+            SpanKey               span_key = SpanKey::generate()
+        );
 
-    // Typed overload with request data: caller passes a JsonDTO, gets a JsonDTO back.
-    // to_json() / from_json() / validate() are handled internally -- no JSON at the call site.
-    template <JsonDTO RequestDto, JsonDTO ResponseDto>
-    asio::awaitable<ResponseDto> send_message(
-        const std::string& route_key,
-        const RequestDto&  data,
-        SpanKey            span_key = SpanKey::generate()
-    ) {
-        const nlohmann::json response_data = co_await send_message(route_key, data.to_json(), span_key);
-        ResponseDto result = ResponseDto::from_json(response_data);
-        result.validate();
-        co_return result;
-    }
+        // Typed overload with request data: caller passes a JsonDTO, gets a JsonDTO back.
+        // to_json() / from_json() / validate() are handled internally -- no JSON at the call site.
+        template <JsonDTO RequestDto, JsonDTO ResponseDto>
+        asio::awaitable<ResponseDto> send_message(
+            const std::string& route_key,
+            const RequestDto&  data,
+            SpanKey            span_key = SpanKey::generate()
+        ) {
+            const nlohmann::json response_data = co_await send_message(route_key, data.to_json(), span_key);
+            ResponseDto          result        = ResponseDto::from_json(response_data);
+            result.validate();
+            co_return result;
+        }
 
-    // Typed overload without request data: for handlers that take no input (EmptyDto implied).
-    template <JsonDTO ResponseDto>
-    asio::awaitable<ResponseDto> send_message(
-        const std::string& route_key,
-        SpanKey            span_key = SpanKey::generate()
-    ) {
-        const nlohmann::json response_data = co_await send_message(route_key, nlohmann::json::object(), span_key);
-        ResponseDto result = ResponseDto::from_json(response_data);
-        result.validate();
-        co_return result;
-    }
+        // Typed overload without request data: for handlers that take no input (EmptyDto implied).
+        template <JsonDTO ResponseDto>
+        asio::awaitable<ResponseDto> send_message(
+            const std::string& route_key,
+            SpanKey            span_key = SpanKey::generate()
+        ) {
+            const nlohmann::json response_data = co_await send_message(route_key, nlohmann::json::object(), span_key);
+            ResponseDto          result        = ResponseDto::from_json(response_data);
+            result.validate();
+            co_return result;
+        }
 
-protected:
-    // The one abstract hook: given a packed request frame, return the packed
-    // response frame, handling retries internally. Overridden once per
-    // transport family (StreamClientBase, PersistentStreamClientBase,
-    // DatagramClientBase) -- never directly by a leaf class.
-    virtual asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) = 0;
+    protected:
+        // The one abstract hook: given a packed request frame, return the packed
+        // response frame, handling retries internally. Overridden once per
+        // transport family (StreamClientBase, PersistentStreamClientBase,
+        // DatagramClientBase) -- never directly by a leaf class.
+        virtual asio::awaitable<std::vector<uint8_t>> send_message_retry_loop(std::vector<uint8_t> request) = 0;
 
-    // retry_count and success are local to each send_message_retry_loop()
-    // call -- storing them as members is a data race when the thread pool
-    // runs concurrent send_message() calls on the same client.
-    int                       max_retries_;
-    std::chrono::milliseconds retry_delay_;
+        // retry_count and success are local to each send_message_retry_loop()
+        // call -- storing them as members is a data race when the thread pool
+        // runs concurrent send_message() calls on the same client.
+        int                       max_retries_;
+        std::chrono::milliseconds retry_delay_;
 
-private:
-    [[noreturn]] static void throw_response_exception(int status, const nlohmann::json& data);
+    private:
+        [[noreturn]] static void throw_response_exception(int status, const nlohmann::json& data);
 };

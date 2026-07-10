@@ -79,55 +79,56 @@ struct ConfigStatisticsKeeper {
 // explicit call (not implicit static-init-order magic) is what keeps this
 // safe -- same reasoning that ruled out decorator-style endpoint
 // registration earlier this project.
-class AppConfiguration {
-public:
-    // argv0 is used to derive the application name (basename, mirroring
-    // Python's camel_to_snake(basename(sys.argv[0]).replace(".py", "")) --
-    // minus the .py-stripping, which doesn't apply to a compiled binary).
-    static void initialize(const char* argv0, const CommandLineArgs& args);
-    static AppConfiguration& instance();
+class AppConfiguration
+{
+    public:
+        // argv0 is used to derive the application name (basename, mirroring
+        // Python's camel_to_snake(basename(sys.argv[0]).replace(".py", "")) --
+        // minus the .py-stripping, which doesn't apply to a compiled binary).
+        static void initialize(const char* argv0, const CommandLineArgs& args);
+        static AppConfiguration& instance();
 
-    const std::string& name() const;
-    const std::string& instance_id() const;
-    const std::string& lock_directory() const;
-    const std::optional<std::string>& buffer_directory() const;
+        const std::string&                name()             const;
+        const std::string&                instance_id()      const;
+        const std::string&                lock_directory()   const;
+        const std::optional<std::string>& buffer_directory() const;
 
-    const std::optional<ConfigTCP>& tcp() const;
-    const std::optional<ConfigUDP>& udp() const;
-    const std::optional<ConfigUDS>& uds() const;
-    const ConfigLogging&            logging() const;
-    const ConfigStatisticsKeeper&   stats_keeper() const;
+        const std::optional<ConfigTCP>& tcp()          const;
+        const std::optional<ConfigUDP>& udp()          const;
+        const std::optional<ConfigUDS>& uds()          const;
+        const ConfigLogging&            logging()      const;
+        const ConfigStatisticsKeeper&   stats_keeper() const;
 
-    // Mirrors ekosis/configuration/config_models.py's get_app_instance_extra() --
-    // scans environ at startup and strips the tier-appropriate prefix so that
-    // ECOENV_EXTRA_<APP>_<INSTANCE>_<KEY> becomes just <KEY> in the map.
-    // Three tiers (global/app/instance); instance wins over app wins over global.
-    std::string extra(const std::string& key, const std::string& default_value = "") const;
+        // Mirrors ekosis/configuration/config_models.py's get_app_instance_extra() --
+        // scans environ at startup and strips the tier-appropriate prefix so that
+        // ECOENV_EXTRA_<APP>_<INSTANCE>_<KEY> becomes just <KEY> in the map.
+        // Three tiers (global/app/instance); instance wins over app wins over global.
+        std::string extra(const std::string& key, const std::string& default_value = "") const;
 
-private:
-    AppConfiguration(const char* argv0, const CommandLineArgs& args);
+    private:
+        AppConfiguration(const char* argv0, const CommandLineArgs& args);
 
-    void load_from_env();
-    void load_from_file(const std::string& path);
-    void load_extra_from_env();
+        void load_from_env();
+        void load_from_file(const std::string& path);
+        void load_extra_from_env();
 
-    // The three-tier ECOENV_<postfix>[_<APP>[_<INSTANCE>]] precedence chain
-    // -- instance-level wins, then app-level, then global, then default.
-    // instance_level_only mirrors Python's get_instance_env -- skips the
-    // app/global fallback tiers entirely for settings that are only ever
-    // meaningful per-instance.
-    std::string                get_eco_env(const std::string& postfix, const std::string& default_value, bool instance_level_only = false) const;
-    std::optional<std::string> get_eco_env_optional(const std::string& postfix, bool instance_level_only = false) const;
+        // The three-tier ECOENV_<postfix>[_<APP>[_<INSTANCE>]] precedence chain
+        // -- instance-level wins, then app-level, then global, then default.
+        // instance_level_only mirrors Python's get_instance_env -- skips the
+        // app/global fallback tiers entirely for settings that are only ever
+        // meaningful per-instance.
+        std::string                get_eco_env(const std::string& postfix, const std::string& default_value, bool instance_level_only = false) const;
+        std::optional<std::string> get_eco_env_optional(const std::string& postfix, bool instance_level_only = false) const;
 
-    std::string                application_name_;
-    std::string                instance_;
-    std::string                lock_directory_;
-    std::optional<std::string> buffer_directory_;
-    std::unordered_map<std::string, std::string> extra_;
+        std::string                                  application_name_;
+        std::string                                  instance_;
+        std::string                                  lock_directory_;
+        std::optional<std::string>                   buffer_directory_;
+        std::unordered_map<std::string, std::string> extra_;
 
-    std::optional<ConfigTCP> tcp_;
-    std::optional<ConfigUDP> udp_;
-    std::optional<ConfigUDS> uds_;
-    ConfigLogging            logging_;
-    ConfigStatisticsKeeper   stats_keeper_;
+        std::optional<ConfigTCP> tcp_;
+        std::optional<ConfigUDP> udp_;
+        std::optional<ConfigUDS> uds_;
+        ConfigLogging            logging_;
+        ConfigStatisticsKeeper   stats_keeper_;
 };

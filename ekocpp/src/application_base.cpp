@@ -19,30 +19,40 @@
 #include "standard_endpoints/log_manager.hpp"
 #include "standard_endpoints/statistics.hpp"
 
+// --------------------------------------------------------------------------------
 InstanceAlreadyRunningException::InstanceAlreadyRunningException(
-    const std::string& application_name, const std::string& instance_id, int process_id
+    const std::string& application_name,
+    const std::string& instance_id,
+    int                process_id
 ) : ExceptionBase(
-        "Instance [" + instance_id + "] of [" + application_name + "] already running with process id ["
-        + std::to_string(process_id) + "]!"
-    ) {}
+        "Instance ["                          + instance_id +
+        "] of ["                              + application_name +
+        "] already running with process id [" + std::to_string(process_id) +
+        "]!"
+    )
+{}
 
+// --------------------------------------------------------------------------------
 namespace {
-// Parses argv, initialises AppConfiguration and EcoLogger, then returns the
-// config reference that ApplicationBase::configuration_ binds to. Called
-// from the initialiser list so everything is ready before the constructor
-// body -- and therefore before any derived class constructor body -- runs.
-AppConfiguration& initialise(int argc, char** argv) {
-    const CommandLineArgs args = parse_command_line_args(argc, argv);
-    AppConfiguration::initialize(argv[0], args);
-    EcoLogger::instance().setup();
-    return AppConfiguration::instance();
-}
+
+    // Parses argv, initialises AppConfiguration and EcoLogger, then returns the
+    // config reference that ApplicationBase::configuration_ binds to. Called
+    // from the initialiser list so everything is ready before the constructor
+    // body -- and therefore before any derived class constructor body -- runs.
+    AppConfiguration& initialise(int argc, char** argv) {
+        const CommandLineArgs args = parse_command_line_args(argc, argv);
+        AppConfiguration::initialize(argv[0], args);
+        EcoLogger::instance().setup();
+        return AppConfiguration::instance();
+    }
 } // namespace
 
+// --------------------------------------------------------------------------------
 ApplicationBase::ApplicationBase(int argc, char** argv)
     : configuration_(initialise(argc, argv)),
       io_context_(),
-      signals_(io_context_, SIGTERM, SIGINT, SIGHUP) {
+      signals_(io_context_, SIGTERM, SIGINT, SIGHUP)
+{
     lock_file_check();
 
     StatisticsKeeper::instance().set_gather_period(configuration_.stats_keeper().gather_period);
@@ -69,7 +79,9 @@ ApplicationBase::ApplicationBase(int argc, char** argv)
     }
 }
 
-ApplicationBase::~ApplicationBase() {
+// --------------------------------------------------------------------------------
+ApplicationBase::~ApplicationBase()
+{
     // Idempotent on purpose -- guaranteed to run on every exit path (normal
     // return from start(), or an exception unwinding through main()), even
     // if stop() was never called explicitly. This is the actual RAII
@@ -88,8 +100,13 @@ ApplicationBase::~ApplicationBase() {
     }
 }
 
-void ApplicationBase::lock_file_check() {
-    const std::string lock_file_name = configuration_.name() + "-" + configuration_.instance_id() + ".lock";
+// --------------------------------------------------------------------------------
+void ApplicationBase::lock_file_check()
+{
+    const std::string lock_file_name =
+        configuration_.name()        + "-" +
+        configuration_.instance_id() + ".lock";
+
     lock_file_path_ = configuration_.lock_directory() + "/" + lock_file_name;
 
     // O_CREAT here does NOT race with another instance doing the same --
@@ -108,10 +125,14 @@ void ApplicationBase::lock_file_check() {
             // Another live process holds the lock. Read whatever PID it
             // last wrote purely for the error message -- the lock itself,
             // not this PID read, is what proved it's alive.
-            int process_id = 0;
+            int           process_id = 0;
             std::ifstream existing(lock_file_path_);
             existing >> process_id;
-            throw InstanceAlreadyRunningException(configuration_.name(), configuration_.instance_id(), process_id);
+            throw InstanceAlreadyRunningException(
+                configuration_.name(),
+                configuration_.instance_id(),
+                process_id
+            );
         }
         throw ExceptionBase("Unable to lock file [" + lock_file_path_ + "]: " + std::strerror(flock_errno));
     }
@@ -125,6 +146,7 @@ void ApplicationBase::lock_file_check() {
         close(fd);
         throw ExceptionBase("Unable to truncate lock file [" + lock_file_path_ + "]: " + std::strerror(truncate_errno));
     }
+
     const std::string pid_line = std::to_string(getpid()) + "\n";
     if (write(fd, pid_line.c_str(), pid_line.size()) == -1) {
         const int write_errno = errno;
@@ -136,7 +158,9 @@ void ApplicationBase::lock_file_check() {
     lock_fd_ = fd; // kept open for the process lifetime -- closing it is what releases the flock
 }
 
-void ApplicationBase::setup_signal_handlers() {
+// --------------------------------------------------------------------------------
+void ApplicationBase::setup_signal_handlers()
+{
     // Single-shot, deliberately -- the application is shutting down the
     // moment any of these fire, so there's no reason to re-arm async_wait
     // afterward, unlike a long-lived listener.
@@ -148,7 +172,9 @@ void ApplicationBase::setup_signal_handlers() {
     });
 }
 
-asio::awaitable<void> ApplicationBase::run_statistics_gather() {
+// --------------------------------------------------------------------------------
+asio::awaitable<void> ApplicationBase::run_statistics_gather()
+{
     auto& keeper = StatisticsKeeper::instance();
     keeper.start();
     const std::chrono::seconds period{configuration_.stats_keeper().gather_period};
@@ -159,7 +185,9 @@ asio::awaitable<void> ApplicationBase::run_statistics_gather() {
     }
 }
 
-void ApplicationBase::start() {
+// --------------------------------------------------------------------------------
+void ApplicationBase::start()
+{
     setup_signal_handlers();
 
     asio::co_spawn(io_context_, run_statistics_gather(), asio::detached);
@@ -189,7 +217,9 @@ void ApplicationBase::start() {
     for (auto& t : pool) { t.join(); }
 }
 
-void ApplicationBase::stop() {
+// --------------------------------------------------------------------------------
+void ApplicationBase::stop()
+{
     StatisticsKeeper::instance().stop();
     if (server_tcp_) server_tcp_->stop();
     if (server_udp_) server_udp_->stop();
@@ -202,13 +232,20 @@ void ApplicationBase::stop() {
     asio::co_spawn(io_context_, shut_down_buffered_subsystems(), asio::detached);
 }
 
-asio::awaitable<void> ApplicationBase::shut_down_buffered_subsystems() {
+// --------------------------------------------------------------------------------
+asio::awaitable<void> ApplicationBase::shut_down_buffered_subsystems()
+{
     for (const auto& shutdown_fn : buffered_shutdowns_) {
         co_await shutdown_fn();
     }
     io_context_.stop();
 }
 
+// --------------------------------------------------------------------------------
 void ApplicationBase::setup_tasks() {}
 
-asio::io_context& ApplicationBase::io_context() { return io_context_; }
+// --------------------------------------------------------------------------------
+asio::io_context& ApplicationBase::io_context()
+{
+    return io_context_;
+}

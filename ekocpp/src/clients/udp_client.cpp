@@ -7,22 +7,30 @@
 using namespace asio::experimental::awaitable_operators;
 
 namespace {
-constexpr size_t MAX_DATAGRAM_SIZE = 65536;
+    constexpr size_t MAX_DATAGRAM_SIZE = 65536;
 }
 
+// --------------------------------------------------------------------------------
 UDPClient::UDPClient(
-    asio::any_io_executor executor, std::string server_host, uint16_t server_port,
-    std::chrono::milliseconds timeout, int max_retries, std::chrono::milliseconds retry_delay
+    asio::any_io_executor     executor,
+    std::string               server_host,
+    uint16_t                  server_port,
+    std::chrono::milliseconds timeout,
+    int                       max_retries,
+    std::chrono::milliseconds retry_delay
 ) : ClientBase(max_retries, retry_delay),
     executor_(executor),
     host_(std::move(server_host)),
     port_(server_port),
     timeout_(timeout),
-    send_permit_(executor_, 1) {
+    send_permit_(executor_, 1)
+{
     send_permit_.try_send(std::error_code{}); // one permit available immediately
 }
 
-asio::awaitable<void> UDPClient::ensure_initialised() {
+// --------------------------------------------------------------------------------
+asio::awaitable<void> UDPClient::ensure_initialised()
+{
     if (!initialised_) {
         socket_.emplace(executor_, asio::ip::udp::endpoint(asio::ip::udp::v4(), 0));
         // connect() on a UDP socket just fixes the default peer for
@@ -34,7 +42,9 @@ asio::awaitable<void> UDPClient::ensure_initialised() {
     }
 }
 
-asio::awaitable<std::vector<uint8_t>> UDPClient::send_once(const std::vector<uint8_t>& request) {
+// --------------------------------------------------------------------------------
+asio::awaitable<std::vector<uint8_t>> UDPClient::send_once(const std::vector<uint8_t>& request)
+{
     co_await ensure_initialised();
     co_await socket_->async_send(asio::buffer(request), asio::use_awaitable);
 
@@ -50,7 +60,9 @@ asio::awaitable<std::vector<uint8_t>> UDPClient::send_once(const std::vector<uin
     co_return buffer;
 }
 
-asio::awaitable<std::vector<uint8_t>> UDPClient::send_message_retry_loop(std::vector<uint8_t> request) {
+// --------------------------------------------------------------------------------
+asio::awaitable<std::vector<uint8_t>> UDPClient::send_message_retry_loop(std::vector<uint8_t> request)
+{
     // Single-slot channel as a binary semaphore: acquire by receiving the one
     // permit, release by sending it back -- serializes concurrent
     // send_message() calls onto the one shared socket, same role Python's
@@ -61,8 +73,8 @@ asio::awaitable<std::vector<uint8_t>> UDPClient::send_message_retry_loop(std::ve
         ~PermitGuard() { permit.try_send(std::error_code{}); }
     } guard{send_permit_};
 
-    auto executor  = co_await asio::this_coro::executor;
-    int retry_count = 0;
+    auto executor    = co_await asio::this_coro::executor;
+    int  retry_count = 0;
 
     while (retry_count < max_retries_) {
         bool should_retry = false;

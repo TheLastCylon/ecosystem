@@ -29,7 +29,10 @@ public:
     // Runs before_push for each middleware and merges the returned metadata
     // dicts (later middlewares can overwrite earlier ones on key collision,
     // same as Python's dict.update semantics).
-    asio::awaitable<nlohmann::json> collect_push_metadata(const SpanKey& span_key, const RequestDTO& dto) {
+    asio::awaitable<nlohmann::json> collect_push_metadata(
+        const SpanKey&    span_key,
+        const RequestDTO& dto
+    ) {
         nlohmann::json metadata = nlohmann::json::object();
         for (auto& mw : middlewares_) {
             auto result = co_await mw->before_push(span_key, dto);
@@ -40,17 +43,25 @@ public:
         co_return metadata;
     }
 
+    // --------------------------------------------------------------------------------
     asio::awaitable<void> run_before_process(
-        const SpanKey& span_key, const RequestDTO& dto, const nlohmann::json& metadata, int retries)
-    {
+        const SpanKey&        span_key,
+        const RequestDTO&     dto,
+        const nlohmann::json& metadata,
+        int                   retries
+    ) {
         for (auto& mw : middlewares_) {
             co_await mw->before_process(span_key, dto, metadata, retries);
         }
     }
 
+    // --------------------------------------------------------------------------------
     asio::awaitable<void> run_after_process(
-        const SpanKey& span_key, const RequestDTO& dto, const nlohmann::json& metadata, bool success)
-    {
+        const SpanKey&        span_key,
+        const RequestDTO&     dto,
+        const nlohmann::json& metadata,
+        bool                  success
+    ) {
         for (auto& mw : middlewares_) {
             co_await mw->after_process(span_key, dto, metadata, success);
         }

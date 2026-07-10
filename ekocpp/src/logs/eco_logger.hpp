@@ -19,20 +19,20 @@
 // initialized by the time setup() is called from main()), so there's no
 // need for AppConfiguration's two-phase initialize()/instance() split.
 class EcoLogger {
-public:
-    static EcoLogger& instance();
+    public:
+        static EcoLogger& instance();
 
-    // Builds the root logger's sinks from AppConfiguration::instance().logging().
-    // Call once, from main(), after AppConfiguration::initialize().
-    void setup();
+        // Builds the root logger's sinks from AppConfiguration::instance().logging().
+        // Call once, from main(), after AppConfiguration::initialize().
+        void setup();
 
-    // Mirrors ekosis/logs/logger.py's EcoLogger.set_level -- "debug"/"info"/
-    // "warn"/"error"/"critical", anything else falls through to info, same
-    // permissiveness as Python's chain of plain `if`s. Used by eco.log.level.
-    void set_level(const std::string& level);
+        // Mirrors ekosis/logs/logger.py's EcoLogger.set_level -- "debug"/"info"/
+        // "warn"/"error"/"critical", anything else falls through to info, same
+        // permissiveness as Python's chain of plain `if`s. Used by eco.log.level.
+        void set_level(const std::string& level);
 
-private:
-    EcoLogger() = default;
+    private:
+        EcoLogger() = default;
 
-    std::shared_ptr<spdlog::logger> logger_;
+        std::shared_ptr<spdlog::logger> logger_;
 };

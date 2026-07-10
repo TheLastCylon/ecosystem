@@ -7,7 +7,7 @@
 // EmptyDto (or asio::awaitable<EmptyDto>) instead of void, satisfying JsonDto
 // the same way every other DTO does.
 struct EmptyDto {
-    static EmptyDto    from_json(const nlohmann::json&) { return {}; }
-    nlohmann::json     to_json()                  const { return nlohmann::json::object(); }
-    void               validate()                 const {}
+    static EmptyDto from_json(const nlohmann::json&) { return {}; }
+    nlohmann::json  to_json()                  const { return nlohmann::json::object(); }
+    void            validate()                 const {}
 };
