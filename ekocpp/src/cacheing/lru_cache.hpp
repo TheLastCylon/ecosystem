@@ -127,8 +127,8 @@ class LRUCache
             return std::vector<std::pair<Key, Value>>(entries_.begin(), entries_.end());
         }
 
-private:
-    size_t                                                                       max_size_;
-    std::list<std::pair<Key, Value>>                                             entries_;
-    std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator> index_;
+    private:
+        size_t                                                                       max_size_;
+        std::list<std::pair<Key, Value>>                                             entries_;
+        std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator> index_;
 };
